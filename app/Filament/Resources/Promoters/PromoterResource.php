@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Promoters;
 use App\Filament\Resources\Promoters\Pages\CreatePromoter;
 use App\Filament\Resources\Promoters\Pages\EditPromoter;
 use App\Filament\Resources\Promoters\Pages\ListPromoters;
+use App\Filament\Resources\Promoters\Pages\ViewPromoter;
 use App\Filament\Resources\Promoters\Schemas\PromoterForm;
 use App\Filament\Resources\Promoters\Tables\PromotersTable;
 use App\Models\Promoter;
@@ -56,6 +57,7 @@ class PromoterResource extends Resource
         return [
             'index' => ListPromoters::route('/'),
             'create' => CreatePromoter::route('/create'),
+            'view' => ViewPromoter::route('/{record}'),
             'edit' => EditPromoter::route('/{record}/edit'),
         ];
     }

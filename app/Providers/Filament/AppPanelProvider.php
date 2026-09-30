@@ -35,6 +35,9 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('')
             ->login()
+            // Jede Seite braucht eine vollständige Policy – fehlt eine Methode, bricht
+            // Filament ab, statt die Aktion stillschweigend zu erlauben.
+            ->strictAuthorization()
             ->brandName(config('app.name'))
             ->colors([
                 'primary' => Color::Blue,

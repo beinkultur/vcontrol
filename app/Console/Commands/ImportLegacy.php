@@ -15,7 +15,7 @@ class ImportLegacy extends Command
 {
     protected $signature = 'vc:import';
 
-    protected $description = 'Übernimmt Benutzer, Rollen und Veranstalter aus der PHP-Version';
+    protected $description = 'Übernimmt Kalender, Rollen mit Rechten, Benutzer und Veranstalter aus der PHP-Version';
 
     public function handle(): int
     {
@@ -26,6 +26,7 @@ class ImportLegacy extends Command
 
         $this->info('Quelle: ' . $legacy->getDatabaseName());
         DB::transaction(function () use ($legacy): void {
+            $this->importCalendars($legacy);
             $this->importRoles($legacy);
             $this->importUsers($legacy);
             $this->importPromoters($legacy);
@@ -66,8 +67,28 @@ class ImportLegacy extends Command
         return DB::connection('legacy');
     }
 
+    private function importCalendars(Connection $legacy): void
+    {
+        $rows = $legacy->table('vc_calendars')->orderBy('sort_order')->get()->map(fn (object $c): array => [
+            'key' => $c->key,
+            'name' => $c->name,
+            'color' => $c->color,
+            'freitermin_status' => $c->freitermin_status,
+            'is_system' => (bool) $c->is_system,
+            'sort_order' => (int) $c->sort_order,
+            'created_at' => $c->created_at,
+            'updated_at' => $c->updated_at,
+        ])->all();
+
+        $this->sync('calendars', $rows, 'key');
+    }
+
     private function importRoles(Connection $legacy): void
     {
+        // Die Matrizen liegen in der PHP-Version als Zeilen je Rolle und Bereich
+        $permissions = $this->levelsBy($legacy, 'vc_role_permissions', 'role_id', 'area_key');
+        $calendars = $this->levelsBy($legacy, 'vc_role_calendar_permissions', 'role_id', 'calendar_key');
+
         $rows = $legacy->table('vc_roles')->orderBy('id')->get()->map(fn (object $r): array => [
             'id' => $r->id,
             'slug' => $r->slug,
@@ -76,6 +97,8 @@ class ImportLegacy extends Command
             'is_system' => (bool) $r->is_system,
             'is_super' => (bool) $r->is_super,
             'sort_order' => (int) $r->sort_order,
+            'permissions' => json_encode((object) ($permissions[$r->id] ?? [])),
+            'calendar_permissions' => json_encode((object) ($calendars[$r->id] ?? [])),
             'created_at' => $r->created_at,
             'updated_at' => $r->updated_at,
         ])->all();
@@ -83,8 +106,25 @@ class ImportLegacy extends Command
         $this->sync('roles', $rows);
     }
 
+    /**
+     * Zeilen „Besitzer, Schlüssel, Stufe“ als Matrix je Besitzer.
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function levelsBy(Connection $legacy, string $table, string $ownerColumn, string $keyColumn): array
+    {
+        $matrix = [];
+        foreach ($legacy->table($table)->get() as $row) {
+            $matrix[(int) $row->{$ownerColumn}][(string) $row->{$keyColumn}] = (string) $row->access_level;
+        }
+
+        return $matrix;
+    }
+
     private function importUsers(Connection $legacy): void
     {
+        $calendars = $this->levelsBy($legacy, 'vc_user_calendar_permissions', 'user_id', 'calendar_key');
+
         $rows = $legacy->table('vc_users')->orderBy('id')->get()->map(fn (object $u): array => [
             'id' => $u->id,
             'first_name' => $u->first_name,
@@ -96,6 +136,7 @@ class ImportLegacy extends Command
             'employee_id' => $u->employee_id,
             'trade_id' => $u->trade_id,
             'is_active' => (bool) $u->is_active,
+            'calendar_permissions' => json_encode((object) ($calendars[$u->id] ?? [])),
             'created_at' => $u->created_at,
             'updated_at' => $u->updated_at,
         ])->all();
@@ -166,17 +207,17 @@ class ImportLegacy extends Command
 
     /**
      * Spiegelt die Quellzeilen in die Tabelle: anlegen oder aktualisieren über
-     * die ID, Zeilen ohne Gegenstück in der Quelle entfernen.
+     * den Schlüssel, Zeilen ohne Gegenstück in der Quelle entfernen.
      *
      * @param  list<array<string, mixed>>  $rows
      */
-    private function sync(string $table, array $rows): void
+    private function sync(string $table, array $rows, string $key = 'id'): void
     {
         foreach (array_chunk($rows, 500) as $chunk) {
-            DB::table($table)->upsert($chunk, ['id']);
+            DB::table($table)->upsert($chunk, [$key]);
         }
-        $ids = array_column($rows, 'id');
-        $removed = DB::table($table)->whereNotIn('id', $ids === [] ? [0] : $ids)->delete();
+        $keys = array_column($rows, $key);
+        $removed = DB::table($table)->whereNotIn($key, $keys === [] ? ['__keiner__'] : $keys)->delete();
 
         $this->line(sprintf('  %-20s %4d übernommen%s', $table, count($rows), $removed > 0 ? ", {$removed} entfernt" : ''));
     }

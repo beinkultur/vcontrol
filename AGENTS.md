@@ -26,6 +26,20 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 - Filament-Code gegen `vendor/filament` auf dem Server prüfen, nicht aus dem
   Gedächtnis von Version 3 schreiben: Version 5 hat andere Namespaces
   (`Filament\Schemas\…`, `Filament\Actions\…`).
+
+## Rechte
+
+- Bereiche und Stufen: `App\Access\Area`, `App\Access\Level`; was ein Benutzer darf:
+  `$user->access()`. Mehrere Rollen addieren sich, je Bereich gilt die höchste
+  Stufe. Abgeschaltete Module (`VC_DISABLED_AREAS`) sind auch für Admins zu.
+- Jede Filament-Resource braucht eine Policy, am einfachsten als Unterklasse von
+  `App\Policies\AreaPolicy`. Das Panel läuft mit `strictAuthorization()` – eine
+  fehlende Policy-Methode ist ein Fehler, keine Freigabe.
+- Neue Seiten in `App\Console\Commands\CheckAccess::PAGES` eintragen und
+  `php artisan vc:check-access` laufen lassen: vergleicht je Rolle mit den
+  Sollwerten der PHP-Version.
+- Strenger als die PHP-Version: Admin-Konten und die Admin-Rolle ändern nur
+  Admins; niemand löscht sich selbst; der letzte aktive Admin bleibt Admin.
 - Die Server-CLI ist PHP 8.3 (`php`), daneben gibt es `php85`. Code muss unter beiden
   laufen.
 - Oberfläche, Texte, Kommentare und Commit-Nachrichten auf Deutsch.

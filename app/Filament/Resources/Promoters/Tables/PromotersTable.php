@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\Promoters\Tables;
 
+use App\Filament\Resources\Promoters\PromoterResource;
+use App\Models\Promoter;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -50,6 +53,8 @@ class PromotersTable
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(50)
             ->recordActions([
+                // Ansehen nur für Leserollen – wer bearbeiten darf, landet direkt im Formular
+                ViewAction::make()->hidden(fn (Promoter $record): bool => PromoterResource::canEdit($record)),
                 EditAction::make(),
             ]);
     }
