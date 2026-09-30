@@ -350,6 +350,18 @@ class ImportLegacy extends Command
             ->values()->all());
 
         $userIds = $known['user'];
+        $this->sync('event_guests', $legacy->table('vc_event_guests')->orderBy('id')->get()->filter($inEvent)
+            ->map(fn (object $g): array => [
+                'id' => $g->id,
+                'event_id' => $g->event_id,
+                'first_name' => $g->first_name,
+                'last_name' => $g->last_name,
+                'free_tickets' => (int) $g->free_tickets,
+                'created_by' => isset($userIds[$g->created_by_user_id]) ? $g->created_by_user_id : null,
+                'created_at' => $g->created_at,
+                'updated_at' => $g->updated_at,
+            ])->values()->all());
+
         $this->replace('event_incoming_invoices', $legacy->table('vc_event_incoming_invoices')->get()->filter($inEvent)
             ->map(fn (object $i): array => [
                 'event_id' => $i->event_id,

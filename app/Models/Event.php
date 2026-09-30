@@ -106,6 +106,12 @@ class Event extends Model
         return $this->hasOne(EventChecklist::class);
     }
 
+    /** @return HasMany<EventGuest, $this> */
+    public function guests(): HasMany
+    {
+        return $this->hasMany(EventGuest::class);
+    }
+
     /** @return HasMany<EventService, $this> */
     public function services(): HasMany
     {
