@@ -243,6 +243,7 @@ class EventForm
                 ]),
             Section::make('Rollen am Event')
                 ->columns(2)
+                ->collapsible()
                 ->schema(AssignmentFields::all()),
             Section::make('Leistungen')
                 ->description('Wer die Leistung stellt, welches Gewerk oder welcher Anbieter. Leer heißt: nicht festgelegt.')

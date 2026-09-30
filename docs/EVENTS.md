@@ -67,7 +67,7 @@ Bedienbar:
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version.
 
 Noch nicht: Bühnenplan (Zeichnung, Treppen, Rückwand), Fortschrittsanzeige
-der Phasen, Leistungsgruppen bearbeiten, Rollen-Uhrzeiten, Dateien,
+der Phasen, Leistungsgruppen bearbeiten, Dateien,
 Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
 Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Druckansicht
 der Gästeliste, Sortierung „Finanz-Warnung zuerst“.
@@ -77,6 +77,8 @@ der Gästeliste, Sortierung „Finanz-Warnung zuerst“.
   Inhalt tragen 1.252 Zeilen (wer stellt die Leistung: Halle 341,
   Veranstalter 827; dazu 214 Notizen). Übernommen werden nur diese plus die
   Aktiv-Schalter (zusammen 1.259); eine fehlende Zeile heißt „nicht festgelegt“.
+- **Rollen** mit Uhrzeit von/bis (im Bestand 5 von 367, z. B. VfV 03:00–17:30).
+  Leert man die Person, verschwindet die Rolle samt Uhrzeit.
 - **Rollen:** Die „Projektleitung“ steckt in den Rollen (`pl`, 123 Events),
   nicht im leeren Feld `pl` am Event. Rollen verweisen per Morph-Map auf
   Mitarbeiter, Gewerk oder Benutzer (`employee`/`trade`/`user`, dieselben
