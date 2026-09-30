@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'va_nr', 'va_id', 'title', 'promoter_id', 'status', 'event_type1', 'event_type2',
@@ -38,6 +39,42 @@ class Event extends Model
     public function promoter(): BelongsTo
     {
         return $this->belongsTo(Promoter::class);
+    }
+
+    /** @return HasOne<EventFinance, $this> */
+    public function finance(): HasOne
+    {
+        return $this->hasOne(EventFinance::class);
+    }
+
+    /** @return HasOne<EventSchedule, $this> */
+    public function schedule(): HasOne
+    {
+        return $this->hasOne(EventSchedule::class);
+    }
+
+    /** @return HasOne<EventPr, $this> */
+    public function pr(): HasOne
+    {
+        return $this->hasOne(EventPr::class);
+    }
+
+    /** @return HasOne<EventOperation, $this> */
+    public function operation(): HasOne
+    {
+        return $this->hasOne(EventOperation::class);
+    }
+
+    /** @return HasOne<EventStage, $this> */
+    public function stage(): HasOne
+    {
+        return $this->hasOne(EventStage::class);
+    }
+
+    /** @return HasOne<EventChecklist, $this> */
+    public function checklist(): HasOne
+    {
+        return $this->hasOne(EventChecklist::class);
     }
 
     /** Liegt in der Vergangenheit, ist aber noch nicht abgeschlossen. */

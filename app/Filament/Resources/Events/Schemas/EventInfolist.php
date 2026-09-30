@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
+use App\Access\Area;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -10,6 +13,25 @@ use Filament\Schemas\Schema;
 /** Vorläufige Detailansicht der Event-Kerndaten, bis der Workspace steht. */
 class EventInfolist
 {
+    /** Zeiten in der Reihenfolge des Veranstaltungstags. */
+    private const TIMES = [
+        'get_in' => 'Get-in',
+        'load_in' => 'Load-in',
+        'admission' => 'Einlass',
+        'vip_admission' => 'VIP-Einlass',
+        'start_time' => 'Beginn',
+        'end_time' => 'Ende',
+        'curfew' => 'Curfew',
+        'load_out' => 'Load-out',
+    ];
+
+    private static function canSeeFinance(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->access()->can(Area::Buchhaltung);
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -35,6 +57,26 @@ class EventInfolist
                         TextEntry::make('status')->label('VA-Status')->badge(),
                         IconEntry::make('doing_closed')->label('Durchführung abgeschlossen')->boolean(),
                         IconEntry::make('closed')->label('Event abgeschlossen')->boolean(),
+                    ]),
+                Section::make('Zeiten')
+                    ->columnSpanFull()
+                    ->columns(4)
+                    ->schema(array_map(
+                        fn (string $field, string $label): TextEntry => TextEntry::make("schedule.{$field}")->label($label)->time('H:i')->placeholder('–'),
+                        array_keys(self::TIMES),
+                        self::TIMES,
+                    )),
+                Section::make('Finanzen')
+                    ->columnSpanFull()
+                    ->columns(3)
+                    ->visible(fn (): bool => self::canSeeFinance())
+                    ->schema([
+                        TextEntry::make('finance.contract_status')->label('Vertragsstatus')->placeholder('–'),
+                        TextEntry::make('finance.accounting_status')->label('FIBU-Status')->badge()->placeholder('–'),
+                        TextEntry::make('finance.price_list')->label('Preisliste')->placeholder('–'),
+                        TextEntry::make('finance.rent')->label('Miete')->money('EUR', locale: 'de')->placeholder('–'),
+                        TextEntry::make('finance.invoice_numbers')->label('Rechnungsnummern')->badge()->color('gray')->placeholder('–'),
+                        IconEntry::make('finance.accounting_closed')->label('Abrechnung abgeschlossen')->boolean(),
                     ]),
                 Section::make('Halle')
                     ->columnSpanFull()

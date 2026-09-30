@@ -38,6 +38,7 @@ class ImportLegacy extends Command
             $this->importUsers($legacy);
             $this->importPromoters($legacy);
             $this->importEvents($legacy);
+            $this->importEventDetails($legacy);
         });
 
         return self::SUCCESS;
@@ -233,6 +234,78 @@ class ImportLegacy extends Command
         ])->all();
 
         $this->sync('events', $rows);
+    }
+
+    /** 1:1-Zusatzdaten der Events; übernommen wird nur, was zu einem Event gehört. */
+    private function importEventDetails(Connection $legacy): void
+    {
+        $eventIds = DB::table('events')->pluck('id')->flip();
+        $rows = fn (string $table): array => $legacy->table($table)->get()
+            ->filter(fn (object $row): bool => isset($eventIds[$row->event_id]))
+            ->values()->all();
+
+        $this->sync('event_finances', array_map(fn (object $f): array => [
+            'event_id' => $f->event_id,
+            'contract_status' => $f->contract_status,
+            'accounting_status' => $this->jsonList($f->accounting_status),
+            'price_list' => $f->price_list,
+            'rent' => $f->rent,
+            'invoice_numbers' => $this->jsonValues([$f->invoice_no1, $f->invoice_no2, $f->invoice_no3]),
+            'accounting_closed' => (bool) $f->accounting_closed,
+        ], $rows('vc_event_finance')), 'event_id');
+
+        $this->sync('event_schedules', array_map(
+            fn (object $s): array => $this->columns($s, ['event_id', 'get_in', 'load_in', 'admission', 'vip_admission', 'start_time', 'end_time', 'curfew', 'load_out']),
+            $rows('vc_event_schedules'),
+        ), 'event_id');
+
+        $this->sync('event_pr', array_map(
+            fn (object $p): array => $this->columns($p, ['event_id', 'pr_date', 'pr_status']),
+            $rows('vc_event_pr'),
+        ), 'event_id');
+
+        $this->sync('event_operations', array_map(
+            fn (object $o): array => $this->columns($o, ['event_id', 'power_start_ref', 'power_end_ref', 'power_consumption', 'backstages', 'offices', 'bus_power', 'house_delay']),
+            $rows('vc_event_operations'),
+        ), 'event_id');
+
+        $this->sync('event_stages', array_map(
+            fn (object $s): array => $this->columns($s, ['event_id', 'stage_info', 'width', 'depth', 'height', 'wing_sl_width', 'wing_sl_depth', 'wing_sr_width', 'wing_sr_depth', 'wing_sl_offset', 'wing_sr_offset', 'extra_platforms', 'rollpodest_width', 'rollpodest_depth', 'podest_total', 'stair_third', 'stair_sl_offset', 'stair_sr_offset', 'backwall_cm', 'other_info', 'stage_notes', 'notes', 'sold_out_award']),
+            $rows('vc_event_stage'),
+        ), 'event_id');
+
+        $this->sync('event_checklists', array_map(
+            fn (object $c): array => $this->columns($c, ['event_id', 'hands', 'traffic', 'pvc_setup', 'pvc_teardown', 'cleaning', 'interim_cleaning', 'bar_setup', 'bar_teardown', 'chairs_ordered', 'merch_fee', 'merch_fee_check', 'special_cleaning', 'power_ant', 'house_rig_early', 'briefing_complete']),
+            $rows('vc_event_checklist'),
+        ), 'event_id');
+    }
+
+    /**
+     * Gleichnamige Spalten unverändert übernehmen.
+     *
+     * @param  list<string>  $columns
+     * @return array<string, mixed>
+     */
+    private function columns(object $row, array $columns): array
+    {
+        $out = [];
+        foreach ($columns as $column) {
+            $out[$column] = $row->{$column} ?? null;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Mehrere Einzelspalten (z. B. invoice_no1–3) als JSON-Liste, leere weggelassen.
+     *
+     * @param  list<mixed>  $values
+     */
+    private function jsonValues(array $values): ?string
+    {
+        $items = array_values(array_filter(array_map(fn (mixed $v): string => trim((string) $v), $values), 'strlen'));
+
+        return $items === [] ? null : json_encode($items, JSON_UNESCAPED_UNICODE);
     }
 
     /** Komma-Text der PHP-Version („Umbau , Verkehr“) als JSON-Liste. */
