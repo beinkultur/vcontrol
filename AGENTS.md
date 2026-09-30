@@ -1,47 +1,25 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# VenueControl (Laravel)
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+Laravel-Neubau von VenueControl, der Veranstaltungsverwaltung für Hallen. Eine
+Installation pro Halle mit eigener Subdomain und eigener Datenbank. Die erste ist
+https://ipa.vcontrol.eu für die Inselpark Arena.
 
-## Prerequisites
+Die bestehende PHP-Version ohne Framework läuft parallel unter https://vc.bein.ws
+(Repo `/Users/niggo/Nextcloud/_nb/VARIOUS/VenueControl`) und ist fachlich die Vorlage.
+Ihre Datei `scripts/smoke_baseline.json` hält für jede Rolle und Seite den Statuscode
+fest — die Rechte-Matrix, die diese Version erreichen muss.
 
-Verify that PHP and Composer are available:
+## Arbeitsweise
 
-```sh
-php -v
-composer -V
-```
-
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
-
-macOS:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+- **Lokal ist weder PHP noch Composer installiert, und das bleibt so.** Composer,
+  Artisan und Tests laufen auf dem Server:
+  `ssh allinkl-eventmanager 'cd /www/htdocs/w0219ff1/ipa.vcontrol.eu && php artisan …'`
+- `vendor/` und `.env` existieren nur auf dem Server. Nach Änderungen an
+  `composer.json` dort `composer install` ausführen und `composer.lock` zurück ins
+  Repo holen.
+- Deploy: geänderte Dateien einzeln per `scp` auf den vollständigen Zielpfad, danach
+  je nach Änderung `php artisan view:clear`, `config:clear` oder `route:clear`, bei
+  neuen Migrationen `php artisan migrate --force`.
+- Die Server-CLI ist PHP 8.3 (`php`), daneben gibt es `php85`. Code muss unter beiden
+  laufen.
+- Oberfläche, Texte, Kommentare und Commit-Nachrichten auf Deutsch.
