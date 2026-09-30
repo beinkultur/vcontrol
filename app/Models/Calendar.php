@@ -13,6 +13,9 @@ class Calendar extends Model
     /** Persönlicher Kalender – lesbar für jeden, der einen Kalender sehen darf. */
     public const PERSONAL = 'personal';
 
+    /** Ebenen, an denen nur die Farbe änderbar ist – der Code hängt an ihnen. */
+    public const LOCKED = ['events', 'anfragen'];
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';
@@ -28,6 +31,11 @@ class Calendar extends Model
             'is_system' => 'boolean',
             'sort_order' => 'integer',
         ];
+    }
+
+    public function isLocked(): bool
+    {
+        return in_array($this->key, self::LOCKED, true);
     }
 
     /** @param Builder<self> $query */

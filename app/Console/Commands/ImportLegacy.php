@@ -15,7 +15,7 @@ class ImportLegacy extends Command
 {
     protected $signature = 'vc:import';
 
-    protected $description = 'Übernimmt Kalender, Rollen mit Rechten, Benutzer und Veranstalter aus der PHP-Version';
+    protected $description = 'Übernimmt Stammdaten, Rollen mit Rechten, Benutzer und Veranstalter aus der PHP-Version';
 
     public function handle(): int
     {
@@ -27,6 +27,13 @@ class ImportLegacy extends Command
         $this->info('Quelle: ' . $legacy->getDatabaseName());
         DB::transaction(function () use ($legacy): void {
             $this->importCalendars($legacy);
+            $this->importSettings($legacy);
+            // Vor den Benutzern: users.employee_id und users.trade_id verweisen darauf
+            $this->importEmployees($legacy);
+            $this->importTrades($legacy);
+            $this->importRooms($legacy);
+            $this->importFieldOptions($legacy);
+            $this->importInventory($legacy);
             $this->importRoles($legacy);
             $this->importUsers($legacy);
             $this->importPromoters($legacy);
@@ -81,6 +88,120 @@ class ImportLegacy extends Command
         ])->all();
 
         $this->sync('calendars', $rows, 'key');
+    }
+
+    private function importSettings(Connection $legacy): void
+    {
+        $rows = $legacy->table('vc_settings')->get()->map(fn (object $s): array => [
+            'key' => $s->key,
+            'value' => $s->value,
+            'created_at' => $s->updated_at,
+            'updated_at' => $s->updated_at,
+        ])->all();
+
+        $this->sync('settings', $rows, 'key');
+    }
+
+    private function importEmployees(Connection $legacy): void
+    {
+        $rows = $legacy->table('vc_employees')->orderBy('id')->get()->map(fn (object $e): array => [
+            'id' => $e->id,
+            'first_name' => $e->first_name,
+            'last_name' => $e->last_name,
+            'initials' => $e->initials,
+            'phone' => $e->phone,
+            'email' => $e->email,
+            'positions' => $this->jsonList($e->positions),
+            'created_at' => $e->created_at,
+            'updated_at' => $e->updated_at,
+        ])->all();
+
+        $this->sync('employees', $rows);
+    }
+
+    private function importTrades(Connection $legacy): void
+    {
+        $rows = $legacy->table('vc_trades')->orderBy('id')->get()->map(fn (object $t): array => [
+            'id' => $t->id,
+            'short_name' => $t->short_name,
+            'name' => $t->name,
+            'categories' => $this->jsonList($t->category),
+            'email' => $t->email,
+            'phone' => $t->phone,
+            'address1' => $t->address1,
+            'address2' => $t->address2,
+            'zip' => $t->zip,
+            'city' => $t->city,
+            'is_archived' => (bool) $t->is_archived,
+            'created_at' => $t->created_at,
+            'updated_at' => $t->updated_at,
+        ])->all();
+
+        $this->sync('trades', $rows);
+    }
+
+    private function importRooms(Connection $legacy): void
+    {
+        $rows = $legacy->table('vc_rooms')->orderBy('id')->get()->map(fn (object $r): array => [
+            'id' => $r->id,
+            'name' => $r->name,
+            'sort_order' => (int) $r->sort_order,
+            'is_active' => (bool) $r->active,
+            'created_at' => $r->created_at,
+            'updated_at' => $r->created_at,
+        ])->all();
+
+        $this->sync('rooms', $rows);
+    }
+
+    private function importFieldOptions(Connection $legacy): void
+    {
+        $rows = $legacy->table('vc_field_options')->orderBy('id')->get()->map(fn (object $o): array => [
+            'id' => $o->id,
+            'field_key' => $o->field_key,
+            'value' => $o->value,
+            'parent_value' => trim((string) $o->parent_value) === '' ? null : $o->parent_value,
+            'sort_order' => (int) $o->sort_order,
+            'is_active' => (bool) $o->active,
+            'created_at' => $o->created_at,
+            'updated_at' => $o->created_at,
+        ])->all();
+
+        $this->sync('field_options', $rows);
+    }
+
+    private function importInventory(Connection $legacy): void
+    {
+        $categories = $legacy->table('vc_inventory_categories')->orderBy('id')->get()->map(fn (object $c): array => [
+            'id' => $c->id,
+            'name' => $c->name,
+            'sort_order' => (int) $c->sort_order,
+            'is_active' => (bool) $c->active,
+            'created_at' => $c->created_at,
+            'updated_at' => $c->updated_at,
+        ])->all();
+        $items = $legacy->table('vc_inventory_items')->orderBy('id')->get()->map(fn (object $i): array => [
+            'id' => $i->id,
+            'category_id' => $i->category_id,
+            'name' => $i->name,
+            'is_active' => (bool) $i->active,
+            'created_at' => $i->created_at,
+            'updated_at' => $i->updated_at,
+        ])->all();
+
+        // Verschwundene Artikel zuerst entfernen, sonst blockiert der Fremdschlüssel
+        // das Entfernen ihrer Kategorie
+        $this->sync('inventory_items', $items, upsert: false);
+        $this->sync('inventory_categories', $categories);
+        $this->sync('inventory_items', $items);
+    }
+
+    /** Komma-Text der PHP-Version („Umbau , Verkehr“) als JSON-Liste. */
+    private function jsonList(?string $value): ?string
+    {
+        $items = array_values(array_unique(array_filter(array_map('trim', explode(',', (string) $value)), 'strlen')));
+
+        return $items === [] ? null : json_encode($items, JSON_UNESCAPED_UNICODE);
     }
 
     private function importRoles(Connection $legacy): void
@@ -211,14 +332,18 @@ class ImportLegacy extends Command
      *
      * @param  list<array<string, mixed>>  $rows
      */
-    private function sync(string $table, array $rows, string $key = 'id'): void
+    private function sync(string $table, array $rows, string $key = 'id', bool $upsert = true): void
     {
-        foreach (array_chunk($rows, 500) as $chunk) {
-            DB::table($table)->upsert($chunk, [$key]);
+        if ($upsert) {
+            foreach (array_chunk($rows, 500) as $chunk) {
+                DB::table($table)->upsert($chunk, [$key]);
+            }
         }
         $keys = array_column($rows, $key);
         $removed = DB::table($table)->whereNotIn($key, $keys === [] ? ['__keiner__'] : $keys)->delete();
 
-        $this->line(sprintf('  %-20s %4d übernommen%s', $table, count($rows), $removed > 0 ? ", {$removed} entfernt" : ''));
+        if ($upsert) {
+            $this->line(sprintf('  %-20s %4d übernommen%s', $table, count($rows), $removed > 0 ? ", {$removed} entfernt" : ''));
+        }
     }
 }

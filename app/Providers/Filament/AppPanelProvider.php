@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -38,7 +39,10 @@ class AppPanelProvider extends PanelProvider
             // Jede Seite braucht eine vollständige Policy – fehlt eine Methode, bricht
             // Filament ab, statt die Aktion stillschweigend zu erlauben.
             ->strictAuthorization()
-            ->brandName(config('app.name'))
+            // Mit dem Hallennamen – jede Halle hat ihre eigene Installation
+            ->brandName(fn (): string => collect([config('app.name'), Setting::lookup(Setting::VENUE_NAME)])
+                ->filter()
+                ->implode(' · '))
             ->colors([
                 'primary' => Color::Blue,
             ])

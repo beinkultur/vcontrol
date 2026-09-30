@@ -27,6 +27,13 @@ class CheckAccess extends Command
         'GET /veranstalter' => '/veranstalter',
         'GET /users' => '/benutzer',
         'GET /admin/rollen' => '/rollen',
+        'GET /admin/gewerke' => '/gewerke',
+        'GET /admin/mitarbeiter' => '/mitarbeiter',
+        'GET /admin/raeume' => '/raeume',
+        'GET /admin/feldoptionen' => '/feldoptionen',
+        'GET /admin/inventar' => '/inventar',
+        'GET /admin/kalender' => '/kalender-ebenen',
+        'GET /admin/stammdaten' => '/halle',
     ];
 
     public function handle(Kernel $kernel): int
