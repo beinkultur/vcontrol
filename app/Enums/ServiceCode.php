@@ -27,6 +27,27 @@ enum ServiceCode: string implements HasLabel
     case Sanitary = 'sanitary';
     case CrewCatering = 'crew_catering';
 
+    /**
+     * Leistungsbereich der Gewerke, die dafür in Frage kommen (Trade::categories),
+     * wie TRADE_SERVICE_CATEGORIES in der PHP-Version. Brandwache hat keinen –
+     * dafür steht jedes Gewerk zur Wahl.
+     */
+    public function tradeCategory(): ?string
+    {
+        return match ($this) {
+            self::Vt, self::HouseRigIn, self::HouseRigOut => 'VA-Technik',
+            self::Sfx => 'SFX',
+            self::StageSetup, self::StageTeardown, self::BarriersSetup, self::BarriersTeardown,
+            self::SmokingSetup, self::SmokingTeardown, self::LockSetup, self::LockTeardown,
+            self::ChairsSetup, self::ChairsTeardown => 'Umbau',
+            self::ProdCrew => 'Produktion',
+            self::Security => 'Sicherheit',
+            self::Sanitary => 'Sanitäter',
+            self::CrewCatering => 'Catering',
+            self::FireWatch => null,
+        };
+    }
+
     public function getLabel(): string
     {
         return match ($this) {

@@ -8,6 +8,7 @@ use App\Enums\OptionField;
 use App\Filament\Support\AssignmentFields;
 use App\Filament\Support\IncomingInvoiceFields;
 use App\Filament\Support\OptionChoices;
+use App\Filament\Support\ServiceFields;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Event;
 use App\Models\EventFinance;
@@ -220,6 +221,10 @@ class EventForm
             Section::make('Rollen am Event')
                 ->columns(2)
                 ->schema(AssignmentFields::all()),
+            Section::make('Leistungen')
+                ->description('Wer die Leistung stellt, welches Gewerk oder welcher Anbieter. Leer heißt: nicht festgelegt.')
+                ->collapsible()
+                ->schema(ServiceFields::all()),
         ];
     }
 
