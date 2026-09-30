@@ -341,3 +341,65 @@ a.vc-card:hover {
 .dark .vc-card__link {
     color: var(--primary-400);
 }
+
+/* ---------------------------------------------------------------------
+ * Bühnenplan
+ * ------------------------------------------------------------------ */
+
+.vc-plan {
+    background: #fff;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.vc-plan svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.vc-plan-legend {
+    display: grid;
+    gap: 0.3rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8rem;
+    color: var(--gray-600);
+}
+
+.dark .vc-plan-legend {
+    color: var(--gray-400);
+}
+
+.vc-swatch {
+    display: inline-block;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin-right: 0.35rem;
+    border: 1px solid;
+    border-radius: 2px;
+    vertical-align: -0.1rem;
+}
+
+.vc-swatch--line {
+    width: 1rem;
+    height: 0;
+    border-width: 2px 0 0;
+    border-style: dashed;
+    border-radius: 0;
+    vertical-align: 0.2rem;
+}
+
+.vc-muted {
+    color: var(--gray-500);
+    font-size: 0.85em;
+}
+
+.vc-text-danger {
+    color: var(--danger-600);
+}
+
+.dark .vc-text-danger {
+    color: var(--danger-400);
+}

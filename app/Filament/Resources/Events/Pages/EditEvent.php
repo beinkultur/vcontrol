@@ -15,4 +15,11 @@ class EditEvent extends EditRecord
     use HasEventHeading;
 
     protected static string $resource = EventResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            $this->stagePlanAction(),
+        ];
+    }
 }

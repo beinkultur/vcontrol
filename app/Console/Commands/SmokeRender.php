@@ -91,6 +91,8 @@ class SmokeRender extends Command
         // Seiten außerhalb des Panels (routes/web.php)
         foreach ($this->samples(Event::class) as $event) {
             $paths[] = route('events.guest-list-print', $event, absolute: false);
+            $paths[] = route('events.stage-plan-print', $event, absolute: false);
+            $paths[] = route('events.stage-plan-svg', $event, absolute: false);
         }
 
         return array_values(array_unique($paths));

@@ -102,6 +102,7 @@
                     </li>
                 @endforeach
             </ul>
+            <a href="{{ \App\Filament\Resources\Events\EventResource::getUrl('stage-plan', ['record' => $event]) }}" wire:navigate class="vc-card__link">Bühnenplan anzeigen ›</a>
         </section>
     </div>
 </div>

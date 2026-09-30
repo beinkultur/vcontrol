@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\GuestListPrintController;
+use App\Http\Controllers\StagePlanController;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Route;
 
@@ -12,4 +13,6 @@ use Illuminate\Support\Facades\Route;
 $panel = Filament::getPanel('app');
 Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])->group(function (): void {
     Route::get('/events/{event}/gaesteliste', GuestListPrintController::class)->name('events.guest-list-print');
+    Route::get('/events/{event}/buehnenplan/druck', [StagePlanController::class, 'print'])->name('events.stage-plan-print');
+    Route::get('/events/{event}/buehnenplan.svg', [StagePlanController::class, 'svg'])->name('events.stage-plan-svg');
 });

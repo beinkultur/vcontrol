@@ -11,6 +11,13 @@ class EventStage extends EventDetail
 {
     protected $table = 'event_stages';
 
+    /** Vorgaben der PHP-Version für neue Bühnen (Bestand: 238 von 239 so). */
+    protected $attributes = [
+        'wing_sl_offset' => 1,
+        'wing_sr_offset' => 1,
+        'backwall_cm' => 160,
+    ];
+
     /** Maße, aus denen sich die Zahl der Podeste ergibt. */
     public const PODEST_FIELDS = ['width', 'depth', 'wing_sl_width', 'wing_sl_depth', 'wing_sr_width', 'wing_sr_depth', 'rollpodest_width', 'rollpodest_depth', 'extra_platforms'];
 

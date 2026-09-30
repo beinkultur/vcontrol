@@ -67,6 +67,16 @@ Bedienbar:
   Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar.
 - Gästeliste mit Druckansicht für den Einlass (A4, nach Name sortiert, Summe,
   Spalte zum Abhaken).
+- **Bühnenplan** (`/events/{id}/buehnenplan`) wie in der PHP-Version:
+  Draufsicht mit Podest-Raster (Standard 14×8, Hausbestand, angemietet),
+  Wings, Treppen, Raummitte, Raumbegrenzung und Rückwand; daneben
+  Plan-Einstellungen (Versatz Wings und Treppen, Abstand Rückwand) und Zahlen.
+  Druckansicht A4 quer und SVG-Datei. Verlinkt im Kopf des Workspace, unter
+  Planung › Bühne und auf der Übersicht. Für alle 239 Events zeichengleich mit
+  der PHP-Version geprüft. Hallenspezifisch und für eine zweite Halle noch
+  einstellbar zu machen: Raum 25 × 15 m, Standardbühne 14 × 8 m,
+  Hausbestand 24 + 2, Beschriftung „IPA stage“ (Konstanten in
+  `App\Support\StagePlan`).
 - **Bühne:** Maße, Wings, Rollipodest, Höhe und die Podest-Rechnung wie in
   der PHP-Version; in der Event-Liste die Kurzform „14×8 H1,4 62P“ (gelb bei
   anderer Höhe als 1,4 m, rot bei mehr Podesten als im Bestand). Bestand (86) und
@@ -82,8 +92,7 @@ Bedienbar:
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Spalte
   „Zus. Podeste“: über den im Mietpreis enthaltenen hinaus (47 Events).
 
-Noch nicht: Bühnenplan (Zeichnung, Treppen, Rückwand), Fortschrittsanzeige
-der Phasen, Leistungsgruppen bearbeiten, Dateien,
+Noch nicht: Leistungsgruppen bearbeiten, Dateien,
 Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
 Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Sortierung
 „Finanz-Warnung zuerst“.

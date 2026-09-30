@@ -6,6 +6,7 @@ use App\Access\Area;
 use App\Access\Level;
 use App\Enums\AssignmentRole;
 use App\Enums\OptionField;
+use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
 use App\Filament\Support\AssignmentFields;
@@ -18,7 +19,9 @@ use App\Models\EventFinance;
 use App\Models\EventPr;
 use App\Models\EventStage;
 use App\Support\EventProgress;
+use App\Support\StagePlan;
 use App\Support\StagePodests;
+use Filament\Actions\Action;
 use App\Models\User;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
@@ -31,6 +34,7 @@ use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Livewire;
 use Filament\Schemas\Components\Section;
@@ -128,7 +132,15 @@ class EventForm
                             self::sections([
                                 Tab::make('Zeiten')->id('zeiten')->schema([self::times()]),
                                 Tab::make('Checkliste')->id('checkliste')->schema([self::checklist()]),
-                                Tab::make('Bühne')->id('buehne')->schema([self::stage()]),
+                                Tab::make('Bühne')->id('buehne')->schema([
+                                    Actions::make([
+                                        Action::make('stagePlan')
+                                            ->label('Bühnenplan anzeigen')
+                                            ->icon(Heroicon::OutlinedMap)
+                                            ->url(fn (Event $record): string => EventResource::getUrl('stage-plan', ['record' => $record])),
+                                    ])->alignEnd(),
+                                    self::stage(),
+                                ]),
                                 Tab::make('Personal')->id('personal')->schema([
                                     Section::make()
                                         ->columns(2)
@@ -539,11 +551,11 @@ class EventForm
         return $live ? $field->live(onBlur: true) : $field;
     }
 
-    /** Versatz der Wings; die Spalte kennt kein „leer“, nur 0. */
+    /** Versatz der Wings; leer heißt wie in der PHP-Version 1 m. */
     private static function offsetField(string $name): TextInput
     {
         return self::meterField($name, 'Versatz', live: false)
-            ->dehydrateStateUsing(fn (mixed $state): int => (int) ($state ?? 0));
+            ->dehydrateStateUsing(fn (mixed $state): int => $state === null || $state === '' ? StagePlan::DEFAULT_WING_OFFSET : (int) $state);
     }
 
     /** @return array<string, string> Schlüssel im Format der Datenbank („1.40“) */

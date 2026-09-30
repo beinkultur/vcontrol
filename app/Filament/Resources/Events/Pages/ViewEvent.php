@@ -33,6 +33,7 @@ class ViewEvent extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            $this->stagePlanAction(),
             EditAction::make(),
         ];
     }
