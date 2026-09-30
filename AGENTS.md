@@ -37,6 +37,12 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   nur ein Platzhalter.
 - Felder, die nicht am Modell hängen: `->dehydrated(false)` plus
   `->saveRelationshipsUsing()` (siehe `App\Filament\Support\*Fields`).
+- `afterStateHydrated()` läuft nach den State-Casts: Wer dort `state()` setzt,
+  muss das Format selbst liefern (bei `ToggleButtons::boolean()` 1/0, nicht
+  true/false – sonst ist nichts markiert).
+- Zwei Abschnitte mit `->relationship()` auf dieselbe 1:1-Beziehung legen bei
+  neuen Events die Zeile doppelt an. Ein einzelnes Feld woanders: ohne Bindung
+  und per `updateOrCreate` speichern (siehe Sold-Out-Award in `EventForm`).
 
 ## Tests
 

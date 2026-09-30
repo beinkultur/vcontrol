@@ -73,6 +73,32 @@ class EventStageTest extends TestCase
         $this->assertSame('Egonase 2x3m', $stage->stage_notes);
     }
 
+    public function test_sold_out_award_in_der_durchfuehrung(): void
+    {
+        $event = Event::create(['title' => 'Ausverkauft', 'starts_at' => now()->subDay()]);
+
+        Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
+            ->assertFormSet(['sold_out_award' => null])
+            ->fillForm(['sold_out_award' => 1, 'stage.width' => 14, 'stage.depth' => 8])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $stage = $event->stage()->firstOrFail();
+        $this->assertTrue($stage->sold_out_award);
+        $this->assertSame(62, $stage->podest_total);
+
+        $form = Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()]);
+        // Genau 1, nicht true: Nur dann ist „ja“ markiert.
+        $this->assertSame(1, $form->get('data.sold_out_award'));
+        $form
+            ->fillForm(['sold_out_award' => 0])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertFalse($stage->fresh()->sold_out_award);
+        $this->assertSame(1, EventStage::query()->count());
+    }
+
     public function test_kurzform_in_der_liste(): void
     {
         Setting::put(Setting::PODEST_INVENTORY, '75');

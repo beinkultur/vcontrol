@@ -319,8 +319,33 @@ class EventForm
                         ->label('Durchführung abgeschlossen'),
                     Toggle::make('closed')
                         ->label('Event abgeschlossen'),
+                    self::soldOutAward(),
                 ]),
         ];
+    }
+
+    /**
+     * Steht in der Bühnen-Tabelle, gehört aber in die Durchführung. Ein zweiter
+     * Abschnitt auf derselben Beziehung würde bei neuen Events die Zeile doppelt
+     * anlegen – daher ein Feld ohne Bindung, gespeichert nach dem Abschnitt
+     * „Bühne“. Ja/nein/leer wie in der PHP-Version, leer heißt: nicht erfasst.
+     */
+    private static function soldOutAward(): ToggleButtons
+    {
+        return ToggleButtons::make('sold_out_award')
+            ->label('Sold-Out-Award')
+            ->boolean('ja', 'nein')
+            ->grouped()
+            // Als 1/0 wie die Schaltflächen: Filament wendet seine Umwandlung vor
+            // diesem Aufruf an, ein true bliebe stehen und nichts wäre markiert.
+            ->afterStateHydrated(fn (ToggleButtons $component, ?Event $record) => $component->state(
+                $record?->stage?->sold_out_award === null ? null : (int) $record->stage->sold_out_award,
+            ))
+            ->dehydrated(false)
+            ->saveRelationshipsUsing(fn (Event $record, mixed $state) => $record->stage()->updateOrCreate(
+                [],
+                ['sold_out_award' => $state === null || $state === '' ? null : (bool) $state],
+            ));
     }
 
     private static function can(Area $area, Level $minimum = Level::Read): bool

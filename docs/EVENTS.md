@@ -60,12 +60,13 @@ Bedienbar:
   berechnet, wenn sich ein Maß ändert – die Summen aus AppSheet bleiben sonst
   stehen (mit allen 239 Zeilen geprüft). Die AppSheet-Felder „Anmerkungen“
   (17×) und „sonst. Podeste“ (12×), die die PHP-Version nicht mehr zeigt,
-  erscheinen schreibgeschützt.
+  erscheinen schreibgeschützt. Der Sold-Out-Award (auch Bühnen-Tabelle) steht
+  in der Durchführung, ja/nein/leer wie in der PHP-Version.
 - **Buchhaltung** mit Offen/Abgeschlossen/Alle/Endabrechnung/Archiv und
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version.
 
-Noch nicht: Bühnenplan (Zeichnung, Treppen, Rückwand), Sold-Out-Award in der
-Durchführung, Leistungsgruppen bearbeiten, Rollen-Uhrzeiten, Notizen, Dateien,
+Noch nicht: Bühnenplan (Zeichnung, Treppen, Rückwand), Fortschrittsanzeige
+der Phasen, Leistungsgruppen bearbeiten, Rollen-Uhrzeiten, Notizen, Dateien,
 Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
 Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Druckansicht
 der Gästeliste, Sortierung „Finanz-Warnung zuerst“.
