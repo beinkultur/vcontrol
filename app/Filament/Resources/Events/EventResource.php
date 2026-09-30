@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Events;
 
+use App\Filament\Resources\Events\Pages\CreateEvent;
+use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\ViewEvent;
+use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Filament\Resources\Events\Schemas\EventInfolist;
 use App\Filament\Resources\Events\Tables\EventsTable;
 use App\Models\Event;
@@ -14,8 +17,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 /**
- * Events – vorerst Liste und Detailansicht. Bearbeiten kommt mit dem
- * Workspace (Buchung, Planung, Durchführung), siehe docs/EVENTS.md.
+ * Events: Liste, Detailansicht für Leserollen und Workspace (Buchung, Planung,
+ * Durchführung) zum Anlegen und Bearbeiten, siehe docs/EVENTS.md.
  */
 class EventResource extends Resource
 {
@@ -32,6 +35,11 @@ class EventResource extends Resource
     protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'title';
+
+    public static function form(Schema $schema): Schema
+    {
+        return EventForm::configure($schema);
+    }
 
     public static function infolist(Schema $schema): Schema
     {
@@ -53,7 +61,9 @@ class EventResource extends Resource
     {
         return [
             'index' => ListEvents::route('/'),
+            'create' => CreateEvent::route('/create'),
             'view' => ViewEvent::route('/{record}'),
+            'edit' => EditEvent::route('/{record}/edit'),
         ];
     }
 }

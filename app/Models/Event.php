@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EventNumber;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,27 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Event extends Model
 {
     public const STATUS_CANCELLED = 'storniert';
+
+    protected static function booted(): void
+    {
+        // Neue Events bekommen eine laufende Nummer und daraus die VA-ID,
+        // sofern nicht ausdrücklich eine mitgegeben wird
+        static::creating(function (Event $event): void {
+            if (blank($event->va_nr)) {
+                $event->va_nr = EventNumber::next();
+            }
+            if (blank($event->va_id)) {
+                $event->va_id = EventNumber::buildVaId(EventNumber::customerNoOf($event->promoter_id), $event->va_nr);
+            }
+        });
+
+        // Anderer Veranstalter: VA-ID neu bilden, laufende Nummer behalten
+        static::updating(function (Event $event): void {
+            if ($event->isDirty('promoter_id') && !$event->isDirty('va_id') && filled($event->va_nr)) {
+                $event->va_id = EventNumber::buildVaId(EventNumber::customerNoOf($event->promoter_id), $event->va_nr);
+            }
+        });
+    }
 
     /**
      * @return array<string, string>

@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Events\Tables;
 
+use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Support\Enums\FontFamily;
@@ -101,7 +103,9 @@ class EventsTable
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(50)
             ->recordActions([
-                ViewAction::make(),
+                // Ansehen nur für Leserollen – wer bearbeiten darf, landet im Workspace
+                ViewAction::make()->hidden(fn (Event $record): bool => EventResource::canEdit($record)),
+                EditAction::make(),
             ]);
     }
 
