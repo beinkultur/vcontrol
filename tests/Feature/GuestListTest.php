@@ -62,4 +62,28 @@ class GuestListTest extends TestCase
             ->assertTableActionHidden('create')
             ->assertTableActionHidden('edit', $this->event->guests->first());
     }
+
+    public function test_druckansicht_sortiert_mit_summe(): void
+    {
+        $this->event->guests()->createMany([
+            ['first_name' => 'Max', 'last_name' => 'Zander', 'free_tickets' => 2],
+            ['first_name' => 'Erika', 'last_name' => 'Albers', 'free_tickets' => 3],
+        ]);
+        $this->actingAs($this->userWith($this->role('einlass', ['events' => 'read'])));
+
+        Livewire::test(GuestsRelationManager::class, ['ownerRecord' => $this->event, 'pageClass' => ViewEvent::class])
+            ->assertTableActionVisible('print');
+
+        $this->get("/events/{$this->event->id}/gaesteliste")
+            ->assertOk()
+            ->assertSeeInOrder(['Gala', 'Albers', 'Erika', 'Zander', 'Max', 'Gesamt Tickets', '5']);
+    }
+
+    public function test_druckansicht_nur_mit_recht_und_anmeldung(): void
+    {
+        $this->get("/events/{$this->event->id}/gaesteliste")->assertRedirect();
+
+        $this->actingAs($this->userWith($this->role('buchhaltung', ['buchhaltung' => 'read'])));
+        $this->get("/events/{$this->event->id}/gaesteliste")->assertForbidden();
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Event;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Console\Command;
@@ -86,6 +87,10 @@ class SmokeRender extends Command
         }
         foreach ($panel->getPages() as $page) {
             $paths[] = $page::getUrl(isAbsolute: false);
+        }
+        // Seiten außerhalb des Panels (routes/web.php)
+        foreach ($this->samples(Event::class) as $event) {
+            $paths[] = route('events.guest-list-print', $event, absolute: false);
         }
 
         return array_values(array_unique($paths));

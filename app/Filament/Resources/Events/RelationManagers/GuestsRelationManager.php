@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\Events\RelationManagers;
 
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -70,6 +72,12 @@ class GuestsRelationManager extends RelationManager
             ->paginated([25, 50, 100, 'all'])
             ->defaultPaginationPageOption(50)
             ->headerActions([
+                Action::make('print')
+                    ->label('Drucken')
+                    ->icon(Heroicon::OutlinedPrinter)
+                    ->color('gray')
+                    ->url(fn (): string => route('events.guest-list-print', $this->getOwnerRecord()))
+                    ->openUrlInNewTab(),
                 CreateAction::make()
                     ->mutateDataUsing(fn (array $data): array => $data + ['created_by' => Auth::id()]),
             ])

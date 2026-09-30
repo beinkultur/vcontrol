@@ -52,7 +52,8 @@ Bedienbar:
   Planung (Halle, Bühne, Zeiten, Räume, Rollen, Leistungen, Checkliste),
   Durchführung (Betrieb, Abschluss). VA-NR/VA-ID beim Anlegen. Notizen
   (Betreff, Text, Verfasser und letzter Bearbeiter) und Gästeliste als
-  eingebettete Tabellen. Die Checkliste zeigt die PHP-Version nur als
+  eingebettete Tabellen; die Gästeliste mit Druckansicht für den Einlass
+  (A4, nach Name sortiert, Summe, Spalte zum Abhaken). Die Checkliste zeigt die PHP-Version nur als
   Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar.
 - **Bühne:** Maße, Wings, Rollipodest, Höhe und die Podest-Rechnung wie in
   der PHP-Version; in der Event-Liste die Kurzform „14×8 H1,4 62P“ (rot bei
@@ -69,8 +70,8 @@ Bedienbar:
 Noch nicht: Bühnenplan (Zeichnung, Treppen, Rückwand), Fortschrittsanzeige
 der Phasen, Leistungsgruppen bearbeiten, Dateien,
 Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
-Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Druckansicht
-der Gästeliste, Sortierung „Finanz-Warnung zuerst“.
+Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Sortierung
+„Finanz-Warnung zuerst“.
 
 - **Leistungen:** Die PHP-Version legt je Event alle 19 Leistungen an
   (4.465 Zeilen), in keiner einzigen ist ein Gewerk oder Anbieter eingetragen.
