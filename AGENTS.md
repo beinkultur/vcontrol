@@ -14,12 +14,18 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 - **Lokal ist weder PHP noch Composer installiert, und das bleibt so.** Composer,
   Artisan und Tests laufen auf dem Server:
   `ssh allinkl-eventmanager 'cd /www/htdocs/w0219ff1/ipa.vcontrol.eu && php artisan …'`
-- `vendor/` und `.env` existieren nur auf dem Server. Nach Änderungen an
-  `composer.json` dort `composer install` ausführen und `composer.lock` zurück ins
-  Repo holen.
-- Deploy: geänderte Dateien einzeln per `scp` auf den vollständigen Zielpfad, danach
-  je nach Änderung `php artisan view:clear`, `config:clear` oder `route:clear`, bei
-  neuen Migrationen `php artisan migrate --force`.
+- `vendor/` und `.env` existieren nur auf dem Server. Pakete per `composer require`
+  auf dem Server installieren und `composer.json` und `composer.lock` sofort zurück
+  ins Repo holen – sonst überschreibt der nächste Deploy den neueren Stand.
+- Deploy: `scripts/deploy.sh` (Standard ipa.vcontrol.eu, sonst die Halle als
+  Parameter). Überträgt per rsync und leert die Caches. Neue Migrationen danach
+  selbst mit `php artisan migrate --force` ausführen.
+- Daten kommen aus der PHP-Version: `php artisan vc:import`, beliebig oft
+  wiederholbar. Bis zum Umstieg ist die PHP-Version führend; was hier geändert
+  wird, überschreibt der nächste Import.
+- Filament-Code gegen `vendor/filament` auf dem Server prüfen, nicht aus dem
+  Gedächtnis von Version 3 schreiben: Version 5 hat andere Namespaces
+  (`Filament\Schemas\…`, `Filament\Actions\…`).
 - Die Server-CLI ist PHP 8.3 (`php`), daneben gibt es `php85`. Code muss unter beiden
   laufen.
 - Oberfläche, Texte, Kommentare und Commit-Nachrichten auf Deutsch.

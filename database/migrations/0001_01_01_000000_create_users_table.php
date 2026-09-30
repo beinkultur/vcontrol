@@ -13,10 +13,17 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('first_name', 120)->nullable();
+            $table->string('last_name', 120);
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            // venue_employee = Mitarbeiter der Halle, freelancer = freie Mitarbeit,
+            // trade_account = Zugang eines Gewerks (Dienstleister)
+            $table->string('account_type', 30)->default('venue_employee');
+            $table->unsignedBigInteger('employee_id')->nullable()->index();
+            $table->unsignedBigInteger('trade_id')->nullable()->index();
+            $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });
