@@ -23,6 +23,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -48,6 +49,23 @@ class EventForm
         'curfew' => 'Curfew',
         'load_out' => 'Load-out',
     ];
+
+    /** Planungsprüfungen aus der PHP-Version (dort „Hands geplant?“ usw.). */
+    private const CHECKS = [
+        'hands' => 'Hands',
+        'traffic' => 'Verkehrsposten',
+        'pvc_setup' => 'PVC Aufbau',
+        'pvc_teardown' => 'PVC Abbau',
+        'cleaning' => 'Reinigung',
+        'interim_cleaning' => 'Zwischenreinigung',
+        'special_cleaning' => 'Sonderreinigung',
+        'bar_setup' => 'Tresen Aufbau',
+        'bar_teardown' => 'Tresen Abbau',
+        'chairs_ordered' => 'Stühle bestellt',
+        'merch_fee_check' => 'Merch-Fee eingesammelt',
+    ];
+
+    private const CHECK_OPTIONS = ['yes' => 'ja', 'no' => 'nein', 'na' => 'entfällt'];
 
     public static function configure(Schema $schema): Schema
     {
@@ -225,6 +243,30 @@ class EventForm
                 ->description('Wer die Leistung stellt, welches Gewerk oder welcher Anbieter. Leer heißt: nicht festgelegt.')
                 ->collapsible()
                 ->schema(ServiceFields::all()),
+            Section::make('Checkliste')
+                ->relationship('checklist')
+                ->columns(3)
+                ->collapsible()
+                ->schema([
+                    ...array_map(
+                        fn (string $field, string $label): ToggleButtons => ToggleButtons::make($field)
+                            ->label($label)
+                            ->options(self::CHECK_OPTIONS)
+                            ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
+                            ->grouped(),
+                        array_keys(self::CHECKS),
+                        self::CHECKS,
+                    ),
+                    TextInput::make('merch_fee')
+                        ->label('Merch-Fee')
+                        ->maxLength(120),
+                    Toggle::make('power_ant')
+                        ->label('Miete Elektro-Ameise'),
+                    Toggle::make('house_rig_early')
+                        ->label('Haus-Rig ab 7 Uhr'),
+                    Toggle::make('briefing_complete')
+                        ->label('Briefing vollständig'),
+                ]),
         ];
     }
 
