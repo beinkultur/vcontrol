@@ -67,7 +67,8 @@ Bedienbar:
 - **Detailansicht** (nur lesen): Kerndaten, Zeiten, Finanzen (mit Recht),
   Rollen mit Uhrzeit, Räume, Leistungen, Bühne, Checkliste, Sold-Out-Award.
 - **Buchhaltung** mit Offen/Abgeschlossen/Alle/Endabrechnung/Archiv und
-  Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version.
+  Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Spalte
+  „Zus. Podeste“: über den im Mietpreis enthaltenen hinaus (47 Events).
 
 Noch nicht: Bühnenplan (Zeichnung, Treppen, Rückwand), Fortschrittsanzeige
 der Phasen, Leistungsgruppen bearbeiten, Dateien,

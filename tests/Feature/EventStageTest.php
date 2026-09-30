@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\ManageVenue;
+use App\Filament\Resources\Accounting\Pages\ListAccounting;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Models\Event;
@@ -113,6 +114,18 @@ class EventStageTest extends TestCase
             ->assertSee('Verkehrsposten: entfällt')
             ->assertSee('Haus-Rig ab 7 Uhr')
             ->assertDontSee('Reinigung:');
+    }
+
+    public function test_buchhaltung_zeigt_zusaetzliche_podeste(): void
+    {
+        $gross = Event::create(['title' => 'Groß', 'starts_at' => now()->subDay()]);
+        $gross->stage()->create(['width' => 20, 'depth' => 10]); // 106 Podeste
+        $klein = Event::create(['title' => 'Klein', 'starts_at' => now()->subDay()]);
+        $klein->stage()->create(['width' => 14, 'depth' => 8]); // 62 Podeste
+
+        Livewire::test(ListAccounting::class, ['activeTab' => 'alle'])
+            ->assertTableColumnStateSet('extra_podests', 44, $gross)
+            ->assertTableColumnStateSet('extra_podests', 0, $klein);
     }
 
     public function test_kurzform_in_der_liste(): void

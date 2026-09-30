@@ -8,6 +8,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use App\Models\User;
 use App\Support\IncomingInvoices;
+use App\Support\StagePodests;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontFamily;
@@ -103,6 +104,14 @@ class AccountingResource extends Resource
                     ->label('Miete')
                     ->money('EUR', locale: 'de')
                     ->alignEnd(),
+                // Wie in der PHP-Version aus der gespeicherten Summe; leer zählt 0.
+                TextColumn::make('extra_podests')
+                    ->label('Zus. Podeste')
+                    ->state(fn (Event $record): int => StagePodests::billableExtra($record->stage?->podest_total))
+                    ->color(fn (int $state): string => $state > 0 ? 'warning' : 'gray')
+                    ->tooltip(fn (): string => 'zusätzlich zu berechnen, ' . StagePodests::includedInRent() . ' sind im Mietpreis enthalten')
+                    ->alignEnd()
+                    ->toggleable(),
                 TextColumn::make('finance.invoice_numbers')
                     ->label('Rechnungen')
                     ->badge()
@@ -119,7 +128,7 @@ class AccountingResource extends Resource
                     ->tooltip('eingegangen / erwartet')
                     ->alignCenter(),
             ])
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['promoter', 'finance', 'operation', 'incomingInvoices']))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['promoter', 'finance', 'operation', 'incomingInvoices', 'stage']))
             ->filters([
                 SelectFilter::make('year')
                     ->label('Jahr')
