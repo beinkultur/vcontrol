@@ -9,8 +9,10 @@ use App\Enums\ServiceCode;
 use App\Models\Event;
 use App\Models\EventAssignment;
 use App\Models\EventService;
+use App\Models\EventChecklist;
 use App\Models\Room;
 use App\Models\User;
+use App\Support\StagePodests;
 use Illuminate\Support\Facades\Auth;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -41,6 +43,33 @@ class EventInfolist
             ->pluck('name')
             ->values()
             ->all();
+    }
+
+    /** @return list<string> Nur erfasste Punkte, z. B. „Hands: ja“. */
+    private static function checklistItems(?EventChecklist $checklist): array
+    {
+        if ($checklist === null) {
+            return [];
+        }
+
+        $items = [];
+        foreach (EventForm::CHECKS as $field => $label) {
+            $value = $checklist->{$field};
+            $answer = $value === null ? null : (EventForm::CHECK_OPTIONS[$value] ?? null);
+            if ($answer !== null) {
+                $items[] = "{$label}: {$answer}";
+            }
+        }
+        if (filled($checklist->merch_fee)) {
+            $items[] = 'Merch-Fee: ' . $checklist->merch_fee;
+        }
+        foreach (['power_ant' => 'Miete Elektro-Ameise', 'house_rig_early' => 'Haus-Rig ab 7 Uhr', 'briefing_complete' => 'Briefing vollständig'] as $field => $label) {
+            if ($checklist->{$field}) {
+                $items[] = $label;
+            }
+        }
+
+        return $items;
     }
 
     private static function canSeeFinance(): bool
@@ -75,6 +104,14 @@ class EventInfolist
                         TextEntry::make('status')->label('VA-Status')->badge(),
                         IconEntry::make('doing_closed')->label('Durchführung abgeschlossen')->boolean(),
                         IconEntry::make('closed')->label('Event abgeschlossen')->boolean(),
+                        TextEntry::make('sold_out_award')
+                            ->label('Sold-Out-Award')
+                            ->state(fn (Event $record): ?string => match ($record->stage?->sold_out_award) {
+                                true => 'ja',
+                                false => 'nein',
+                                default => null,
+                            })
+                            ->placeholder('–'),
                     ]),
                 Section::make('Zeiten')
                     ->columnSpanFull()
@@ -103,7 +140,8 @@ class EventInfolist
                             ->hiddenLabel()
                             ->state(fn (Event $record): array => $record->assignments
                                 ->sortBy(fn (EventAssignment $a): int => array_search($a->role, AssignmentRole::cases(), true))
-                                ->map(fn (EventAssignment $a): string => $a->role->getLabel() . ': ' . $a->assigneeName())
+                                ->map(fn (EventAssignment $a): string => $a->role->getLabel() . ': ' . $a->assigneeName()
+                                    . ($a->starts_at || $a->ends_at ? ' (' . substr((string) $a->starts_at, 0, 5) . '–' . substr((string) $a->ends_at, 0, 5) . ')' : ''))
                                 ->values()->all())
                             ->listWithLineBreaks()
                             ->placeholder('Niemand zugeordnet'),
@@ -137,6 +175,34 @@ class EventInfolist
                                 ->values()->all())
                             ->listWithLineBreaks()
                             ->placeholder('Nichts festgelegt'),
+                    ]),
+                Section::make('Bühne')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('stage_summary')
+                            ->label('Maße, Höhe, Podeste')
+                            ->state(fn (Event $record): string => StagePodests::summary($record->stage)['text'])
+                            ->color(fn (Event $record): ?string => StagePodests::summary($record->stage)['alert'] ? 'danger' : null),
+                        TextEntry::make('stage_inventory')
+                            ->label('Bestand')
+                            ->state(function (Event $record): string {
+                                $total = StagePodests::total($record->stage) ?? 0;
+                                $inventory = StagePodests::inventory();
+
+                                return $total > $inventory
+                                    ? ($total - $inventory) . ' Podeste über dem Bestand von ' . $inventory . ' – Nachbestellung nötig'
+                                    : 'im Bestand von ' . $inventory;
+                            }),
+                        TextEntry::make('stage.stage_notes')->label('Anmerkungen')->placeholder('–'),
+                    ]),
+                Section::make('Checkliste')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('checklist_items')
+                            ->hiddenLabel()
+                            ->state(fn (Event $record): array => self::checklistItems($record->checklist))
+                            ->listWithLineBreaks()
+                            ->placeholder('Nichts erfasst'),
                     ]),
                 Section::make('Halle')
                     ->columnSpanFull()

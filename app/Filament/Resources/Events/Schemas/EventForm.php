@@ -55,7 +55,7 @@ class EventForm
     ];
 
     /** Planungsprüfungen aus der PHP-Version (dort „Hands geplant?“ usw.). */
-    private const CHECKS = [
+    public const CHECKS = [
         'hands' => 'Hands',
         'traffic' => 'Verkehrsposten',
         'pvc_setup' => 'PVC Aufbau',
@@ -69,7 +69,7 @@ class EventForm
         'merch_fee_check' => 'Merch-Fee eingesammelt',
     ];
 
-    private const CHECK_OPTIONS = ['yes' => 'ja', 'no' => 'nein', 'na' => 'entfällt'];
+    public const CHECK_OPTIONS = ['yes' => 'ja', 'no' => 'nein', 'na' => 'entfällt'];
 
     public static function configure(Schema $schema): Schema
     {

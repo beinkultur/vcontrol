@@ -64,6 +64,8 @@ Bedienbar:
   (17×) und „sonst. Podeste“ (12×), die die PHP-Version nicht mehr zeigt,
   erscheinen schreibgeschützt. Der Sold-Out-Award (auch Bühnen-Tabelle) steht
   in der Durchführung, ja/nein/leer wie in der PHP-Version.
+- **Detailansicht** (nur lesen): Kerndaten, Zeiten, Finanzen (mit Recht),
+  Rollen mit Uhrzeit, Räume, Leistungen, Bühne, Checkliste, Sold-Out-Award.
 - **Buchhaltung** mit Offen/Abgeschlossen/Alle/Endabrechnung/Archiv und
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version.
 

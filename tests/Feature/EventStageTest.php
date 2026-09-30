@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\ManageVenue;
+use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Models\Event;
 use App\Models\EventStage;
@@ -97,6 +98,21 @@ class EventStageTest extends TestCase
 
         $this->assertFalse($stage->fresh()->sold_out_award);
         $this->assertSame(1, EventStage::query()->count());
+    }
+
+    public function test_detailansicht_zeigt_buehne_checkliste_und_award(): void
+    {
+        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()]);
+        $event->stage()->create(['width' => 20, 'depth' => 10, 'height' => 1.0, 'sold_out_award' => true]);
+        $event->checklist()->create(['hands' => 'yes', 'traffic' => 'na', 'house_rig_early' => true]);
+
+        $this->get(EventResource::getUrl('view', ['record' => $event]))
+            ->assertOk()
+            ->assertSeeInOrder(['20×10 H1 106P', '20 Podeste über dem Bestand von 86'])
+            ->assertSee('Hands: ja')
+            ->assertSee('Verkehrsposten: entfällt')
+            ->assertSee('Haus-Rig ab 7 Uhr')
+            ->assertDontSee('Reinigung:');
     }
 
     public function test_kurzform_in_der_liste(): void
