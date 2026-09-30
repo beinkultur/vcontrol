@@ -27,6 +27,17 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   Gedächtnis von Version 3 schreiben: Version 5 hat andere Namespaces
   (`Filament\Schemas\…`, `Filament\Actions\…`).
 
+## Tests
+
+- `php artisan test` (und `php85 artisan test`) auf dem Server: PHPUnit gegen
+  SQLite im Speicher, ~2 Sekunden. `tests/TestCase.php` bricht ab, falls die
+  Verbindung nicht SQLite im Speicher ist – RefreshDatabase würde sonst echte
+  Daten löschen.
+- Filament-Dialoge mit `Livewire::test(...)->callAction(...)` prüfen. Nach
+  abgelehnter Eingabe bleibt der Dialog offen: für den nächsten Aufruf eine
+  frische Komponente nehmen. `fillForm()` wirkt nur mit APP_ENV=testing.
+- Nach jeder Änderung: Tests grün, `php artisan vc:check-access` gleich.
+
 ## Rechte
 
 - Bereiche und Stufen: `App\Access\Area`, `App\Access\Level`; was ein Benutzer darf:
