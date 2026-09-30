@@ -10,6 +10,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -21,6 +22,9 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 /**
  * Der interne Arbeitsbereich. Er ist die App selbst und liegt deshalb ohne
  * Pfadpräfix unter / – Anmeldung unter /login wie in der PHP-Version.
+ *
+ * Navigation oben und keine Breitenbegrenzung: Die Listen brauchen die ganze
+ * Seitenbreite.
  */
 class AppPanelProvider extends PanelProvider
 {
@@ -36,6 +40,8 @@ class AppPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->spa()
+            ->topNavigation()
+            ->maxContentWidth(Width::Full)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
