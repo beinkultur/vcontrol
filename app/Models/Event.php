@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\RoomUsage;
 use App\Support\EventNumber;
+use App\Support\IncomingInvoices;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Event extends Model
 {
     public const STATUS_CANCELLED = 'storniert';
+
+    /** FIBU-Status, der ein Event aus der normalen Buchhaltungsliste nimmt. */
+    public const ACCOUNTING_FINAL = 'Endabrechnung gestellt';
 
     protected static function booted(): void
     {
@@ -154,5 +158,46 @@ class Event extends Model
     public function scopePast(Builder $query): void
     {
         $query->whereDate('starts_at', '<', today());
+    }
+
+    /** FIBU-Status enthält „Endabrechnung gestellt“. */
+    public function scopeFinalInvoiced(Builder $query, bool $final = true): void
+    {
+        $method = $final ? 'whereHas' : 'whereDoesntHave';
+        $query->{$method}('finance', fn (Builder $f) => $f->whereJsonContains('accounting_status', self::ACCOUNTING_FINAL));
+    }
+
+    /** Schalter „Abrechnung abgeschlossen“. */
+    public function scopeAccountingClosed(Builder $query, bool $closed = true): void
+    {
+        $method = $closed ? 'whereHas' : 'whereDoesntHave';
+        $query->{$method}('finance', fn (Builder $f) => $f->where('accounting_closed', true));
+    }
+
+    /**
+     * Alle aktiven Eingangsrechnungen sind da. Gleiche Regel wie
+     * App\Support\IncomingInvoices: gespeicherter Eintrag gewinnt, ohne Eintrag
+     * sind Mobiliar (bei „bestuhlt“) und Haus-Delay automatisch aktiv.
+     */
+    public function scopeIncomingInvoicesSettled(Builder $query): void
+    {
+        $stored = fn (string $key) => fn (Builder $i) => $i->where('invoice_key', $key);
+
+        $query
+            ->whereDoesntHave('incomingInvoices', fn (Builder $i) => $i->where('is_active', true)->where('is_received', false))
+            ->where(fn (Builder $q) => $q
+                ->whereNull('seating')
+                ->orWhereJsonDoesntContain('seating', IncomingInvoices::SEATING_TRIGGER)
+                ->orWhereHas('incomingInvoices', $stored('mobiliar_stuehle')))
+            ->where(fn (Builder $q) => $q
+                ->whereDoesntHave('operation', fn (Builder $o) => $o->where('house_delay', true))
+                ->orWhereHas('incomingInvoices', $stored('cobra_hausdelay')));
+    }
+
+    /** Archivreif: abgeschlossen und alle aktiven Eingangsrechnungen da. */
+    public function scopeArchiveReady(Builder $query, bool $ready = true): void
+    {
+        $condition = fn (Builder $q) => $q->accountingClosed()->incomingInvoicesSettled();
+        $ready ? $query->where($condition) : $query->whereNot($condition);
     }
 }
