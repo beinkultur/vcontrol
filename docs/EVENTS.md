@@ -47,17 +47,29 @@ Bestellscheine, Übergabeprotokolle, Ablaufplan (`vc_event_attachments`).
 Rollen, Raumbelegung, Eingangsrechnungen, Gästeliste, Notizen.
 
 Bedienbar:
-- **Event-Liste** wie in der PHP-Version (offen/ab heute voreingestellt).
-- **Workspace** Buchung (Stammdaten, Finanzen, Eingangsrechnungen, PR),
-  Planung (Halle, Bühne, Zeiten, Räume, Rollen, Leistungen, Checkliste),
-  Durchführung (Betrieb, Abschluss). VA-NR/VA-ID beim Anlegen. Notizen
-  (Betreff, Text, Verfasser und letzter Bearbeiter) und Gästeliste als
-  eingebettete Tabellen; die Gästeliste mit Druckansicht für den Einlass
-  (A4, nach Name sortiert, Summe, Spalte zum Abhaken). Die Checkliste zeigt die PHP-Version nur als
+- **Event-Liste** wie in der PHP-Version: Spalten Datum, Status, Veranstaltung
+  (rotes ! bei Finanz-Warnung), Veranstalter, VA-Kat., PL, PAX, Bestuhlung (🪑),
+  Bühne, VA-ID, Fortschritt Buchung/Planung; nach Monaten gruppiert, schmale
+  Zeilen, fraglich/abgesagt/vergangen farbig markiert. Filter Status, Zeitraum,
+  Jahr, Veranstalter (voreingestellt offen und zukünftig). Ein Klick öffnet
+  das Event – zum Bearbeiten, wer darf, sonst nur lesend.
+- **Workspace** wie in der PHP-Version: Kopf mit Datum · Veranstalter · VA-ID ·
+  Status, Reiter Übersicht | Buchung | Planung | Durchführung mit Fortschritt.
+  Die Übersicht ist das Dashboard (Finanz-Warnung, Phasen-Karten mit
+  Stichpunkten, Stammdaten, Planungsbereiche, Notizen). Unterbereiche als
+  eigene Reiter: Buchung › Daten | Buchhaltung | PR, Planung › Zeiten |
+  Checkliste | Bühne | Personal | Gewerke | Gästeliste | Sonstiges,
+  Durchführung › Betrieb. Die Reiter stehen in der URL
+  (`?phase=planung&bereich=buehne`). Leserollen sehen denselben Workspace nur
+  lesend – ohne Buchhaltung (fehlt ganz, nicht nur ausgeblendet) und ohne
+  WLAN-Passwort, wie in der PHP-Version. Neu anlegen: nur die Daten, danach
+  geht es in den Workspace. Die Checkliste zeigt die PHP-Version nur als
   Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar.
+- Gästeliste mit Druckansicht für den Einlass (A4, nach Name sortiert, Summe,
+  Spalte zum Abhaken).
 - **Bühne:** Maße, Wings, Rollipodest, Höhe und die Podest-Rechnung wie in
-  der PHP-Version; in der Event-Liste die Kurzform „14×8 H1,4 62P“ (rot bei
-  anderer Höhe als 1,4 m oder mehr Podeste als im Bestand). Bestand (86) und
+  der PHP-Version; in der Event-Liste die Kurzform „14×8 H1,4 62P“ (gelb bei
+  anderer Höhe als 1,4 m, rot bei mehr Podesten als im Bestand). Bestand (86) und
   Mietanteil (62) stellt jede Halle unter „Halle“ ein. Die Summe wird nur neu
   berechnet, wenn sich ein Maß ändert – die Summen aus AppSheet bleiben sonst
   stehen (mit allen 239 Zeilen geprüft). Die AppSheet-Felder „Anmerkungen“

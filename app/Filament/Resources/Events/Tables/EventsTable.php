@@ -4,22 +4,31 @@ namespace App\Filament\Resources\Events\Tables;
 
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
+use App\Support\EventDisplay;
 use App\Support\StagePodests;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Support\Enums\FontFamily;
-use Filament\Tables\Columns\IconColumn;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-/** Wie die Event-Liste der PHP-Version: voreingestellt offen und ab heute. */
+/**
+ * Die Event-Liste – Herzstück der App. Spalten, Reihenfolge und Filter wie in
+ * der PHP-Version: nach Monaten gruppiert, voreingestellt offen und ab heute,
+ * schmale Zeilen (Stil in public/css/vcontrol.css), ein Klick öffnet das Event.
+ */
 class EventsTable
 {
-    public const TIME_OPTIONS = ['future' => 'Ab heute', 'past' => 'Vergangen', 'all' => 'Alle'];
+    public const STATE_OPTIONS = ['open' => 'Offen', 'closed' => 'Abgeschlossen', 'all' => 'Alle'];
+
+    public const TIME_OPTIONS = ['future' => 'Zukünftige', 'past' => 'Vergangene', 'all' => 'Alle'];
 
     public static function configure(Table $table): Table
     {
@@ -27,58 +36,107 @@ class EventsTable
             ->columns([
                 TextColumn::make('starts_at')
                     ->label('Datum')
-                    ->date('D, d.m.Y')
-                    ->description(fn (Event $record): ?string => $record->starts_at?->format('H:i') === '00:00' ? null : $record->starts_at?->format('H:i') . ' Uhr')
-                    ->color(fn (Event $record): ?string => $record->isOverdue() ? 'danger' : null)
-                    ->tooltip(fn (Event $record): ?string => $record->isOverdue() ? 'Vergangen, aber noch nicht abgeschlossen' : null)
-                    ->sortable(),
-                TextColumn::make('title')
-                    ->label('Titel')
-                    ->description(fn (Event $record): ?string => $record->promoter?->name)
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('va_id')
-                    ->label('VA-ID')
-                    ->fontFamily(FontFamily::Mono)
-                    ->searchable(),
+                    ->formatStateUsing(fn (Event $record): string => EventDisplay::weekday($record->starts_at) . ' ' . $record->starts_at->format('d.m.')
+                        . (EventDisplay::isMultiDay($record) ? ' 📅' : ''))
+                    ->tooltip(fn (Event $record): ?string => EventDisplay::isMultiDay($record) ? 'Mehrtägig bis ' . $record->ends_at->format('d.m.Y') : null)
+                    ->placeholder('–'),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
-                        Event::STATUS_CANCELLED => 'danger',
-                        'bestätigt' => 'success',
+                    ->formatStateUsing(fn (?string $state): string => EventDisplay::statusLabel($state))
+                    ->color(fn (?string $state): string => match (EventDisplay::statusKind($state)) {
+                        'fraglich' => 'warning',
+                        'cancelled' => 'danger',
                         default => 'gray',
                     }),
-                TextColumn::make('event_type1')
-                    ->label('Kategorie')
-                    ->description(fn (Event $record): ?string => $record->event_type2)
-                    ->toggleable(),
-                TextColumn::make('seating')
-                    ->label('Bestuhlung')
-                    ->badge()
-                    ->color('gray')
-                    ->toggleable(),
+                TextColumn::make('title')
+                    ->label('Veranstaltung')
+                    ->limit(40)
+                    ->tooltip(fn (Event $record): ?string => mb_strlen((string) $record->title) > 40 ? $record->title : null)
+                    ->icon(fn (Event $record): ?Heroicon => $record->hasFinanceAlert() ? Heroicon::ExclamationCircle : null)
+                    ->iconColor('danger')
+                    ->weight(FontWeight::Medium)
+                    ->searchable(),
+                TextColumn::make('promoter_short')
+                    ->label('Veranstalter')
+                    ->state(fn (Event $record): ?string => EventDisplay::promoterShort($record))
+                    ->tooltip(fn (Event $record): ?string => $record->promoter?->name)
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
+                        'promoter',
+                        fn (Builder $promoter): Builder => $promoter->where('name', 'like', "%{$search}%")->orWhere('short_name', 'like', "%{$search}%"),
+                    )),
+                TextColumn::make('category')
+                    ->label('VA-Kat.')
+                    ->state(fn (Event $record): ?string => $record->event_type2 ?: $record->event_type1)
+                    ->tooltip(fn (Event $record): ?string => collect([$record->event_type1, $record->event_type2])->filter()->implode(' / ') ?: null)
+                    ->color('gray'),
+                TextColumn::make('project_lead')
+                    ->label('PL')
+                    ->state(fn (Event $record): ?string => EventDisplay::projectLeadShort($record))
+                    ->tooltip(fn (Event $record): ?string => EventDisplay::projectLeadName($record)),
+                TextColumn::make('pax_expected')
+                    ->label('PAX')
+                    ->numeric(thousandsSeparator: '.')
+                    ->alignEnd(),
+                TextColumn::make('seated')
+                    ->label('Best.')
+                    ->state(fn (Event $record): ?string => EventDisplay::fullySeated($record) ? '🪑' : null)
+                    ->tooltip(fn (Event $record): ?string => EventDisplay::fullySeated($record) ? 'Bestuhlt – Stühle extern anmieten' : null)
+                    ->alignCenter(),
+                // Wie in der PHP-Version: gelb bei anderer Höhe als 1,4 m, rot bei mehr Podesten als im Bestand
                 TextColumn::make('stage_summary')
                     ->label('Bühne')
                     ->state(fn (Event $record): string => StagePodests::summary($record->stage)['text'])
-                    ->color(fn (Event $record): ?string => StagePodests::summary($record->stage)['alert'] ? 'danger' : null)
-                    ->tooltip('Maße, Höhe, Podeste – rot: andere Höhe als 1,4 m oder mehr Podeste als im Bestand')
-                    ->toggleable(),
-                TextColumn::make('pax_expected')
-                    ->label('PAX erw.')
-                    ->numeric(thousandsSeparator: '.')
-                    ->alignEnd()
-                    ->toggleable(),
-                IconColumn::make('closed')
-                    ->label('Abgeschl.')
-                    ->boolean()
-                    ->alignCenter(),
+                    ->badge(fn (Event $record): bool => StagePodests::summary($record->stage)['alert'])
+                    ->color(fn (Event $record): string => match (true) {
+                        StagePodests::summary($record->stage)['podests'] => 'danger',
+                        StagePodests::summary($record->stage)['height'] => 'warning',
+                        default => 'gray',
+                    })
+                    ->tooltip('Breite × Tiefe, Höhe, Podeste'),
+                TextColumn::make('va_id')
+                    ->label('VA-ID')
+                    ->fontFamily(FontFamily::Mono)
+                    ->color('gray')
+                    ->searchable(),
+                ViewColumn::make('progress')
+                    ->label('Fortschritt')
+                    ->view('filament.events.list-progress'),
             ])
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['promoter', 'stage']))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with([
+                'promoter', 'finance', 'pr', 'schedule', 'checklist', 'stage', 'services', 'assignments.assignee',
+            ]))
+            ->defaultGroup(
+                Group::make('month')
+                    ->label('Monat')
+                    ->titlePrefixedWithLabel(false)
+                    ->getKeyFromRecordUsing(fn (Event $record): string => $record->starts_at?->format('Y-m') ?? '')
+                    ->getTitleFromRecordUsing(fn (Event $record): string => $record->starts_at ? EventDisplay::month($record->starts_at) : 'Ohne Datum')
+                    ->orderQueryUsing(fn (Builder $query, string $direction): Builder => $query->orderBy('starts_at', $direction)),
+            )
+            ->groupingSettingsHidden()
             ->defaultSort(fn (Builder $query): Builder => $query->orderBy('starts_at')->orderBy('title'))
+            ->recordClasses(fn (Event $record): array => [
+                'vc-row--fraglich' => EventDisplay::statusKind($record->status) === 'fraglich',
+                'vc-row--cancelled' => EventDisplay::statusKind($record->status) === 'cancelled',
+                'vc-row--past' => $record->starts_at?->lt(today()) ?? false,
+            ])
+            ->recordUrl(fn (Event $record): string => EventResource::getUrl(EventResource::canEdit($record) ? 'edit' : 'view', ['record' => $record]))
             ->filters([
+                Filter::make('state')
+                    ->schema([
+                        Select::make('state')
+                            ->label('Status')
+                            ->options(self::STATE_OPTIONS)
+                            ->default('open')
+                            ->selectablePlaceholder(false),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['state'] ?? 'open') {
+                        'closed' => $query->where('closed', true),
+                        'all' => $query,
+                        default => $query->where('closed', false),
+                    }),
                 Filter::make('time')
-                    ->label('Zeitraum')
                     ->schema([
                         Select::make('time')
                             ->label('Zeitraum')
@@ -90,30 +148,27 @@ class EventsTable
                         'past' => $query->whereDate('starts_at', '<', today()),
                         'all' => $query,
                         default => $query->whereDate('starts_at', '>=', today()),
-                    })
-                    ->indicateUsing(fn (array $data): ?string => ($data['time'] ?? 'future') === 'all' ? null : self::TIME_OPTIONS[$data['time'] ?? 'future']),
+                    }),
                 SelectFilter::make('year')
                     ->label('Jahr')
+                    ->placeholder('Alle')
                     ->options(fn (): array => self::years())
                     ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
                         ? $query->whereYear('starts_at', (int) $data['value'])
                         : $query),
                 SelectFilter::make('promoter')
                     ->label('Veranstalter')
+                    ->placeholder('Alle')
                     ->relationship('promoter', 'name')
                     ->searchable()
                     ->preload(),
-                SelectFilter::make('status')
-                    ->label('Status')
-                    ->options(fn (): array => Event::query()->whereNotNull('status')->distinct()->orderBy('status')->pluck('status', 'status')->all()),
-            ])
-            ->paginated([25, 50, 100])
-            ->defaultPaginationPageOption(50)
-            ->recordActions([
-                // Ansehen nur für Leserollen – wer bearbeiten darf, landet im Workspace
-                ViewAction::make()->hidden(fn (Event $record): bool => EventResource::canEdit($record)),
-                EditAction::make(),
-            ]);
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(4)
+            ->deferFilters(false)
+            ->hiddenFilterIndicators()
+            ->paginated([50, 100, 'all'])
+            ->defaultPaginationPageOption(100)
+            ->emptyStateHeading('Keine Events für diese Filter');
     }
 
     /**

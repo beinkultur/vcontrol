@@ -21,14 +21,21 @@ final class AssignmentFields
 {
     private const TYPES = ['employee', 'trade', 'user'];
 
-    /** @return list<Grid> Je Rolle eine Zeile: wer, von, bis. */
-    public static function all(): array
+    /**
+     * Je Rolle eine Zeile: wer, von, bis.
+     *
+     * @param  list<AssignmentRole>  $except  Rollen, die woanders stehen (Projektleitung unter Buchung › Daten)
+     * @return list<Grid>
+     */
+    public static function all(array $except = []): array
     {
-        return array_map(fn (AssignmentRole $role): Grid => Grid::make(4)->schema([
-            self::field($role)->columnSpan(2),
+        $roles = array_filter(AssignmentRole::cases(), fn (AssignmentRole $role): bool => !in_array($role, $except, true));
+
+        return array_values(array_map(fn (AssignmentRole $role): Grid => Grid::make(4)->schema([
+            self::select($role)->columnSpan(2),
             self::time($role, 'starts_at', 'von'),
             self::time($role, 'ends_at', 'bis'),
-        ]), AssignmentRole::cases());
+        ]), $roles));
     }
 
     /** Uhrzeit der Rolle; gespeichert zusammen mit der Zuordnung, ohne sie leer. */
@@ -44,7 +51,8 @@ final class AssignmentFields
             ->dehydrated(false);
     }
 
-    private static function field(AssignmentRole $role): Select
+    /** Nur die Auswahl, ohne Uhrzeiten – für die Projektleitung unter Buchung › Daten. */
+    public static function select(AssignmentRole $role): Select
     {
         return Select::make('role_' . $role->value)
             ->label($role->getLabel())

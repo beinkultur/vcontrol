@@ -4,7 +4,10 @@ namespace App\Filament\Resources\Events\Schemas;
 
 use App\Access\Area;
 use App\Access\Level;
+use App\Enums\AssignmentRole;
 use App\Enums\OptionField;
+use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
 use App\Filament\Support\AssignmentFields;
 use App\Filament\Support\IncomingInvoiceFields;
 use App\Filament\Support\OptionChoices;
@@ -14,6 +17,7 @@ use App\Models\Event;
 use App\Models\EventFinance;
 use App\Models\EventPr;
 use App\Models\EventStage;
+use App\Support\EventProgress;
 use App\Support\StagePodests;
 use App\Models\User;
 use Filament\Forms\Components\CheckboxList;
@@ -28,17 +32,21 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Livewire;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Event-Workspace, erste Ausbaustufe: Kerndaten und 1:1-Zusatzdaten in den drei
- * Phasen der PHP-Version. Listen (Leistungen, Rollen, Räume) folgen.
+ * Event-Workspace wie in der PHP-Version: Übersicht (Dashboard) und die drei
+ * Phasen, darin die Unterbereiche als eigene Reiter. Reiter stehen in der URL
+ * (?phase=planung&bereich=buehne), damit das Dashboard direkt hineinspringt.
  */
 class EventForm
 {
@@ -73,84 +81,184 @@ class EventForm
 
     public static function configure(Schema $schema): Schema
     {
+        // Neu anlegen wie in der PHP-Version: nur die Daten der Buchung. Den
+        // Workspace mit Übersicht und Phasen gibt es, sobald das Event existiert.
+        if ($schema->getOperation() === 'create') {
+            return $schema
+                ->columns(1)
+                ->components([
+                    Section::make('Daten')->columns(3)->schema(self::bookingData()),
+                ]);
+        }
+
         return $schema
             ->columns(1)
             ->components([
                 Tabs::make('Phasen')
-                    ->persistTabInQueryString()
+                    ->persistTabInQueryString('phase')
                     ->tabs([
-                        Tab::make('Buchung')->schema(self::booking()),
-                        Tab::make('Planung')->schema(self::planning()),
-                        Tab::make('Durchführung')->schema(self::execution()),
+                        Tab::make('Übersicht')
+                            ->id('uebersicht')
+                            ->icon(Heroicon::OutlinedHome)
+                            ->schema([
+                                View::make('filament.events.dashboard')
+                                    ->viewData(fn (Event $record, $livewire): array => [
+                                        'event' => $record,
+                                        'pageUrl' => $livewire::getUrl(['record' => $record]),
+                                    ]),
+                                self::embedded(NotesRelationManager::class),
+                            ]),
+                        self::phase('Buchung', 'buchung')->schema([
+                            self::sections(array_values(array_filter([
+                                Tab::make('Daten')
+                                    ->id('daten')
+                                    ->schema([Section::make()->columns(3)->schema(self::bookingData())]),
+                                // Nur mit Recht auf die Buchhaltung, bearbeiten nur mit Schreibrecht dort.
+                                // Nicht bloß ausgeblendet: Filament füllt auch verborgene Abschnitte,
+                                // die Finanzdaten stünden sonst im Seitenquelltext.
+                                self::can(Area::Buchhaltung)
+                                    ? Tab::make('Buchhaltung')->id('buchhaltung')->schema(self::accounting())
+                                    : null,
+                                Tab::make('PR')
+                                    ->id('pr')
+                                    ->schema([self::pr()]),
+                            ]))),
+                        ]),
+                        self::phase('Planung', 'planung')->schema([
+                            self::sections([
+                                Tab::make('Zeiten')->id('zeiten')->schema([self::times()]),
+                                Tab::make('Checkliste')->id('checkliste')->schema([self::checklist()]),
+                                Tab::make('Bühne')->id('buehne')->schema([self::stage()]),
+                                Tab::make('Personal')->id('personal')->schema([
+                                    Section::make()
+                                        ->columns(2)
+                                        ->schema(AssignmentFields::all(except: [AssignmentRole::ProjectLead])),
+                                ]),
+                                Tab::make('Gewerke')->id('gewerke')->schema([
+                                    Section::make()
+                                        ->description('Wer die Leistung stellt, welches Gewerk oder welcher Anbieter. Leer heißt: nicht festgelegt.')
+                                        ->schema(ServiceFields::all()),
+                                ]),
+                                Tab::make('Gästeliste')->id('gaeste')->schema([self::embedded(GuestsRelationManager::class)]),
+                                Tab::make('Sonstiges')->id('sonstiges')->schema([self::other()]),
+                            ]),
+                        ]),
+                        // In der PHP-Version dazu Übergabe, Bestellscheine, Checklisten, Schäden – noch nicht portiert
+                        self::phase('Durchführung', 'durchfuehrung')->schema(self::execution()),
                     ]),
             ]);
     }
 
-    /** @return list<Section> */
-    private static function booking(): array
+    /** Phase mit ihrem Fortschritt als Zahl am Reiter. */
+    private static function phase(string $label, string $id): Tab
+    {
+        return Tab::make($label)
+            ->id($id)
+            ->badge(fn (?Event $record): ?string => $record ? EventProgress::phases($record)[$id] . ' %' : null);
+    }
+
+    /** @param  list<Tab>  $tabs  Unterbereiche einer Phase */
+    private static function sections(array $tabs): Tabs
+    {
+        return Tabs::make('Bereiche')
+            ->persistTabInQueryString('bereich')
+            ->contained(false)
+            ->tabs($tabs);
+    }
+
+    /** Relation Manager als Teil eines Reiters, in der Detailansicht nur lesend. */
+    private static function embedded(string $relationManager): Livewire
+    {
+        return Livewire::make($relationManager, fn (Event $record, $livewire): array => [
+            'ownerRecord' => $record,
+            'pageClass' => $livewire::class,
+        ]);
+    }
+
+    /** Buchung › Daten wie in der PHP-Version; auch das Formular zum Anlegen. */
+    private static function bookingData(): array
     {
         return [
-            Section::make('Stammdaten')
-                ->columns(2)
-                ->schema([
-                    TextInput::make('title')
-                        ->label('Titel')
-                        ->required()
-                        ->maxLength(255)
-                        ->columnSpanFull(),
-                    Select::make('promoter_id')
-                        ->label('Veranstalter')
-                        ->relationship('promoter', 'name', fn ($query) => $query->where('is_archived', false)->orderBy('name'))
-                        ->searchable()
-                        ->preload()
-                        ->helperText('Die VA-ID setzt sich aus seiner Kundennummer und der laufenden Nummer zusammen.'),
-                    Select::make('status')
-                        ->label('VA-Status')
-                        ->options(fn (?Event $record): array => OptionChoices::for(OptionField::VaStatus, $record?->status))
-                        ->native(false),
-                    DateTimePicker::make('starts_at')
-                        ->label('Beginn')
-                        ->required()
-                        ->seconds(false),
-                    DateTimePicker::make('ends_at')
-                        ->label('Ende')
-                        ->seconds(false)
-                        ->afterOrEqual('starts_at'),
-                    Select::make('event_type1')
-                        ->label('Kategorie 1')
-                        ->options(fn (?Event $record): array => OptionChoices::for(OptionField::VaType1, $record?->event_type1))
-                        ->live()
-                        ->afterStateUpdated(fn (Set $set) => $set('event_type2', null))
-                        ->native(false),
-                    Select::make('event_type2')
-                        ->label('Kategorie 2')
-                        ->options(fn (Get $get, ?Event $record): array => OptionChoices::for(OptionField::VaType2, $record?->event_type2, $get('event_type1')))
-                        ->native(false),
-                    TextInput::make('va_nr')
-                        ->label('Laufende Nummer')
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->placeholder('wird beim Anlegen vergeben'),
-                    TextInput::make('va_id')
-                        ->label('VA-ID')
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->placeholder('wird beim Anlegen vergeben'),
-                    Textarea::make('description')
-                        ->label('Beschreibung')
-                        ->rows(3)
-                        ->columnSpanFull(),
-                    Textarea::make('booking_notes')
-                        ->label('Interne Buchungsnotizen')
-                        ->rows(3)
-                        ->columnSpanFull(),
-                ]),
-            // Finanzen nur mit Recht auf die Buchhaltung, bearbeiten nur mit Schreibrecht dort.
-            // In Abschnitten mit relationship() ist $record das zugehörige Modell, nicht das Event.
+            TextInput::make('title')
+                ->label('Titel')
+                ->required()
+                ->maxLength(255)
+                ->columnSpanFull(),
+            DateTimePicker::make('starts_at')
+                ->label('Beginn')
+                ->required()
+                ->seconds(false),
+            DateTimePicker::make('ends_at')
+                ->label('Ende')
+                ->seconds(false)
+                ->afterOrEqual('starts_at'),
+            Select::make('status')
+                ->label('VA-Status')
+                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::VaStatus, $record?->status))
+                ->native(false),
+            Select::make('promoter_id')
+                ->label('Veranstalter')
+                ->relationship('promoter', 'name', fn ($query) => $query->where('is_archived', false)->orderBy('name'))
+                ->searchable()
+                ->preload(),
+            AssignmentFields::select(AssignmentRole::ProjectLead),
+            Toggle::make('closed')
+                ->label('Event abgeschlossen')
+                ->inline(false)
+                ->hiddenOn('create'),
+            Select::make('event_type1')
+                ->label('Kategorie 1')
+                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::VaType1, $record?->event_type1))
+                ->live()
+                ->afterStateUpdated(fn (Set $set) => $set('event_type2', null))
+                ->native(false),
+            Select::make('event_type2')
+                ->label('Kategorie 2')
+                ->options(fn (Get $get, ?Event $record): array => OptionChoices::for(OptionField::VaType2, $record?->event_type2, $get('event_type1')))
+                ->native(false),
+            Select::make('ticketing')
+                ->label('Ticketing')
+                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Ticketing, $record?->ticketing))
+                ->native(false),
+            TextInput::make('va_id')
+                ->label('VA-ID')
+                ->disabled()
+                ->dehydrated(false)
+                ->placeholder('wird beim Anlegen vergeben'),
+            TextInput::make('va_nr')
+                ->label('Laufende Nummer')
+                ->disabled()
+                ->dehydrated(false)
+                ->placeholder('wird beim Anlegen vergeben'),
+            TextInput::make('pax_expected')
+                ->label('PAX erwartet')
+                ->numeric()
+                ->minValue(0),
+            CheckboxList::make('areas')
+                ->label('Bereiche')
+                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Areas, $record?->areas)),
+            CheckboxList::make('seating')
+                ->label('Bestuhlung')
+                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Seating, $record?->seating)),
+            Textarea::make('booking_notes')
+                ->label('Interne Buchungsnotizen')
+                ->rows(3)
+                ->columnSpanFull(),
+        ];
+    }
+
+    /**
+     * Buchung › Buchhaltung. In Abschnitten mit relationship() ist $record das
+     * zugehörige Modell, nicht das Event.
+     *
+     * @return list<Section>
+     */
+    private static function accounting(): array
+    {
+        return [
             Section::make('Finanzen')
                 ->relationship('finance')
                 ->columns(2)
-                ->visible(fn (): bool => self::can(Area::Buchhaltung))
                 ->disabled(fn (): bool => !self::can(Area::Buchhaltung, Level::Edit))
                 ->schema([
                     Select::make('contract_status')
@@ -178,102 +286,87 @@ class EventForm
             Section::make('Eingangsrechnungen')
                 ->description('Welche Rechnungen von Dienstleistern erwartet werden und ob sie da sind. Mobiliar ist bei „bestuhlt“ automatisch erwartet, Cobra – Haus-Delay bei Haus-Delay.')
                 ->columns(3)
-                ->visible(fn (?Event $record): bool => $record !== null && self::can(Area::Buchhaltung))
                 ->disabled(fn (): bool => !self::can(Area::Buchhaltung, Level::Edit))
                 ->schema(IncomingInvoiceFields::all()),
-            Section::make('PR')
-                ->relationship('pr')
-                ->columns(2)
-                ->schema([
-                    DatePicker::make('pr_date')
-                        ->label('PR-Datum'),
-                    Select::make('pr_status')
-                        ->label('PR-Status')
-                        ->options(fn (?EventPr $record): array => OptionChoices::for(OptionField::PrStatus, $record?->pr_status))
-                        ->native(false),
-                ]),
         ];
     }
 
-    /** @return list<Section> */
-    private static function planning(): array
+    private static function pr(): Section
     {
-        return [
-            Section::make('Halle')
-                ->columns(3)
-                ->schema([
-                    CheckboxList::make('areas')
-                        ->label('Bereiche')
-                        ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Areas, $record?->areas)),
-                    CheckboxList::make('seating')
-                        ->label('Bestuhlung')
-                        ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Seating, $record?->seating)),
-                    Select::make('ticketing')
-                        ->label('Ticketing')
-                        ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Ticketing, $record?->ticketing))
-                        ->native(false),
-                    TextInput::make('pax_expected')
-                        ->label('PAX erwartet')
-                        ->numeric()
-                        ->minValue(0),
-                    TextInput::make('onsite_contact')
-                        ->label('Ansprechpartner vor Ort')
-                        ->maxLength(120),
-                    TextInput::make('wlan')
-                        ->label('WLAN')
-                        ->maxLength(120),
-                    TextInput::make('wlan_password')
-                        ->label('WLAN-Passwort')
-                        ->maxLength(120),
-                ]),
-            self::stage(),
-            Section::make('Zeiten')
-                ->relationship('schedule')
-                ->columns(4)
-                ->schema(array_map(
-                    fn (string $field, string $label): TimePicker => TimePicker::make($field)->label($label)->seconds(false),
-                    array_keys(self::TIMES),
-                    self::TIMES,
-                )),
-            Section::make('Räume')
-                ->columns(2)
-                ->schema([
-                    self::roomField('backstageRooms', 'Backstage'),
-                    self::roomField('officeRooms', 'Büros'),
-                ]),
-            Section::make('Rollen am Event')
-                ->columns(2)
-                ->collapsible()
-                ->schema(AssignmentFields::all()),
-            Section::make('Leistungen')
-                ->description('Wer die Leistung stellt, welches Gewerk oder welcher Anbieter. Leer heißt: nicht festgelegt.')
-                ->collapsible()
-                ->schema(ServiceFields::all()),
-            Section::make('Checkliste')
-                ->relationship('checklist')
-                ->columns(3)
-                ->collapsible()
-                ->schema([
-                    ...array_map(
-                        fn (string $field, string $label): ToggleButtons => ToggleButtons::make($field)
-                            ->label($label)
-                            ->options(self::CHECK_OPTIONS)
-                            ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
-                            ->grouped(),
-                        array_keys(self::CHECKS),
-                        self::CHECKS,
-                    ),
-                    TextInput::make('merch_fee')
-                        ->label('Merch-Fee')
-                        ->maxLength(120),
-                    Toggle::make('power_ant')
-                        ->label('Miete Elektro-Ameise'),
-                    Toggle::make('house_rig_early')
-                        ->label('Haus-Rig ab 7 Uhr'),
-                    Toggle::make('briefing_complete')
-                        ->label('Briefing vollständig'),
-                ]),
-        ];
+        return Section::make()
+            ->relationship('pr')
+            ->columns(2)
+            ->schema([
+                DatePicker::make('pr_date')
+                    ->label('PR-Datum'),
+                Select::make('pr_status')
+                    ->label('PR-Status')
+                    ->options(fn (?EventPr $record): array => OptionChoices::for(OptionField::PrStatus, $record?->pr_status))
+                    ->native(false),
+            ]);
+    }
+
+    private static function times(): Section
+    {
+        return Section::make()
+            ->relationship('schedule')
+            ->columns(4)
+            ->schema(array_map(
+                fn (string $field, string $label): TimePicker => TimePicker::make($field)->label($label)->seconds(false),
+                array_keys(self::TIMES),
+                self::TIMES,
+            ));
+    }
+
+    private static function checklist(): Section
+    {
+        return Section::make()
+            ->relationship('checklist')
+            ->columns(3)
+            ->schema([
+                ...array_map(
+                    fn (string $field, string $label): ToggleButtons => ToggleButtons::make($field)
+                        ->label($label)
+                        ->options(self::CHECK_OPTIONS)
+                        ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
+                        ->grouped(),
+                    array_keys(self::CHECKS),
+                    self::CHECKS,
+                ),
+                TextInput::make('merch_fee')
+                    ->label('Merch-Fee')
+                    ->maxLength(120),
+                Toggle::make('power_ant')
+                    ->label('Miete Elektro-Ameise'),
+                Toggle::make('house_rig_early')
+                    ->label('Haus-Rig ab 7 Uhr'),
+                Toggle::make('briefing_complete')
+                    ->label('Briefing vollständig'),
+            ]);
+    }
+
+    /** Planung › Sonstiges: in der PHP-Version WLAN; dazu, was keinen eigenen Platz hat. */
+    private static function other(): Section
+    {
+        return Section::make()
+            ->columns(3)
+            ->schema([
+                TextInput::make('wlan')
+                    ->label('WLAN')
+                    ->maxLength(120),
+                // Wie in der PHP-Version nur für Bearbeiter (siehe auch ViewEvent)
+                TextInput::make('wlan_password')
+                    ->label('WLAN-Passwort')
+                    ->maxLength(120)
+                    ->visible(fn (): bool => self::can(Area::Events, Level::Edit)),
+                TextInput::make('onsite_contact')
+                    ->label('Ansprechpartner vor Ort')
+                    ->maxLength(120),
+                Textarea::make('description')
+                    ->label('Beschreibung')
+                    ->rows(3)
+                    ->columnSpanFull(),
+            ]);
     }
 
     /** Aktive Räume plus die schon zugeordneten, falls einer inzwischen inaktiv ist. */
@@ -293,10 +386,20 @@ class EventForm
             ->columns(2);
     }
 
-    /** @return list<Section> */
+    /**
+     * Durchführung › Betrieb (Show Day) wie in der PHP-Version.
+     *
+     * @return list<Section>
+     */
     private static function execution(): array
     {
         return [
+            Section::make('Räume')
+                ->columns(2)
+                ->schema([
+                    self::roomField('backstageRooms', 'Backstage'),
+                    self::roomField('officeRooms', 'Büros'),
+                ]),
             Section::make('Betrieb')
                 ->relationship('operation')
                 ->columns(3)
@@ -316,8 +419,6 @@ class EventForm
                         ->label('PAX abgerechnet')
                         ->numeric()
                         ->minValue(0),
-                    Toggle::make('closed')
-                        ->label('Event abgeschlossen'),
                     self::soldOutAward(),
                 ]),
         ];
@@ -357,9 +458,8 @@ class EventForm
     /** Bühnenmaße wie im Bühnen-Formular der PHP-Version, mit Podest-Rechnung. */
     private static function stage(): Section
     {
-        return Section::make('Bühne')
+        return Section::make()
             ->relationship('stage')
-            ->collapsible()
             ->columns(4)
             ->schema([
                 Fieldset::make('Hauptbühne')

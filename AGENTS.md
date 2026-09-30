@@ -40,6 +40,15 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 - `afterStateHydrated()` läuft nach den State-Casts: Wer dort `state()` setzt,
   muss das Format selbst liefern (bei `ToggleButtons::boolean()` 1/0, nicht
   true/false – sonst ist nichts markiert).
+- **Ausblenden schützt keine Daten.** Filament füllt auch verborgene Abschnitte
+  (`->visible(false)`), samt `->relationship()` – die Werte stehen dann im
+  Livewire-Zustand im Seitenquelltext. Was ein Benutzer nicht sehen darf, gar
+  nicht erst ins Schema bauen (siehe Reiter „Buchhaltung“ in `EventForm`).
+- Formulare bekommen beim Laden **alle** Spalten des Datensatzes in den Zustand,
+  auch ohne Feld. Heikles in `mutateFormDataBeforeFill()` entfernen (siehe
+  WLAN-Passwort in `ViewEvent`).
+- Reiter in der URL: `Tabs::persistTabInQueryString('phase')` plus `Tab::id()`,
+  sonst ist der Schlüssel ein Slug wie `buchung::data::tab`.
 - Zwei Abschnitte mit `->relationship()` auf dieselbe 1:1-Beziehung legen bei
   neuen Events die Zeile doppelt an. Ein einzelnes Feld woanders: ohne Bindung
   und per `updateOrCreate` speichern (siehe Sold-Out-Award in `EventForm`).
@@ -53,6 +62,9 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 - Filament-Dialoge mit `Livewire::test(...)->callAction(...)` prüfen. Nach
   abgelehnter Eingabe bleibt der Dialog offen: für den nächsten Aufruf eine
   frische Komponente nehmen. `fillForm()` wirkt nur mit APP_ENV=testing.
+- Eigene Stile ohne Build-Schritt: `public/css/vcontrol.css`, eingebunden per
+  Render-Hook im `AppPanelProvider`. Tailwind-Klassen in eigenen Blade-Dateien
+  wirken nicht (Filament bringt nur die eigenen, fertig gebauten Klassen mit).
 - Nach jeder Änderung: Tests grün, `php artisan vc:check-access` gleich,
   `php artisan vc:smoke` fehlerfrei. Letzteres rendert als Admin jede Seite mit den
   echten Daten (je Resource die neuesten Datensätze und den ältesten) und findet,

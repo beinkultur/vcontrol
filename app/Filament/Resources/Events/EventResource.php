@@ -6,10 +6,7 @@ use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\ViewEvent;
-use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
-use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
 use App\Filament\Resources\Events\Schemas\EventForm;
-use App\Filament\Resources\Events\Schemas\EventInfolist;
 use App\Filament\Resources\Events\Tables\EventsTable;
 use App\Models\Event;
 use BackedEnum;
@@ -19,8 +16,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 /**
- * Events: Liste, Detailansicht für Leserollen und Workspace (Buchung, Planung,
- * Durchführung) zum Anlegen und Bearbeiten, siehe docs/EVENTS.md.
+ * Events: Liste und Workspace (Übersicht, Buchung, Planung, Durchführung), für
+ * Leserollen derselbe Workspace nur lesend. Siehe docs/EVENTS.md.
  */
 class EventResource extends Resource
 {
@@ -43,22 +40,15 @@ class EventResource extends Resource
         return EventForm::configure($schema);
     }
 
-    public static function infolist(Schema $schema): Schema
-    {
-        return EventInfolist::configure($schema);
-    }
-
     public static function table(Table $table): Table
     {
         return EventsTable::configure($table);
     }
 
+    /** Notizen und Gästeliste stehen als Reiter im Workspace (EventForm), nicht unter dem Formular. */
     public static function getRelations(): array
     {
-        return [
-            NotesRelationManager::class,
-            GuestsRelationManager::class,
-        ];
+        return [];
     }
 
     /** @return list<string> */

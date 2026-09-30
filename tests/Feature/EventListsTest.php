@@ -5,12 +5,15 @@ namespace Tests\Feature;
 use App\Enums\AssignmentRole;
 use App\Enums\Responsible;
 use App\Enums\ServiceCode;
+use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Models\Employee;
 use App\Models\Event;
 use App\Models\Room;
 use App\Models\Trade;
+use Filament\Facades\Filament;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class EventListsTest extends TestCase
@@ -59,10 +62,18 @@ class EventListsTest extends TestCase
         $this->event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $employee->id]);
         $this->event->services()->create(['service' => ServiceCode::Security, 'responsible' => Responsible::Promoter]);
 
-        $this->actingAs($this->admin())->get('/events/' . $this->event->id)
+        $this->actingAs($this->admin());
+        $this->get('/events/' . $this->event->id)
             ->assertOk()
-            ->assertSee('Projektleitung: Anna Leitung')
-            ->assertSee('Lounge')
-            ->assertSee('Security · Veranstalter');
+            ->assertSee('Anna Leitung')
+            ->assertSee('Lounge');
+
+        Filament::setCurrentPanel(Filament::getPanel('app'));
+        Livewire::test(ViewEvent::class, ['record' => $this->event->getRouteKey()])
+            ->assertSchemaStateSet([
+                'role_pl' => 'employee:' . $employee->id,
+                'service_security_responsible' => Responsible::Promoter,
+                'backstageRooms' => [(string) $this->lounge->id],
+            ]);
     }
 }

@@ -12,6 +12,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -49,6 +50,12 @@ class AppPanelProvider extends PanelProvider
             ->spa()
             ->topNavigation()
             ->maxContentWidth(Width::Full)
+            // Eigene Stile ohne Build-Schritt (Event-Liste, Workspace), Version = Änderungszeit
+            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): string => sprintf(
+                '<link rel="stylesheet" href="%s?v=%d">',
+                asset('css/vcontrol.css'),
+                @filemtime(public_path('css/vcontrol.css')) ?: 0,
+            ))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

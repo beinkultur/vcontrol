@@ -3,33 +3,24 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
-use App\Models\Event;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Schemas\Components\Tabs\Tab;
-use Illuminate\Database\Eloquent\Builder;
 
+/** Offen/Abgeschlossen/Alle steht wie in der PHP-Version im Filter „Status“, nicht in Reitern. */
 class ListEvents extends ListRecords
 {
     protected static string $resource = EventResource::class;
 
+    /** Kein Pfad über der Liste – jede Zeile zählt. */
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
+
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
-        ];
-    }
-
-    /** @return array<string, Tab> */
-    public function getTabs(): array
-    {
-        return [
-            'offen' => Tab::make('Offen')
-                ->badge(Event::query()->where('closed', false)->count())
-                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('closed', false)),
-            'abgeschlossen' => Tab::make('Abgeschlossen')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('closed', true)),
-            'alle' => Tab::make('Alle'),
+            CreateAction::make()->label('Neues Event'),
         ];
     }
 }

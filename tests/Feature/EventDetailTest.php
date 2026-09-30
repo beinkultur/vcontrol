@@ -45,6 +45,21 @@ class EventDetailTest extends TestCase
             ->assertDontSee('1085');
     }
 
+    public function test_wlan_passwort_nur_fuer_bearbeiter(): void
+    {
+        $this->event->update(['wlan' => 'Arena-Gast', 'wlan_password' => 'geheim-4711']);
+        $catering = $this->userWith($this->role('catering', ['events' => 'read']));
+
+        $this->actingAs($catering)->get('/events/' . $this->event->id)
+            ->assertOk()
+            ->assertSee('Arena-Gast')
+            ->assertDontSee('geheim-4711');
+
+        $this->actingAs($this->admin())->get('/events/' . $this->event->id . '/edit')
+            ->assertOk()
+            ->assertSee('geheim-4711');
+    }
+
     public function test_fibu_status_als_liste_durchsuchbar(): void
     {
         $this->assertSame(1, Event::whereHas('finance', fn ($q) => $q->whereJsonContains('accounting_status', '2. Rate gezahlt'))->count());

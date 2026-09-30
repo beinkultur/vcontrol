@@ -6,6 +6,7 @@ use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Accounting\Pages\ListAccounting;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Models\Event;
 use App\Models\EventStage;
 use App\Models\Setting;
@@ -101,7 +102,7 @@ class EventStageTest extends TestCase
         $this->assertSame(1, EventStage::query()->count());
     }
 
-    public function test_detailansicht_zeigt_buehne_checkliste_und_award(): void
+    public function test_uebersicht_zeigt_buehne_checkliste_und_award(): void
     {
         $event = Event::create(['title' => 'Konzert', 'starts_at' => now()]);
         $event->stage()->create(['width' => 20, 'depth' => 10, 'height' => 1.0, 'sold_out_award' => true]);
@@ -109,35 +110,27 @@ class EventStageTest extends TestCase
 
         $this->get(EventResource::getUrl('view', ['record' => $event]))
             ->assertOk()
-            ->assertSeeInOrder(['20×10 H1 106P', '20 Podeste über dem Bestand von 86'])
-            ->assertSee('Hands: ja')
-            ->assertSee('Verkehrsposten: entfällt')
-            ->assertSee('Haus-Rig ab 7 Uhr')
-            ->assertDontSee('Reinigung:');
-    }
+            ->assertSee('Bühne 20×10 H1 106P');
 
-    public function test_buchhaltung_zeigt_zusaetzliche_podeste(): void
-    {
-        $gross = Event::create(['title' => 'Groß', 'starts_at' => now()->subDay()]);
-        $gross->stage()->create(['width' => 20, 'depth' => 10]); // 106 Podeste
-        $klein = Event::create(['title' => 'Klein', 'starts_at' => now()->subDay()]);
-        $klein->stage()->create(['width' => 14, 'depth' => 8]); // 62 Podeste
-
-        Livewire::test(ListAccounting::class, ['activeTab' => 'alle'])
-            ->assertTableColumnStateSet('extra_podests', 44, $gross)
-            ->assertTableColumnStateSet('extra_podests', 0, $klein);
+        Livewire::test(ViewEvent::class, ['record' => $event->getRouteKey()])
+            ->assertSchemaStateSet([
+                'checklist.hands' => 'yes',
+                'checklist.traffic' => 'na',
+                'checklist.house_rig_early' => true,
+                'sold_out_award' => 1,
+            ]);
     }
 
     public function test_kurzform_in_der_liste(): void
     {
         Setting::put(Setting::PODEST_INVENTORY, '75');
         $stage = new EventStage(['width' => 14, 'depth' => 8, 'height' => 1.4, 'podest_total' => 62]);
-        $this->assertSame(['text' => '14×8 H1,4 62P', 'alert' => false], StagePodests::summary($stage));
+        $this->assertSame(['text' => '14×8 H1,4 62P', 'alert' => false, 'height' => false, 'podests' => false], StagePodests::summary($stage));
 
-        // Andere Höhe als 1,4 m oder mehr Podeste als im Bestand: rot.
+        // Andere Höhe als 1,4 m (gelb) oder mehr Podeste als im Bestand (rot)
         $stage = new EventStage(['width' => 14, 'depth' => 10, 'height' => 1.0, 'podest_total' => 79]);
-        $this->assertSame(['text' => '14×10 H1 79P', 'alert' => true], StagePodests::summary($stage));
-        $this->assertSame(['text' => '–', 'alert' => false], StagePodests::summary(null));
+        $this->assertSame(['text' => '14×10 H1 79P', 'alert' => true, 'height' => true, 'podests' => true], StagePodests::summary($stage));
+        $this->assertSame(['text' => '–', 'alert' => false, 'height' => false, 'podests' => false], StagePodests::summary(null));
     }
 
     public function test_bestand_und_mietanteil_je_halle(): void

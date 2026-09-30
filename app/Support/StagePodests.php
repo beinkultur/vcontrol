@@ -86,12 +86,12 @@ final class StagePodests
      * Kurzform für Listen wie in der PHP-Version, z. B. „14×8 H1 62P“. Auffällig
      * sind eine andere als die Standardhöhe und mehr Podeste als im Bestand.
      *
-     * @return array{text: string, alert: bool}
+     * @return array{text: string, alert: bool, height: bool, podests: bool}
      */
     public static function summary(?EventStage $stage): array
     {
         if ($stage === null) {
-            return ['text' => '–', 'alert' => false];
+            return ['text' => '–', 'alert' => false, 'height' => false, 'podests' => false];
         }
 
         $parts = [];
@@ -109,10 +109,14 @@ final class StagePodests
             $parts[] = "{$total}P";
         }
 
+        $heightAlert = $height !== null && abs($height - self::DEFAULT_HEIGHT) >= 0.011;
+        $podestAlert = $total !== null && $total > self::inventory();
+
         return [
             'text' => $parts === [] ? '–' : implode(' ', $parts),
-            'alert' => ($height !== null && abs($height - self::DEFAULT_HEIGHT) >= 0.011)
-                || ($total !== null && $total > self::inventory()),
+            'alert' => $heightAlert || $podestAlert,
+            'height' => $heightAlert,
+            'podests' => $podestAlert,
         ];
     }
 
