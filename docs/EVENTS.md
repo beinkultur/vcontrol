@@ -41,6 +41,23 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 Später, jeweils mit ihrem Modul: Gäste, Notizen, Dateien, Schäden,
 Bestellscheine, Übergabeprotokolle, Ablaufplan (`vc_event_attachments`).
 
+## Stand der Übernahme (30.09.2026)
+
+Übernommen und in der Detailansicht sichtbar: Kern, alle sechs 1:1-Tabellen,
+Leistungen, Leistungsgruppen, Rollen, Raumbelegung, Eingangsrechnungen.
+
+- **Leistungen:** Die PHP-Version legt je Event alle 19 Leistungen an
+  (4.465 Zeilen), in keiner einzigen ist ein Gewerk oder Anbieter eingetragen.
+  Inhalt tragen 1.252 Zeilen (wer stellt die Leistung: Halle 341,
+  Veranstalter 827; dazu 214 Notizen). Übernommen werden nur diese plus die
+  Aktiv-Schalter (zusammen 1.259); eine fehlende Zeile heißt „nicht festgelegt“.
+- **Rollen:** Die „Projektleitung“ steckt in den Rollen (`pl`, 123 Events),
+  nicht im leeren Feld `pl` am Event. Rollen verweisen per Morph-Map auf
+  Mitarbeiter, Gewerk oder Benutzer (`employee`/`trade`/`user`, dieselben
+  Werte wie in der PHP-Version).
+- **Räume:** Ein Raum, den ein Event belegt, lässt sich nicht mehr löschen
+  (Policy und Fremdschlüssel). Die PHP-Version löschte ihn samt Belegungen.
+
 ## Offene Punkte
 
 1. **„Durchführung abgeschlossen“ und „Event abgeschlossen“** sind in allen

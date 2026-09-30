@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
@@ -75,6 +77,30 @@ class Event extends Model
     public function checklist(): HasOne
     {
         return $this->hasOne(EventChecklist::class);
+    }
+
+    /** @return HasMany<EventService, $this> */
+    public function services(): HasMany
+    {
+        return $this->hasMany(EventService::class);
+    }
+
+    /** @return HasMany<EventAssignment, $this> */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(EventAssignment::class);
+    }
+
+    /** @return HasMany<EventIncomingInvoice, $this> */
+    public function incomingInvoices(): HasMany
+    {
+        return $this->hasMany(EventIncomingInvoice::class);
+    }
+
+    /** @return BelongsToMany<Room, $this> */
+    public function rooms(): BelongsToMany
+    {
+        return $this->belongsToMany(Room::class, 'event_room')->withPivot('usage_type');
     }
 
     /** Liegt in der Vergangenheit, ist aber noch nicht abgeschlossen. */

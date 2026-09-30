@@ -3,6 +3,13 @@
 namespace App\Filament\Resources\Events\Schemas;
 
 use App\Access\Area;
+use App\Enums\AssignmentRole;
+use App\Enums\RoomUsage;
+use App\Enums\ServiceCode;
+use App\Models\Event;
+use App\Models\EventAssignment;
+use App\Models\EventService;
+use App\Models\Room;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Filament\Infolists\Components\IconEntry;
@@ -24,6 +31,17 @@ class EventInfolist
         'curfew' => 'Curfew',
         'load_out' => 'Load-out',
     ];
+
+    /** @return list<string> */
+    private static function roomNames(Event $event, RoomUsage $usage): array
+    {
+        return $event->rooms
+            ->filter(fn (Room $room): bool => $room->pivot->usage_type === $usage->value)
+            ->sortBy('sort_order')
+            ->pluck('name')
+            ->values()
+            ->all();
+    }
 
     private static function canSeeFinance(): bool
     {
@@ -77,6 +95,48 @@ class EventInfolist
                         TextEntry::make('finance.rent')->label('Miete')->money('EUR', locale: 'de')->placeholder('–'),
                         TextEntry::make('finance.invoice_numbers')->label('Rechnungsnummern')->badge()->color('gray')->placeholder('–'),
                         IconEntry::make('finance.accounting_closed')->label('Abrechnung abgeschlossen')->boolean(),
+                    ]),
+                Section::make('Rollen am Event')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('assignments')
+                            ->hiddenLabel()
+                            ->state(fn (Event $record): array => $record->assignments
+                                ->sortBy(fn (EventAssignment $a): int => array_search($a->role, AssignmentRole::cases(), true))
+                                ->map(fn (EventAssignment $a): string => $a->role->getLabel() . ': ' . $a->assigneeName())
+                                ->values()->all())
+                            ->listWithLineBreaks()
+                            ->placeholder('Niemand zugeordnet'),
+                    ]),
+                Section::make('Räume')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('backstages')
+                            ->label('Backstage')
+                            ->state(fn (Event $record): array => self::roomNames($record, RoomUsage::Backstage))
+                            ->badge()
+                            ->placeholder('–'),
+                        TextEntry::make('offices')
+                            ->label('Büros')
+                            ->state(fn (Event $record): array => self::roomNames($record, RoomUsage::Office))
+                            ->badge()
+                            ->placeholder('–'),
+                    ]),
+                Section::make('Leistungen')
+                    ->columnSpan(1)
+                    ->schema([
+                        TextEntry::make('services')
+                            ->hiddenLabel()
+                            ->state(fn (Event $record): array => $record->services
+                                ->sortBy(fn (EventService $s): int => array_search($s->service, ServiceCode::cases(), true))
+                                ->map(fn (EventService $s): string => collect([
+                                    $s->service->getLabel(),
+                                    $s->responsible?->getLabel(),
+                                    $s->providerName(),
+                                ])->filter()->implode(' · '))
+                                ->values()->all())
+                            ->listWithLineBreaks()
+                            ->placeholder('Nichts festgelegt'),
                     ]),
                 Section::make('Halle')
                     ->columnSpanFull()

@@ -26,6 +26,9 @@ class ImportLegacy extends Command
 
         $this->info('Quelle: ' . $legacy->getDatabaseName());
         DB::transaction(function () use ($legacy): void {
+            // Belegungen zuerst leeren: Sie verhindern sonst das Entfernen von Räumen,
+            // die es in der Quelle nicht mehr gibt. Sie werden unten neu übernommen.
+            DB::table('event_room')->delete();
             $this->importCalendars($legacy);
             $this->importSettings($legacy);
             // Vor den Benutzern: users.employee_id und users.trade_id verweisen darauf
@@ -39,6 +42,7 @@ class ImportLegacy extends Command
             $this->importPromoters($legacy);
             $this->importEvents($legacy);
             $this->importEventDetails($legacy);
+            $this->importEventLists($legacy);
         });
 
         return self::SUCCESS;
@@ -278,6 +282,98 @@ class ImportLegacy extends Command
             fn (object $c): array => $this->columns($c, ['event_id', 'hands', 'traffic', 'pvc_setup', 'pvc_teardown', 'cleaning', 'interim_cleaning', 'bar_setup', 'bar_teardown', 'chairs_ordered', 'merch_fee', 'merch_fee_check', 'special_cleaning', 'power_ant', 'house_rig_early', 'briefing_complete']),
             $rows('vc_event_checklist'),
         ), 'event_id');
+    }
+
+    /** Listen am Event: Leistungen, Leistungsgruppen, Rollen, Räume, Eingangsrechnungen. */
+    private function importEventLists(Connection $legacy): void
+    {
+        $eventIds = DB::table('events')->pluck('id')->flip();
+        $inEvent = fn (object $row): bool => isset($eventIds[$row->event_id]);
+
+        // Leistungen: nur Zeilen mit Inhalt. Die PHP-Version legt je Event alle 19
+        // Leistungen an, die meisten bleiben leer.
+        $active = [];
+        foreach ($legacy->table('vc_event_trade_active')->get()->filter($inEvent) as $a) {
+            $active[$a->event_id][$a->service_code] = (bool) $a->active;
+        }
+        $tradeIds = DB::table('trades')->pluck('id')->flip();
+        $services = [];
+        foreach ($legacy->table('vc_event_trades')->orderBy('id')->get()->filter($inEvent) as $s) {
+            $isActive = $active[$s->event_id][$s->service_code] ?? null;
+            $provider = trim((string) $s->provider_label);
+            $note = trim((string) $s->note);
+            if (!$s->trade_id && $provider === '' && !$s->responsible && $note === '' && $isActive === null) {
+                continue;
+            }
+            $services[] = [
+                'id' => $s->id,
+                'event_id' => $s->event_id,
+                'service' => $s->service_code,
+                'trade_id' => isset($tradeIds[$s->trade_id]) ? $s->trade_id : null,
+                'provider_label' => $provider === '' ? null : $provider,
+                'responsible' => $s->responsible,
+                'is_active' => $isActive,
+                'note' => $note === '' ? null : $note,
+            ];
+        }
+        $this->sync('event_services', $services);
+
+        $this->replace('event_service_groups', $legacy->table('vc_event_trade_groups')->get()->filter($inEvent)
+            ->map(fn (object $g): array => [
+                'event_id' => $g->event_id,
+                'group_key' => $g->group_key,
+                'is_active' => (bool) $g->active,
+                'split_setup_teardown' => (bool) $g->split_setup_teardown,
+            ])->values()->all());
+
+        // Rollen: nur Zuordnungen, deren Mitarbeiter, Gewerk oder Benutzer existiert
+        $known = [
+            'employee' => DB::table('employees')->pluck('id')->flip(),
+            'trade' => $tradeIds,
+            'user' => DB::table('users')->pluck('id')->flip(),
+        ];
+        $this->replace('event_assignments', $legacy->table('vc_event_role_assignments')->get()->filter($inEvent)
+            ->filter(fn (object $a): bool => isset($known[$a->assignee_type][$a->assignee_id]))
+            ->map(fn (object $a): array => [
+                'event_id' => $a->event_id,
+                'role' => $a->role_key,
+                'assignee_type' => $a->assignee_type,
+                'assignee_id' => $a->assignee_id,
+                'starts_at' => $a->starts_at,
+                'ends_at' => $a->ends_at,
+            ])->values()->all());
+
+        $roomIds = DB::table('rooms')->pluck('id')->flip();
+        $this->replace('event_room', $legacy->table('vc_event_rooms')->get()->filter($inEvent)
+            ->filter(fn (object $r): bool => isset($roomIds[$r->room_id]))
+            ->map(fn (object $r): array => ['event_id' => $r->event_id, 'room_id' => $r->room_id, 'usage_type' => $r->usage_type])
+            ->values()->all());
+
+        $userIds = $known['user'];
+        $this->replace('event_incoming_invoices', $legacy->table('vc_event_incoming_invoices')->get()->filter($inEvent)
+            ->map(fn (object $i): array => [
+                'event_id' => $i->event_id,
+                'invoice_key' => $i->invoice_key,
+                'is_active' => (bool) $i->is_active,
+                'is_received' => (bool) $i->is_received,
+                'updated_by' => isset($userIds[$i->updated_by_user_id]) ? $i->updated_by_user_id : null,
+                'created_at' => $i->updated_at,
+                'updated_at' => $i->updated_at,
+            ])->values()->all());
+    }
+
+    /**
+     * Tabelle ohne eigene IDs komplett neu füllen.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function replace(string $table, array $rows): void
+    {
+        DB::table($table)->delete();
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table($table)->insert($chunk);
+        }
+        $this->line(sprintf('  %-20s %4d übernommen', $table, count($rows)));
     }
 
     /**
