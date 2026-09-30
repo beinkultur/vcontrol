@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Events\Schemas;
 use App\Access\Area;
 use App\Access\Level;
 use App\Enums\OptionField;
+use App\Filament\Support\AssignmentFields;
 use App\Filament\Support\OptionChoices;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\Event;
 use App\Models\EventFinance;
 use App\Models\EventPr;
@@ -202,7 +204,33 @@ class EventForm
                     array_keys(self::TIMES),
                     self::TIMES,
                 )),
+            Section::make('Räume')
+                ->columns(2)
+                ->schema([
+                    self::roomField('backstageRooms', 'Backstage'),
+                    self::roomField('officeRooms', 'Büros'),
+                ]),
+            Section::make('Rollen am Event')
+                ->columns(2)
+                ->schema(AssignmentFields::all()),
         ];
+    }
+
+    /** Aktive Räume plus die schon zugeordneten, falls einer inzwischen inaktiv ist. */
+    private static function roomField(string $relationship, string $label): CheckboxList
+    {
+        return CheckboxList::make($relationship)
+            ->label($label)
+            ->relationship(
+                name: $relationship,
+                titleAttribute: 'name',
+                modifyQueryUsing: fn (Builder $query, ?Event $record): Builder => $query
+                    ->where(fn (Builder $q): Builder => $q
+                        ->where('rooms.is_active', true)
+                        ->orWhereIn('rooms.id', $record?->{$relationship}->pluck('id')->all() ?? []))
+                    ->orderBy('rooms.sort_order'),
+            )
+            ->columns(2);
     }
 
     /** @return list<Section> */

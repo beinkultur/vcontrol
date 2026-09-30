@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RoomUsage;
 use App\Support\EventNumber;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -123,6 +124,18 @@ class Event extends Model
     public function rooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'event_room')->withPivot('usage_type');
+    }
+
+    /** Backstage-Räume; setzt beim Zuordnen usage_type automatisch. */
+    public function backstageRooms(): BelongsToMany
+    {
+        return $this->belongsToMany(Room::class, 'event_room')->withPivotValue('usage_type', RoomUsage::Backstage->value);
+    }
+
+    /** Büros; setzt beim Zuordnen usage_type automatisch. */
+    public function officeRooms(): BelongsToMany
+    {
+        return $this->belongsToMany(Room::class, 'event_room')->withPivotValue('usage_type', RoomUsage::Office->value);
     }
 
     /** Liegt in der Vergangenheit, ist aber noch nicht abgeschlossen. */
