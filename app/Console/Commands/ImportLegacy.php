@@ -231,7 +231,6 @@ class ImportLegacy extends Command
             'description' => $e->description,
             'booking_notes' => $e->booking_notes,
             'onsite_contact' => $e->onsite_contact,
-            'doing_closed' => (bool) $e->doing_closed,
             'closed' => (bool) $e->closed,
             'created_at' => $e->created_at,
             'updated_at' => $e->updated_at,

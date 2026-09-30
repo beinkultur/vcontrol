@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'va_nr', 'va_id', 'title', 'promoter_id', 'status', 'event_type1', 'event_type2',
     'starts_at', 'ends_at', 'pax_expected', 'pax', 'areas', 'seating', 'ticketing',
     'wlan', 'wlan_password', 'description', 'booking_notes', 'onsite_contact',
-    'doing_closed', 'closed',
+    'closed',
 ])]
 class Event extends Model
 {
@@ -59,7 +59,6 @@ class Event extends Model
             'pax' => 'integer',
             'areas' => 'array',
             'seating' => 'array',
-            'doing_closed' => 'boolean',
             'closed' => 'boolean',
         ];
     }

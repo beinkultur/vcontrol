@@ -102,7 +102,6 @@ class EventInfolist
                     ->columnSpan(1)
                     ->schema([
                         TextEntry::make('status')->label('VA-Status')->badge(),
-                        IconEntry::make('doing_closed')->label('Durchführung abgeschlossen')->boolean(),
                         IconEntry::make('closed')->label('Event abgeschlossen')->boolean(),
                         TextEntry::make('sold_out_award')
                             ->label('Sold-Out-Award')

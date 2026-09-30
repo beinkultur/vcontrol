@@ -316,8 +316,6 @@ class EventForm
                         ->label('PAX abgerechnet')
                         ->numeric()
                         ->minValue(0),
-                    Toggle::make('doing_closed')
-                        ->label('Durchführung abgeschlossen'),
                     Toggle::make('closed')
                         ->label('Event abgeschlossen'),
                     self::soldOutAward(),

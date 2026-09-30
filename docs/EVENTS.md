@@ -92,10 +92,10 @@ Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Sortierung
 
 ## Offene Punkte
 
-1. **„Durchführung abgeschlossen“ und „Event abgeschlossen“** sind in allen
-   239 Events gleich gesetzt (128× beide nein, 111× beide ja). Zwei Schalter
-   behalten oder zu einem zusammenfassen? Empfehlung: behalten, bis klar ist,
-   ob sie fachlich wirklich dasselbe bedeuten.
+1. **„Durchführung abgeschlossen“ und „Event abgeschlossen“** waren in allen
+   239 Events gleich gesetzt (128× beide nein, 111× beide ja). Entschieden am
+   30.09.2026: ein Schalter, „Event abgeschlossen“ (`closed`); `doing_closed`
+   entfällt. Die PHP-Version schreibt ihn ohnehin nicht mehr.
 2. **Personal doppelt:** `vc_event_staff` hält VL und Promoter-Vertretung als
    freien Text, `vc_event_role_assignments` dieselben Rollen strukturiert.
    Empfehlung: nur die strukturierte Zuordnung übernehmen; der freie Text
