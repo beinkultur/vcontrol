@@ -27,6 +27,17 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   Gedächtnis von Version 3 schreiben: Version 5 hat andere Namespaces
   (`Filament\Schemas\…`, `Filament\Actions\…`).
 
+## Filament-5-Fallen (hier schon einmal passiert)
+
+- In Abschnitten mit `->relationship('finance')` ist `$record` in Closures das
+  zugehörige Modell (`EventFinance`), nicht das Event.
+- Bei `->options(SomeEnum::class)` liefert `$get()` ein Enum-Objekt, keinen
+  Text – vor `(string)` auf `BackedEnum` prüfen.
+- Relation Manager laden lazy (erst beim Hinscrollen); im ersten HTML steht
+  nur ein Platzhalter.
+- Felder, die nicht am Modell hängen: `->dehydrated(false)` plus
+  `->saveRelationshipsUsing()` (siehe `App\Filament\Support\*Fields`).
+
 ## Tests
 
 - `php artisan test` (und `php85 artisan test`) auf dem Server: PHPUnit gegen
@@ -36,7 +47,10 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 - Filament-Dialoge mit `Livewire::test(...)->callAction(...)` prüfen. Nach
   abgelehnter Eingabe bleibt der Dialog offen: für den nächsten Aufruf eine
   frische Komponente nehmen. `fillForm()` wirkt nur mit APP_ENV=testing.
-- Nach jeder Änderung: Tests grün, `php artisan vc:check-access` gleich.
+- Nach jeder Änderung: Tests grün, `php artisan vc:check-access` gleich,
+  `php artisan vc:smoke` fehlerfrei. Letzteres rendert als Admin jede Seite mit den
+  echten Daten (je Resource die neuesten Datensätze und den ältesten) und findet,
+  was nur mit Altwerten aus dem Import schiefgeht. `--only=/events` grenzt ein.
 
 ## Rechte
 
