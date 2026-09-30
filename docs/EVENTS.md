@@ -44,15 +44,16 @@ Bestellscheine, Übergabeprotokolle, Ablaufplan (`vc_event_attachments`).
 ## Stand der Übernahme (30.09.2026)
 
 Übernommen: Kern, alle sechs 1:1-Tabellen, Leistungen, Leistungsgruppen,
-Rollen, Raumbelegung, Eingangsrechnungen, Gästeliste.
+Rollen, Raumbelegung, Eingangsrechnungen, Gästeliste, Notizen.
 
 Bedienbar:
 - **Event-Liste** wie in der PHP-Version (offen/ab heute voreingestellt).
 - **Workspace** Buchung (Stammdaten, Finanzen, Eingangsrechnungen, PR),
   Planung (Halle, Bühne, Zeiten, Räume, Rollen, Leistungen, Checkliste),
-  Durchführung (Betrieb, Abschluss); Gästeliste als eingebettete Tabelle. VA-NR/VA-ID beim
-  Anlegen. Die Checkliste zeigt die PHP-Version nur als Platzhalter, obwohl die
-  Daten existieren – hier ist sie bearbeitbar.
+  Durchführung (Betrieb, Abschluss). VA-NR/VA-ID beim Anlegen. Notizen
+  (Betreff, Text, Verfasser und letzter Bearbeiter) und Gästeliste als
+  eingebettete Tabellen. Die Checkliste zeigt die PHP-Version nur als
+  Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar.
 - **Bühne:** Maße, Wings, Rollipodest, Höhe und die Podest-Rechnung wie in
   der PHP-Version; in der Event-Liste die Kurzform „14×8 H1,4 62P“ (rot bei
   anderer Höhe als 1,4 m oder mehr Podeste als im Bestand). Bestand (86) und
@@ -66,7 +67,7 @@ Bedienbar:
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version.
 
 Noch nicht: Bühnenplan (Zeichnung, Treppen, Rückwand), Fortschrittsanzeige
-der Phasen, Leistungsgruppen bearbeiten, Rollen-Uhrzeiten, Notizen, Dateien,
+der Phasen, Leistungsgruppen bearbeiten, Rollen-Uhrzeiten, Dateien,
 Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
 Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Druckansicht
 der Gästeliste, Sortierung „Finanz-Warnung zuerst“.

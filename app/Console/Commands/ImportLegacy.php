@@ -362,6 +362,20 @@ class ImportLegacy extends Command
                 'updated_at' => $g->updated_at,
             ])->values()->all());
 
+        $this->sync('event_notes', $legacy->table('vc_event_notes')->orderBy('id')->get()->filter($inEvent)
+            ->map(fn (object $n): array => [
+                'id' => $n->id,
+                'event_id' => $n->event_id,
+                'subject' => $n->subject,
+                'body' => $n->body,
+                'created_by' => isset($userIds[$n->created_by_user_id]) ? $n->created_by_user_id : null,
+                'created_by_name' => $n->created_by_name,
+                'updated_by' => isset($userIds[$n->updated_by_user_id]) ? $n->updated_by_user_id : null,
+                'updated_by_name' => $n->updated_by_name,
+                'created_at' => $n->created_at,
+                'updated_at' => $n->updated_at,
+            ])->values()->all());
+
         $this->replace('event_incoming_invoices', $legacy->table('vc_event_incoming_invoices')->get()->filter($inEvent)
             ->map(fn (object $i): array => [
                 'event_id' => $i->event_id,

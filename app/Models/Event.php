@@ -112,6 +112,12 @@ class Event extends Model
         return $this->hasMany(EventGuest::class);
     }
 
+    /** @return HasMany<EventNote, $this> */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(EventNote::class);
+    }
+
     /** @return HasMany<EventService, $this> */
     public function services(): HasMany
     {
