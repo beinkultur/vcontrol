@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Events\Tables;
 
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
+use App\Support\StagePodests;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
@@ -57,6 +58,12 @@ class EventsTable
                     ->badge()
                     ->color('gray')
                     ->toggleable(),
+                TextColumn::make('stage_summary')
+                    ->label('Bühne')
+                    ->state(fn (Event $record): string => StagePodests::summary($record->stage)['text'])
+                    ->color(fn (Event $record): ?string => StagePodests::summary($record->stage)['alert'] ? 'danger' : null)
+                    ->tooltip('Maße, Höhe, Podeste – rot: andere Höhe als 1,4 m oder mehr Podeste als im Bestand')
+                    ->toggleable(),
                 TextColumn::make('pax_expected')
                     ->label('PAX erw.')
                     ->numeric(thousandsSeparator: '.')
@@ -67,7 +74,7 @@ class EventsTable
                     ->boolean()
                     ->alignCenter(),
             ])
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('promoter'))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['promoter', 'stage']))
             ->defaultSort(fn (Builder $query): Builder => $query->orderBy('starts_at')->orderBy('title'))
             ->filters([
                 Filter::make('time')

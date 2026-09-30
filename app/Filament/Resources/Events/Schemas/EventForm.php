@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\Event;
 use App\Models\EventFinance;
 use App\Models\EventPr;
+use App\Models\EventStage;
+use App\Support\StagePodests;
 use App\Models\User;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
@@ -24,6 +26,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -222,6 +226,7 @@ class EventForm
                         ->label('WLAN-Passwort')
                         ->maxLength(120),
                 ]),
+            self::stage(),
             Section::make('Zeiten')
                 ->relationship('schedule')
                 ->columns(4)
@@ -323,5 +328,132 @@ class EventForm
         $user = Auth::user();
 
         return $user instanceof User && $user->access()->can($area, $minimum);
+    }
+
+    /** Bühnenmaße wie im Bühnen-Formular der PHP-Version, mit Podest-Rechnung. */
+    private static function stage(): Section
+    {
+        return Section::make('Bühne')
+            ->relationship('stage')
+            ->collapsible()
+            ->columns(4)
+            ->schema([
+                Fieldset::make('Hauptbühne')
+                    ->columns(3)
+                    ->schema([
+                        self::meterField('width', 'Breite'),
+                        self::meterField('depth', 'Tiefe'),
+                        Select::make('height')
+                            ->label('Höhe')
+                            ->options(fn (?EventStage $record): array => self::heightOptions($record?->height))
+                            ->native(false),
+                    ]),
+                Fieldset::make('Wing stage left (SL)')
+                    ->columns(3)
+                    ->schema([
+                        self::meterField('wing_sl_width', 'Breite'),
+                        self::meterField('wing_sl_depth', 'Tiefe'),
+                        self::offsetField('wing_sl_offset')
+                            ->helperText('Abstand zur Bühnen-Vorderkante, Richtung Upstage'),
+                    ]),
+                Fieldset::make('Wing stage right (SR)')
+                    ->columns(3)
+                    ->schema([
+                        self::meterField('wing_sr_width', 'Breite'),
+                        self::meterField('wing_sr_depth', 'Tiefe'),
+                        self::offsetField('wing_sr_offset'),
+                    ]),
+                Fieldset::make('Rollipodest')
+                    ->columns(2)
+                    ->schema([
+                        self::meterField('rollpodest_width', 'Breite')
+                            ->placeholder((string) StagePodests::DEFAULT_ROLL_WIDTH),
+                        self::meterField('rollpodest_depth', 'Tiefe')
+                            ->placeholder((string) StagePodests::DEFAULT_ROLL_DEPTH),
+                    ]),
+                TextInput::make('extra_platforms')
+                    ->label('Sonstige Podeste')
+                    ->integer()
+                    ->minValue(0)
+                    ->maxValue(999)
+                    ->suffix('Stück')
+                    ->live(onBlur: true),
+                TextEntry::make('podest_calculation')
+                    ->label('Podeste')
+                    ->state(fn (Get $get): string => self::podestText(self::podests($get)))
+                    ->color(fn (Get $get): ?string => self::podests($get)['total'] > StagePodests::inventory() ? 'danger' : null)
+                    ->columnSpan(3),
+                Textarea::make('stage_notes')
+                    ->label('Anmerkungen Bühne')
+                    ->rows(2)
+                    ->columnSpanFull(),
+                // Altdaten aus AppSheet, die das Formular der PHP-Version nicht mehr zeigt.
+                TextEntry::make('legacy_notes')
+                    ->label('Anmerkung aus AppSheet')
+                    ->state(fn (?EventStage $record): ?string => $record?->notes)
+                    ->visible(fn (?EventStage $record): bool => filled($record?->notes))
+                    ->columnSpan(2),
+                TextEntry::make('legacy_other')
+                    ->label('Sonstige Podeste laut AppSheet')
+                    ->state(fn (?EventStage $record): ?string => $record?->other_info)
+                    ->visible(fn (?EventStage $record): bool => filled($record?->other_info))
+                    ->columnSpan(2),
+            ]);
+    }
+
+    /** Ganze Meter; gespeicherte Dezimalwerte („14.00“) erscheinen als „14“. */
+    private static function meterField(string $name, string $label, bool $live = true): TextInput
+    {
+        $field = TextInput::make($name)
+            ->label($label)
+            ->integer()
+            ->minValue(0)
+            ->maxValue(99)
+            ->suffix('m')
+            ->formatStateUsing(fn (mixed $state): ?int => $state === null || $state === '' ? null : (int) round((float) $state));
+
+        return $live ? $field->live(onBlur: true) : $field;
+    }
+
+    /** Versatz der Wings; die Spalte kennt kein „leer“, nur 0. */
+    private static function offsetField(string $name): TextInput
+    {
+        return self::meterField($name, 'Versatz', live: false)
+            ->dehydrateStateUsing(fn (mixed $state): int => (int) ($state ?? 0));
+    }
+
+    /** @return array<string, string> Schlüssel im Format der Datenbank („1.40“) */
+    private static function heightOptions(mixed $current): array
+    {
+        $options = [];
+        foreach (StagePodests::HEIGHTS as $height) {
+            $options[number_format($height, 2, '.', '')] = StagePodests::formatMeters($height) . ' m';
+        }
+        if ($current !== null && $current !== '' && !isset($options[number_format((float) $current, 2, '.', '')])) {
+            $options[number_format((float) $current, 2, '.', '')] = StagePodests::formatMeters((float) $current) . ' m (Altwert)';
+        }
+
+        return $options;
+    }
+
+    /** @return array{main: int, wing_sl: int, wing_sr: int, rollpodest: int, other: int, total: int} */
+    private static function podests(Get $get): array
+    {
+        return StagePodests::calculate(array_combine(
+            EventStage::PODEST_FIELDS,
+            array_map(fn (string $field): mixed => $get($field), EventStage::PODEST_FIELDS),
+        ));
+    }
+
+    /** @param  array{main: int, wing_sl: int, wing_sr: int, rollpodest: int, other: int, total: int}  $podests */
+    private static function podestText(array $podests): string
+    {
+        $inventory = StagePodests::inventory();
+        $text = "Hauptbühne {$podests['main']} + Wing SL {$podests['wing_sl']} + Wing SR {$podests['wing_sr']}"
+            . " + Rollipodest {$podests['rollpodest']} + sonstige {$podests['other']} = {$podests['total']}";
+
+        return $podests['total'] > $inventory
+            ? $text . ' – ' . ($podests['total'] - $inventory) . " über dem Bestand von {$inventory}, Nachbestellung nötig"
+            : $text . " – im Bestand von {$inventory}";
     }
 }

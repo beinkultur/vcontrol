@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Access\Area;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\StagePodests;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
@@ -51,6 +52,8 @@ class ManageVenue extends Page
     {
         $this->form->fill([
             'venue_name' => Setting::lookup(Setting::VENUE_NAME),
+            'podest_inventory' => StagePodests::inventory(),
+            'podest_included' => StagePodests::includedInRent(),
         ]);
     }
 
@@ -67,6 +70,23 @@ class ManageVenue extends Page
                             ->helperText('Erscheint in der Kopfzeile neben „VenueControl“.')
                             ->required()
                             ->maxLength(120),
+                    ]),
+                Section::make('Bühne')
+                    ->description('Grundlage der Podest-Rechnung im Event-Workspace.')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('podest_inventory')
+                            ->label('Podeste im Bestand')
+                            ->helperText('Mehr Podeste an einem Event werden rot markiert: Nachbestellung nötig.')
+                            ->integer()
+                            ->minValue(0)
+                            ->required(),
+                        TextInput::make('podest_included')
+                            ->label('Davon im Mietpreis enthalten')
+                            ->helperText('Podeste darüber hinaus werden zusätzlich berechnet.')
+                            ->integer()
+                            ->minValue(0)
+                            ->required(),
                     ]),
             ]);
     }
@@ -96,6 +116,8 @@ class ManageVenue extends Page
 
         $data = $this->form->getState();
         Setting::put(Setting::VENUE_NAME, trim((string) $data['venue_name']));
+        Setting::put(Setting::PODEST_INVENTORY, (string) (int) $data['podest_inventory']);
+        Setting::put(Setting::PODEST_INCLUDED, (string) (int) $data['podest_included']);
 
         Notification::make()->success()->title('Gespeichert')->send();
     }

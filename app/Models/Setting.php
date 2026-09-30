@@ -11,6 +11,10 @@ class Setting extends Model
 {
     public const VENUE_NAME = 'venue_name';
 
+    public const PODEST_INVENTORY = 'podest_inventory';
+
+    public const PODEST_INCLUDED = 'podest_included';
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';

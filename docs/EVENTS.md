@@ -49,15 +49,23 @@ Rollen, Raumbelegung, Eingangsrechnungen, Gästeliste.
 Bedienbar:
 - **Event-Liste** wie in der PHP-Version (offen/ab heute voreingestellt).
 - **Workspace** Buchung (Stammdaten, Finanzen, Eingangsrechnungen, PR),
-  Planung (Halle, Zeiten, Räume, Rollen, Leistungen, Checkliste), Durchführung
-  (Betrieb, Abschluss); Gästeliste als eingebettete Tabelle. VA-NR/VA-ID beim
+  Planung (Halle, Bühne, Zeiten, Räume, Rollen, Leistungen, Checkliste),
+  Durchführung (Betrieb, Abschluss); Gästeliste als eingebettete Tabelle. VA-NR/VA-ID beim
   Anlegen. Die Checkliste zeigt die PHP-Version nur als Platzhalter, obwohl die
   Daten existieren – hier ist sie bearbeitbar.
+- **Bühne:** Maße, Wings, Rollipodest, Höhe und die Podest-Rechnung wie in
+  der PHP-Version; in der Event-Liste die Kurzform „14×8 H1,4 62P“ (rot bei
+  anderer Höhe als 1,4 m oder mehr Podeste als im Bestand). Bestand (86) und
+  Mietanteil (62) stellt jede Halle unter „Halle“ ein. Die Summe wird nur neu
+  berechnet, wenn sich ein Maß ändert – die Summen aus AppSheet bleiben sonst
+  stehen (mit allen 239 Zeilen geprüft). Die AppSheet-Felder „Anmerkungen“
+  (17×) und „sonst. Podeste“ (12×), die die PHP-Version nicht mehr zeigt,
+  erscheinen schreibgeschützt.
 - **Buchhaltung** mit Offen/Abgeschlossen/Alle/Endabrechnung/Archiv und
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version.
 
-Noch nicht: Bühne (Maße im Workspace, Bühnenplan-Editor),
-Leistungsgruppen bearbeiten, Rollen-Uhrzeiten, Notizen, Dateien,
+Noch nicht: Bühnenplan (Zeichnung, Treppen, Rückwand), Sold-Out-Award in der
+Durchführung, Leistungsgruppen bearbeiten, Rollen-Uhrzeiten, Notizen, Dateien,
 Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
 Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Druckansicht
 der Gästeliste, Sortierung „Finanz-Warnung zuerst“.
