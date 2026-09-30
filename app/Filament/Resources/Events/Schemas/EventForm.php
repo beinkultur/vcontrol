@@ -6,6 +6,7 @@ use App\Access\Area;
 use App\Access\Level;
 use App\Enums\OptionField;
 use App\Filament\Support\AssignmentFields;
+use App\Filament\Support\IncomingInvoiceFields;
 use App\Filament\Support\OptionChoices;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Event;
@@ -151,6 +152,12 @@ class EventForm
                     Toggle::make('accounting_closed')
                         ->label('Abrechnung abgeschlossen'),
                 ]),
+            Section::make('Eingangsrechnungen')
+                ->description('Welche Rechnungen von Dienstleistern erwartet werden und ob sie da sind. Mobiliar ist bei „bestuhlt“ automatisch erwartet, Cobra – Haus-Delay bei Haus-Delay.')
+                ->columns(3)
+                ->visible(fn (?Event $record): bool => $record !== null && self::can(Area::Buchhaltung))
+                ->disabled(fn (): bool => !self::can(Area::Buchhaltung, Level::Edit))
+                ->schema(IncomingInvoiceFields::all()),
             Section::make('PR')
                 ->relationship('pr')
                 ->columns(2)

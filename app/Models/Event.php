@@ -142,6 +142,25 @@ class Event extends Model
         return $this->belongsToMany(Room::class, 'event_room')->withPivotValue('usage_type', RoomUsage::Office->value);
     }
 
+    /**
+     * Finanz-Warnung wie in der PHP-Version: Das Event ist höchstens 14 Tage
+     * entfernt (oder vorbei), aber der Vertrag ist nicht zurück (bzw. kein
+     * Rahmenvertrag) oder die 2. Rate ist nicht gezahlt.
+     */
+    public function hasFinanceAlert(): bool
+    {
+        if ($this->starts_at === null || today()->diffInDays($this->starts_at->copy()->startOfDay(), false) > 14) {
+            return false;
+        }
+
+        // Wertgenau je Komma-Wert, wie containsTag() in der PHP-Version
+        $contract = array_map(fn (string $v): string => mb_strtolower(trim($v)), explode(',', (string) $this->finance?->contract_status));
+        $contractOk = array_intersect($contract, ['vertrag zurück', 'rahmenvertrag']) !== [];
+        $secondRatePaid = in_array('2. Rate gezahlt', $this->finance?->accounting_status ?? [], true);
+
+        return !($contractOk && $secondRatePaid);
+    }
+
     /** Liegt in der Vergangenheit, ist aber noch nicht abgeschlossen. */
     public function isOverdue(): bool
     {

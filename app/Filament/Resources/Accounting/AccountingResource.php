@@ -78,6 +78,11 @@ class AccountingResource extends Resource
                 TextColumn::make('starts_at')
                     ->label('Datum')
                     ->date('D, d.m.Y')
+                    ->icon(fn (Event $record): ?Heroicon => $record->hasFinanceAlert() && !$record->finance?->accounting_closed ? Heroicon::ExclamationTriangle : null)
+                    ->iconColor('danger')
+                    ->tooltip(fn (Event $record): ?string => $record->hasFinanceAlert() && !$record->finance?->accounting_closed
+                        ? 'Finanz-Warnung: Event in höchstens 14 Tagen, Vertrag nicht zurück oder 2. Rate nicht gezahlt'
+                        : null)
                     ->sortable(),
                 TextColumn::make('title')
                     ->label('Titel')
