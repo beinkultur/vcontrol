@@ -24,6 +24,7 @@ class CheckAccess extends Command
 
     /** Seite der PHP-Version => Gegenstück hier. Wächst mit jedem portierten Modul. */
     private const PAGES = [
+        'GET /events' => '/events',
         'GET /veranstalter' => '/veranstalter',
         'GET /users' => '/benutzer',
         'GET /admin/rollen' => '/rollen',

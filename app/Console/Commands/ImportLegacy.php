@@ -37,6 +37,7 @@ class ImportLegacy extends Command
             $this->importRoles($legacy);
             $this->importUsers($legacy);
             $this->importPromoters($legacy);
+            $this->importEvents($legacy);
         });
 
         return self::SUCCESS;
@@ -194,6 +195,44 @@ class ImportLegacy extends Command
         $this->sync('inventory_items', $items, upsert: false);
         $this->sync('inventory_categories', $categories);
         $this->sync('inventory_items', $items);
+    }
+
+    /**
+     * Event-Kern. Nicht übernommen: legacy_key, calendar_id (IDs eines
+     * Google-Kalenders aus AppSheet) und pl (Projektleitung, im Bestand leer).
+     */
+    private function importEvents(Connection $legacy): void
+    {
+        $promoterIds = DB::table('promoters')->pluck('id')->flip();
+
+        $rows = $legacy->table('vc_events')->orderBy('id')->get()->map(fn (object $e): array => [
+            'id' => $e->id,
+            'va_nr' => $e->va_nr,
+            'va_id' => $e->va_id,
+            'title' => $e->title,
+            'promoter_id' => isset($promoterIds[$e->promoter_id]) ? $e->promoter_id : null,
+            'status' => $e->status,
+            'event_type1' => $e->event_type1,
+            'event_type2' => $e->event_type2,
+            'starts_at' => $e->starts_at,
+            'ends_at' => $e->ends_at,
+            'pax_expected' => $e->pax_expected,
+            'pax' => $e->pax,
+            'areas' => $this->jsonList($e->areas),
+            'seating' => $this->jsonList($e->seating),
+            'ticketing' => $e->ticketing,
+            'wlan' => $e->wlan,
+            'wlan_password' => $e->wlan_password,
+            'description' => $e->description,
+            'booking_notes' => $e->booking_notes,
+            'onsite_contact' => $e->onsite_contact,
+            'doing_closed' => (bool) $e->doing_closed,
+            'closed' => (bool) $e->closed,
+            'created_at' => $e->created_at,
+            'updated_at' => $e->updated_at,
+        ])->all();
+
+        $this->sync('events', $rows);
     }
 
     /** Komma-Text der PHP-Version („Umbau , Verkehr“) als JSON-Liste. */
