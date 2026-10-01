@@ -13,13 +13,16 @@ use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
 use App\Filament\Support\AssignmentFields;
 use App\Filament\Support\IncomingInvoiceFields;
 use App\Filament\Support\OptionChoices;
+use App\Filament\Support\RoomUsageFields;
 use App\Filament\Support\ServiceFields;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Event;
 use App\Models\EventFinance;
+use App\Models\EventOperation;
 use App\Models\EventPr;
 use App\Models\EventStage;
 use App\Support\EventProgress;
+use Closure;
 use App\Support\StagePlan;
 use App\Support\StagePodests;
 use Filament\Actions\Action;
@@ -77,7 +80,6 @@ class EventForm
         'pvc_teardown' => 'PVC Abbau',
         'cleaning' => 'Reinigung',
         'interim_cleaning' => 'Zwischenreinigung',
-        'special_cleaning' => 'Sonderreinigung',
         'bar_setup' => 'Tresen Aufbau',
         'bar_teardown' => 'Tresen Abbau',
         'chairs_ordered' => 'Stühle bestellt',
@@ -379,10 +381,6 @@ class EventForm
                 TextInput::make('merch_fee')
                     ->label('Merch-Fee')
                     ->maxLength(120),
-                Toggle::make('power_ant')
-                    ->label('Miete Elektro-Ameise'),
-                Toggle::make('house_rig_early')
-                    ->label('Haus-Rig ab 7 Uhr'),
                 Toggle::make('briefing_complete')
                     ->label('Briefing vollständig'),
             ]);
@@ -412,25 +410,9 @@ class EventForm
             ]);
     }
 
-    /** Aktive Räume plus die schon zugeordneten, falls einer inzwischen inaktiv ist. */
-    private static function roomField(string $relationship, string $label): CheckboxList
-    {
-        return CheckboxList::make($relationship)
-            ->label($label)
-            ->relationship(
-                name: $relationship,
-                titleAttribute: 'name',
-                modifyQueryUsing: fn (Builder $query, ?Event $record): Builder => $query
-                    ->where(fn (Builder $q): Builder => $q
-                        ->where('rooms.is_active', true)
-                        ->orWhereIn('rooms.id', $record?->{$relationship}->pluck('id')->all() ?? []))
-                    ->orderBy('rooms.sort_order'),
-            )
-            ->columns(2);
-    }
-
     /**
-     * Durchführung › Betrieb (Show Day) wie in der PHP-Version.
+     * Durchführung › Betrieb (Show Day) wie in der PHP-Version: Räume, Strom und
+     * Bus-Strom, die Ja/Nein-Punkte des Tages, PAX.
      *
      * @return list<Section>
      */
@@ -438,57 +420,104 @@ class EventForm
     {
         return [
             Section::make('Räume')
-                ->columns(2)
-                ->schema([
-                    self::roomField('backstageRooms', 'Backstage'),
-                    self::roomField('officeRooms', 'Büros'),
-                ]),
-            Section::make('Betrieb')
+                ->description('Jeder Raum einmal: Backstage, Büro oder neutral (nicht belegt).')
+                ->columns(['default' => 1, 'lg' => 2, 'xl' => 3])
+                ->schema(RoomUsageFields::all()),
+            // Vor dem Abschnitt „Check“: legt bei neuen Events die Zeile an, die Haus-Delay dort nur ändert
+            Section::make('Strom')
                 ->relationship('operation')
-                ->columns(3)
+                ->columns(['default' => 1, 'md' => 2, 'xl' => 4])
                 ->schema([
-                    TextInput::make('power_consumption')
-                        ->label('Stromverbrauch (kWh)')
-                        ->numeric(),
-                    Toggle::make('bus_power')
-                        ->label('Buspower'),
-                    Toggle::make('house_delay')
-                        ->label('Haus-Delay'),
+                    ToggleButtons::make('bus_power')
+                        ->label('Bus-Strom')
+                        ->helperText('Anschlüsse, werden einzeln abgerechnet')
+                        ->options(array_combine(range(0, EventOperation::MAX_BUS_POWER), array_map('strval', range(0, EventOperation::MAX_BUS_POWER))))
+                        ->grouped(),
+                    self::meterReading('power_meter_start', 'Stromzähler Stand Anfang'),
+                    self::meterReading('power_meter_end', 'Stromzähler Stand Ende')
+                        ->rule(fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                            $start = $get('power_meter_start');
+                            if (filled($value) && filled($start) && (float) $value < (float) $start) {
+                                $fail('Der Stand am Ende kann nicht kleiner sein als am Anfang.');
+                            }
+                        }),
+                    TextEntry::make('power_consumption_view')
+                        ->label('Verbrauch')
+                        ->state(fn (Get $get, ?EventOperation $record): string => self::consumptionText($get, $record)),
                 ]),
-            Section::make('Abschluss')
-                ->columns(3)
+            Section::make('Check')
+                ->columns(['default' => 1, 'md' => 2, 'xl' => 3])
                 ->schema([
+                    self::yesNo('checklist', 'special_cleaning', 'Sonderreinigung', textValues: true),
+                    self::yesNo('operation', 'house_delay', 'Haus-Delay'),
+                    self::yesNo('checklist', 'power_ant', 'Miete Elektro-Ameise'),
+                    self::yesNo('checklist', 'house_rig_early', 'Haus-Rig ab 7 Uhr'),
+                    self::yesNo('stage', 'sold_out_award', 'Sold-Out-Award'),
                     TextInput::make('pax')
                         ->label('PAX abgerechnet')
                         ->numeric()
                         ->minValue(0),
-                    self::soldOutAward(),
                 ]),
         ];
     }
 
-    /**
-     * Steht in der Bühnen-Tabelle, gehört aber in die Durchführung. Ein zweiter
-     * Abschnitt auf derselben Beziehung würde bei neuen Events die Zeile doppelt
-     * anlegen – daher ein Feld ohne Bindung, gespeichert nach dem Abschnitt
-     * „Bühne“. Ja/nein/leer wie in der PHP-Version, leer heißt: nicht erfasst.
-     */
-    private static function soldOutAward(): ToggleButtons
+    private static function meterReading(string $name, string $label): TextInput
     {
-        return ToggleButtons::make('sold_out_award')
-            ->label('Sold-Out-Award')
-            ->boolean('ja', 'nein')
+        return TextInput::make($name)
+            ->label($label)
+            ->numeric()
+            ->minValue(0)
+            ->step(0.01)
+            ->suffix('kWh')
+            ->live(onBlur: true);
+    }
+
+    /** Verbrauch aus den Zählerständen; sonst ein früher eingetragener Wert. */
+    private static function consumptionText(Get $get, ?EventOperation $record): string
+    {
+        $start = $get('power_meter_start');
+        $end = $get('power_meter_end');
+        if (filled($start) && filled($end) && is_numeric($start) && is_numeric($end)) {
+            return number_format((float) $end - (float) $start, 2, ',', '.') . ' kWh';
+        }
+        if ($record?->power_consumption !== null) {
+            return number_format($record->power_consumption, 0, ',', '.') . ' kWh (eingetragen)';
+        }
+
+        return 'aus den Zählerständen';
+    }
+
+    /**
+     * Ja/nein für Werte aus anderen 1:1-Tabellen (Checkliste, Betrieb, Bühne).
+     * Ohne Bindung gespeichert per updateOrCreate – ein zweiter Abschnitt auf
+     * derselben Beziehung legte bei neuen Events die Zeile doppelt an. Leer
+     * heißt: nicht erfasst. Textwerte wie in der Checkliste (ja/nein/entfällt).
+     */
+    private static function yesNo(string $relation, string $column, string $label, bool $textValues = false): ToggleButtons
+    {
+        $field = ToggleButtons::make($column)
+            ->label($label)
             ->grouped()
-            // Als 1/0 wie die Schaltflächen: Filament wendet seine Umwandlung vor
-            // diesem Aufruf an, ein true bliebe stehen und nichts wäre markiert.
-            ->afterStateHydrated(fn (ToggleButtons $component, ?Event $record) => $component->state(
-                $record?->stage?->sold_out_award === null ? null : (int) $record->stage->sold_out_award,
-            ))
-            ->dehydrated(false)
-            ->saveRelationshipsUsing(fn (Event $record, mixed $state) => $record->stage()->updateOrCreate(
-                [],
-                ['sold_out_award' => $state === null || $state === '' ? null : (bool) $state],
-            ));
+            ->dehydrated(false);
+        $field = $textValues
+            ? $field->options(self::CHECK_OPTIONS)
+                ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
+                ->icons(['yes' => Heroicon::Check, 'no' => Heroicon::XMark])
+            : $field->boolean('ja', 'nein');
+
+        return $field
+            // Für Ja/Nein als 1/0 wie die Schaltflächen: Filament wandelt vor diesem Aufruf um.
+            ->afterStateHydrated(function (ToggleButtons $component, ?Event $record) use ($relation, $column, $textValues): void {
+                $value = $record?->{$relation}?->{$column};
+                $component->state($value === null || $textValues ? $value : (int) $value);
+            })
+            ->saveRelationshipsUsing(fn (Event $record, mixed $state) => $record->{$relation}()->updateOrCreate([], [
+                $column => match (true) {
+                    $state === null || $state === '' => null,
+                    $textValues => (string) $state,
+                    default => (bool) $state,
+                },
+            ]));
     }
 
     private static function can(Area $area, Level $minimum = Level::Read): bool

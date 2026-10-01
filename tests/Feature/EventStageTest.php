@@ -116,7 +116,7 @@ class EventStageTest extends TestCase
             ->assertSchemaStateSet([
                 'checklist.hands' => 'yes',
                 'checklist.traffic' => 'na',
-                'checklist.house_rig_early' => true,
+                'house_rig_early' => 1,
                 'sold_out_award' => 1,
             ]);
     }

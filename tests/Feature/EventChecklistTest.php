@@ -22,7 +22,7 @@ class EventChecklistTest extends TestCase
                 'checklist.chairs_ordered' => 'no',
                 'checklist.traffic' => 'na',
                 'checklist.merch_fee' => '15 %',
-                'checklist.house_rig_early' => true,
+                'house_rig_early' => 1, // seit 01.10.2026 unter Durchführung › Betrieb
             ])
             ->call('save')
             ->assertHasNoFormErrors();

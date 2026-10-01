@@ -6,10 +6,12 @@ use App\Access\Area;
 use App\Filament\Concerns\BoxedPage;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\EventIcsFeed;
 use App\Support\StagePodests;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -19,6 +21,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use UnitEnum;
 
 /**
@@ -109,6 +112,37 @@ class ManageVenue extends Page
                                 ->keyBindings(['mod+s'])
                                 ->visible(fn (): bool => $this->canEdit()),
                         ]),
+                    ]),
+                // Kalender-Feed wie in der PHP-Version: ein Abo für alle, mit geheimem Schlüssel
+                Section::make('Kalender-Feed')
+                    ->description('Alle bestätigten Veranstaltungen als Abo für Kalender-Apps (Outlook, Google, Apple). Die Adresse enthält einen geheimen Schlüssel – wer sie hat, sieht die Termine.')
+                    ->schema([
+                        TextEntry::make('feed_url')
+                            ->label('Adresse')
+                            ->state(fn (): string => EventIcsFeed::url() ?? 'ausgeschaltet')
+                            ->copyable(fn (): bool => EventIcsFeed::isEnabled())
+                            ->copyMessage('Adresse kopiert'),
+                        Actions::make([
+                            Action::make('enableFeed')
+                                ->label(fn (): string => EventIcsFeed::isEnabled() ? 'Neue Adresse erzeugen' : 'Feed einschalten')
+                                ->requiresConfirmation(fn (): bool => EventIcsFeed::isEnabled())
+                                ->modalDescription('Die bisherige Adresse funktioniert danach nicht mehr – bestehende Abos müssen neu eingerichtet werden.')
+                                ->visible(fn (): bool => $this->canEdit())
+                                ->action(function (): void {
+                                    Setting::put(Setting::CALENDAR_FEED_TOKEN, Str::random(40));
+                                    Notification::make()->success()->title('Kalender-Feed eingeschaltet')->send();
+                                }),
+                            Action::make('disableFeed')
+                                ->label('Ausschalten')
+                                ->color('danger')
+                                ->requiresConfirmation()
+                                ->modalDescription('Kalender-Apps bekommen danach keine Termine mehr.')
+                                ->visible(fn (): bool => $this->canEdit() && EventIcsFeed::isEnabled())
+                                ->action(function (): void {
+                                    Setting::put(Setting::CALENDAR_FEED_TOKEN, null);
+                                    Notification::make()->success()->title('Kalender-Feed ausgeschaltet')->send();
+                                }),
+                        ])->key('feedActions'),
                     ]),
             ]);
     }

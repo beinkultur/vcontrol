@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\EventFileController;
 use App\Http\Controllers\GuestListPrintController;
 use App\Http\Controllers\StagePlanController;
@@ -18,3 +19,7 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
     Route::get('/events/{event}/buehnenplan.svg', [StagePlanController::class, 'svg'])->name('events.stage-plan-svg');
     Route::get('/dateien/{file}/download', EventFileController::class)->name('event-files.download');
 });
+
+// Kalender-Feed: Kalender-Apps rufen ohne Anmeldung ab, deshalb mit Schlüssel
+// statt hinter dem Panel-Login (siehe CalendarFeedController).
+Route::get('/kalender/events.ics', CalendarFeedController::class)->name('calendar.feed');

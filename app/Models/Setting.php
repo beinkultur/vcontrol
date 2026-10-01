@@ -15,6 +15,9 @@ class Setting extends Model
 
     public const PODEST_INCLUDED = 'podest_included';
 
+    /** Geheimer Schlüssel des Kalender-Feeds; leer = Feed aus. */
+    public const CALENDAR_FEED_TOKEN = 'calendar_feed_token';
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';

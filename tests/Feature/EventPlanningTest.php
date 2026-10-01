@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\AssignmentRole;
+use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Models\Employee;
 use App\Models\Event;
@@ -24,26 +25,41 @@ class EventPlanningTest extends TestCase
         $this->event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
     }
 
-    public function test_raeume_als_backstage_und_buero_zuordnen(): void
+    public function test_jeder_raum_einmal_backstage_neutral_oder_buero(): void
     {
         $lounge = Room::create(['name' => 'Lounge', 'sort_order' => 10]);
         $buero = Room::create(['name' => 'Produktionsbüro', 'sort_order' => 20]);
+        $physio = Room::create(['name' => 'Physio', 'sort_order' => 30]);
 
         Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
-            ->fillForm(['backstageRooms' => [$lounge->id], 'officeRooms' => [$buero->id, $lounge->id]])
+            ->assertSchemaStateSet(['room_' . $lounge->id => 'neutral'])
+            ->fillForm(['room_' . $lounge->id => 'backstage', 'room_' . $buero->id => 'office', 'room_' . $physio->id => 'neutral'])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $this->assertSame([$lounge->id], $this->event->backstageRooms()->pluck('rooms.id')->all());
-        $this->assertEqualsCanonicalizing([$buero->id, $lounge->id], $this->event->officeRooms()->pluck('rooms.id')->all());
+        $this->assertSame([$buero->id], $this->event->officeRooms()->pluck('rooms.id')->all());
 
-        // Backstage leeren lässt die Büros stehen
+        // Umstellen: Lounge wird neutral, das Büro bleibt
         Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
-            ->fillForm(['backstageRooms' => []])
+            ->assertSchemaStateSet(['room_' . $lounge->id => 'backstage', 'room_' . $buero->id => 'office'])
+            ->fillForm(['room_' . $lounge->id => 'neutral'])
             ->call('save');
 
         $this->assertSame(0, $this->event->backstageRooms()->count());
-        $this->assertSame(2, $this->event->officeRooms()->count());
+        $this->assertSame(1, $this->event->rooms()->count());
+    }
+
+    public function test_inaktiver_raum_nur_wenn_belegt(): void
+    {
+        $alt = Room::create(['name' => 'Alter Raum', 'is_active' => false]);
+        $leer = Room::create(['name' => 'Auch alt', 'is_active' => false]);
+        $this->event->rooms()->attach($alt->id, ['usage_type' => 'office']);
+
+        $this->get(EventResource::getUrl('edit', ['record' => $this->event]) . '?phase=durchfuehrung')
+            ->assertOk()
+            ->assertSee('Alter Raum')
+            ->assertDontSee('Auch alt');
     }
 
     public function test_rollen_vergeben_aendern_und_leeren(): void

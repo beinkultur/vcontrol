@@ -67,6 +67,17 @@ Bedienbar:
   Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar.
 - Gästeliste mit Druckansicht für den Einlass (A4, nach Name sortiert, Summe,
   Spalte zum Abhaken).
+- **Durchführung › Betrieb** (01.10.2026): Räume einmal je Raum mit Backstage /
+  neutral / Büro; Bus-Strom als Anzahl der Anschlüsse (0–5, einzeln
+  abgerechnet, Spalte in der Buchhaltung); Stromzähler Stand Anfang und Ende,
+  der Verbrauch wird daraus berechnet (kein Eingabefeld mehr); „Check“ wie in
+  der PHP-Version: Sonderreinigung, Haus-Delay, Miete Elektro-Ameise, Haus-Rig
+  ab 7 Uhr, Sold-Out-Award, dazu PAX abgerechnet. Die Zählerstände gibt es nur
+  hier, nicht in der PHP-Version.
+- **Kalender-Feed** `/kalender/events.ics` wie in der PHP-Version: alle
+  bestätigten Events ganztägig, Zugriff mit geheimem Schlüssel (Einstellung der
+  Halle) oder angemeldet mit Kalender-Recht. Adresse unter Events › „Kalender
+  abonnieren“ und Verwaltung › Halle (neu erzeugen, ausschalten).
 - **Dateien** wie in der PHP-Version: Planung › Dateien zum Hochladen (Tag,
   Anzeigename, max. 15 MB, Archive nur für Admins), neue Version hochladen
   (Versionsnummer zählt hoch, „Stand: Datum · vN“), Löschen; auf der Übersicht
@@ -104,7 +115,7 @@ Bedienbar:
 Noch nicht: Leistungsgruppen bearbeiten, Datei-Bibliothek (übergreifende
 Dateien verknüpfen),
 Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
-Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Sortierung
+Freitermin, Extern-Portal, Zugangscodes, Audit-Log, Sortierung
 „Finanz-Warnung zuerst“.
 
 - **Leistungen:** Die PHP-Version legt je Event alle 19 Leistungen an

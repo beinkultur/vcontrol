@@ -104,6 +104,12 @@ class AccountingResource extends Resource
                     ->label('Miete')
                     ->money('EUR', locale: 'de')
                     ->alignEnd(),
+                TextColumn::make('operation.bus_power')
+                    ->label('Bus-Strom')
+                    ->tooltip('Anschlüsse, einzeln abzurechnen')
+                    ->color(fn (?int $state): string => $state > 0 ? 'warning' : 'gray')
+                    ->alignEnd()
+                    ->toggleable(),
                 // Wie in der PHP-Version aus der gespeicherten Summe; leer zählt 0.
                 TextColumn::make('extra_podests')
                     ->label('Zus. Podeste')

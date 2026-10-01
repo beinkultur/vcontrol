@@ -73,7 +73,7 @@ class EventListsTest extends TestCase
             ->assertSchemaStateSet([
                 'role_pl' => 'employee:' . $employee->id,
                 'service_security_responsible' => Responsible::Promoter,
-                'backstageRooms' => [(string) $this->lounge->id],
+                'room_' . $this->lounge->id => 'backstage',
             ]);
     }
 }
