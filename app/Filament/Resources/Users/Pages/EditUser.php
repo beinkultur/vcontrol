@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Access\AccountSafety;
+use App\Filament\Concerns\BoxedPage;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
@@ -11,6 +12,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditUser extends EditRecord
 {
+    use BoxedPage;
+
     protected static string $resource = UserResource::class;
 
     protected function getHeaderActions(): array

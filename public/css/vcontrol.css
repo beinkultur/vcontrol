@@ -403,3 +403,241 @@ a.vc-card:hover {
 .dark .vc-text-danger {
     color: var(--danger-400);
 }
+
+/* ---------------------------------------------------------------------
+ * Seitenbreite: Formulare und Dashboards geboxt wie in der PHP-Version,
+ * Listen in voller Breite (BoxedPage)
+ * ------------------------------------------------------------------ */
+
+.fi-main.vc-boxed {
+    max-width: 1400px;
+    margin-inline: auto;
+}
+
+/* ---------------------------------------------------------------------
+ * Event-Workspace: Phasen als Schritte (Stepper der PHP-Version)
+ * ------------------------------------------------------------------ */
+
+.vc-phases > .fi-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.6rem;
+    padding: 0.75rem;
+    overflow: visible;
+    background: color-mix(in oklab, var(--gray-500) 7%, transparent);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.dark .vc-phases > .fi-tabs {
+    border-bottom-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.vc-phases > .fi-tabs > .fi-tabs-item {
+    --vc-phase: var(--primary-600);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.6rem;
+    height: auto;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.65rem;
+    background: var(--color-white);
+    text-align: left;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.dark .vc-phases > .fi-tabs > .fi-tabs-item {
+    border-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    background: var(--gray-900);
+}
+
+.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(2) { --vc-phase: var(--vc-buchung); }
+.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(3) { --vc-phase: var(--vc-planung); }
+.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(4) { --vc-phase: var(--vc-durchfuehrung); }
+
+.vc-phases > .fi-tabs > .fi-tabs-item:hover {
+    border-color: var(--vc-phase);
+}
+
+.vc-phases > .fi-tabs > .fi-tabs-item.fi-active {
+    border-color: var(--vc-phase);
+    background: color-mix(in oklab, var(--vc-phase) 9%, var(--color-white));
+    box-shadow: inset 0 -3px 0 var(--vc-phase);
+}
+
+.dark .vc-phases > .fi-tabs > .fi-tabs-item.fi-active {
+    background: color-mix(in oklab, var(--vc-phase) 18%, var(--gray-900));
+}
+
+.vc-phases > .fi-tabs > .fi-tabs-item .fi-tabs-item-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    color: var(--gray-950);
+}
+
+.dark .vc-phases > .fi-tabs > .fi-tabs-item .fi-tabs-item-label {
+    color: var(--color-white);
+}
+
+.vc-step__num {
+    flex-shrink: 0;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: var(--vc-track);
+    color: var(--gray-600);
+}
+
+.fi-tabs-item.fi-active .vc-step__num {
+    background: var(--vc-phase);
+    color: var(--color-white);
+}
+
+.vc-step__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.vc-step__title {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.vc-step__desc {
+    font-size: 0.72rem;
+    font-weight: 400;
+    line-height: 1.3;
+    white-space: normal;
+    color: var(--gray-500);
+}
+
+.vc-phases > .fi-tabs > .fi-tabs-item .fi-tabs-item-label {
+    flex: 1 1 auto;
+}
+
+.vc-phases > .fi-tabs > .fi-tabs-item .fi-badge {
+    flex-shrink: 0;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+@media (max-width: 64rem) {
+    .vc-phases > .fi-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .vc-step__desc {
+        display: none;
+    }
+}
+
+/* Unterbereiche: Leiste links, aktiver Bereich in der Farbe der Phase */
+.vc-sections > .fi-tabs {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-inline: 0;
+}
+
+.vc-sections--buchung { --vc-phase: var(--vc-buchung); }
+.vc-sections--planung { --vc-phase: var(--vc-planung); }
+
+.vc-sections > .fi-tabs > .fi-tabs-item.fi-active {
+    background: var(--vc-phase);
+}
+
+.vc-sections > .fi-tabs > .fi-tabs-item.fi-active .fi-tabs-item-label {
+    color: var(--color-white);
+}
+
+/* ---------------------------------------------------------------------
+ * Planung › Bühne: Podest-Berechnung
+ * ------------------------------------------------------------------ */
+
+.vc-podests {
+    padding: 0.85rem 1rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--gray-200);
+    background: color-mix(in oklab, var(--gray-500) 6%, transparent);
+}
+
+.dark .vc-podests {
+    border-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.vc-podests--alert {
+    border-color: color-mix(in oklab, #dc2626 40%, transparent);
+    background: color-mix(in oklab, #dc2626 9%, transparent);
+}
+
+.vc-podests__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.vc-podests__title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.vc-podests__inventory {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+}
+
+.vc-podests__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+}
+
+@media (max-width: 48rem) {
+    .vc-podests__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.vc-podests__grid dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--gray-500);
+}
+
+.vc-podests__grid dd {
+    margin: 0.1rem 0 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-podests__total dd {
+    color: var(--primary-600);
+}
+
+.dark .vc-podests__total dd {
+    color: var(--primary-400);
+}
+
+.vc-podests--alert .vc-podests__total dd {
+    color: var(--danger-600);
+}
+
+.vc-podests__note {
+    margin: 0.6rem 0 0;
+    font-size: 0.82rem;
+}

@@ -36,6 +36,7 @@ use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Livewire;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -46,6 +47,7 @@ use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 /**
  * Event-Workspace wie in der PHP-Version: Übersicht (Dashboard) und die drei
@@ -100,10 +102,10 @@ class EventForm
             ->components([
                 Tabs::make('Phasen')
                     ->persistTabInQueryString('phase')
+                    ->extraAttributes(['class' => 'vc-phases'])
                     ->tabs([
-                        Tab::make('Übersicht')
+                        Tab::make(self::stepLabel('⌂', 'Übersicht', 'Dashboard & Fortschritt'))
                             ->id('uebersicht')
-                            ->icon(Heroicon::OutlinedHome)
                             ->schema([
                                 View::make('filament.events.dashboard')
                                     ->viewData(fn (Event $record, $livewire): array => [
@@ -113,7 +115,7 @@ class EventForm
                                 self::embedded(NotesRelationManager::class),
                             ]),
                         self::phase('Buchung', 'buchung')->schema([
-                            self::sections(array_values(array_filter([
+                            self::sections('buchung', array_values(array_filter([
                                 Tab::make('Daten')
                                     ->id('daten')
                                     ->schema([Section::make()->columns(3)->schema(self::bookingData())]),
@@ -129,7 +131,7 @@ class EventForm
                             ]))),
                         ]),
                         self::phase('Planung', 'planung')->schema([
-                            self::sections([
+                            self::sections('planung', [
                                 Tab::make('Zeiten')->id('zeiten')->schema([self::times()]),
                                 Tab::make('Checkliste')->id('checkliste')->schema([self::checklist()]),
                                 Tab::make('Bühne')->id('buehne')->schema([
@@ -161,20 +163,41 @@ class EventForm
             ]);
     }
 
-    /** Phase mit ihrem Fortschritt als Zahl am Reiter. */
+    /** Beschreibung der Phasen wie im Phasen-Stepper der PHP-Version. */
+    private const PHASES = [
+        'buchung' => ['1', 'Buchung', 'Event anlegen und vertragliche Stammdaten'],
+        'planung' => ['2', 'Planung', 'Advancing, Zeiten, Personal und Gewerke'],
+        'durchfuehrung' => ['3', 'Durchführung', 'Show Day – Betrieb und Räume'],
+    ];
+
+    /** Phase mit Nummer, Beschreibung und Fortschritt am Reiter. */
     private static function phase(string $label, string $id): Tab
     {
-        return Tab::make($label)
+        [$number, , $description] = self::PHASES[$id];
+
+        return Tab::make(self::stepLabel($number, $label, $description))
             ->id($id)
             ->badge(fn (?Event $record): ?string => $record ? EventProgress::phases($record)[$id] . ' %' : null);
     }
 
-    /** @param  list<Tab>  $tabs  Unterbereiche einer Phase */
-    private static function sections(array $tabs): Tabs
+    /** Reiterbeschriftung als Schritt: Nummer, Titel, Beschreibung (Stil: .vc-phases). */
+    private static function stepLabel(string $number, string $title, string $description): HtmlString
+    {
+        return new HtmlString(sprintf(
+            '<span class="vc-step__num">%s</span><span class="vc-step__text"><span class="vc-step__title">%s</span><span class="vc-step__desc">%s</span></span>',
+            e($number),
+            e($title),
+            e($description),
+        ));
+    }
+
+    /** @param  list<Tab>  $tabs  Unterbereiche einer Phase, in der Farbe der Phase */
+    private static function sections(string $phase, array $tabs): Tabs
     {
         return Tabs::make('Bereiche')
             ->persistTabInQueryString('bereich')
             ->contained(false)
+            ->extraAttributes(['class' => "vc-sections vc-sections--{$phase}"])
             ->tabs($tabs);
     }
 
@@ -467,73 +490,78 @@ class EventForm
         return $user instanceof User && $user->access()->can($area, $minimum);
     }
 
-    /** Bühnenmaße wie im Bühnen-Formular der PHP-Version, mit Podest-Rechnung. */
+    /**
+     * Bühnenmaße wie im Bühnen-Formular der PHP-Version: vier gleich gebaute
+     * Kästen (je drei Felder), darunter die Podest-Rechnung als Zusammenfassung.
+     */
     private static function stage(): Section
     {
         return Section::make()
             ->relationship('stage')
-            ->columns(4)
             ->schema([
-                Fieldset::make('Hauptbühne')
-                    ->columns(3)
+                Grid::make(['default' => 1, 'lg' => 2])
                     ->schema([
-                        self::meterField('width', 'Breite'),
-                        self::meterField('depth', 'Tiefe'),
-                        Select::make('height')
-                            ->label('Höhe')
-                            ->options(fn (?EventStage $record): array => self::heightOptions($record?->height))
-                            ->native(false),
+                        Fieldset::make('Hauptbühne')
+                            ->columns(3)
+                            ->schema([
+                                self::meterField('width', 'Breite'),
+                                self::meterField('depth', 'Tiefe'),
+                                Select::make('height')
+                                    ->label('Höhe')
+                                    ->options(fn (?EventStage $record): array => self::heightOptions($record?->height))
+                                    ->native(false),
+                            ]),
+                        Fieldset::make('Rollipodest und sonstige Podeste')
+                            ->columns(3)
+                            ->schema([
+                                self::meterField('rollpodest_width', 'Breite')
+                                    ->placeholder((string) StagePodests::DEFAULT_ROLL_WIDTH),
+                                self::meterField('rollpodest_depth', 'Tiefe')
+                                    ->placeholder((string) StagePodests::DEFAULT_ROLL_DEPTH),
+                                TextInput::make('extra_platforms')
+                                    ->label('Sonstige')
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->maxValue(999)
+                                    ->suffix('Stück')
+                                    ->live(onBlur: true),
+                            ]),
+                        Fieldset::make('Wing stage left (SL)')
+                            ->columns(3)
+                            ->schema([
+                                self::meterField('wing_sl_width', 'Breite'),
+                                self::meterField('wing_sl_depth', 'Tiefe'),
+                                self::offsetField('wing_sl_offset'),
+                            ]),
+                        Fieldset::make('Wing stage right (SR)')
+                            ->columns(3)
+                            ->schema([
+                                self::meterField('wing_sr_width', 'Breite'),
+                                self::meterField('wing_sr_depth', 'Tiefe'),
+                                self::offsetField('wing_sr_offset'),
+                            ]),
                     ]),
-                Fieldset::make('Wing stage left (SL)')
-                    ->columns(3)
-                    ->schema([
-                        self::meterField('wing_sl_width', 'Breite'),
-                        self::meterField('wing_sl_depth', 'Tiefe'),
-                        self::offsetField('wing_sl_offset')
-                            ->helperText('Abstand zur Bühnen-Vorderkante, Richtung Upstage'),
+                View::make('filament.events.podest-summary')
+                    ->viewData(fn (Get $get): array => [
+                        'podests' => self::podests($get),
+                        'inventory' => StagePodests::inventory(),
                     ]),
-                Fieldset::make('Wing stage right (SR)')
-                    ->columns(3)
-                    ->schema([
-                        self::meterField('wing_sr_width', 'Breite'),
-                        self::meterField('wing_sr_depth', 'Tiefe'),
-                        self::offsetField('wing_sr_offset'),
-                    ]),
-                Fieldset::make('Rollipodest')
-                    ->columns(2)
-                    ->schema([
-                        self::meterField('rollpodest_width', 'Breite')
-                            ->placeholder((string) StagePodests::DEFAULT_ROLL_WIDTH),
-                        self::meterField('rollpodest_depth', 'Tiefe')
-                            ->placeholder((string) StagePodests::DEFAULT_ROLL_DEPTH),
-                    ]),
-                TextInput::make('extra_platforms')
-                    ->label('Sonstige Podeste')
-                    ->integer()
-                    ->minValue(0)
-                    ->maxValue(999)
-                    ->suffix('Stück')
-                    ->live(onBlur: true),
-                TextEntry::make('podest_calculation')
-                    ->label('Podeste')
-                    ->state(fn (Get $get): string => self::podestText(self::podests($get)))
-                    ->color(fn (Get $get): ?string => self::podests($get)['total'] > StagePodests::inventory() ? 'danger' : null)
-                    ->columnSpan(3),
                 Textarea::make('stage_notes')
                     ->label('Anmerkungen Bühne')
-                    ->rows(2)
-                    ->columnSpanFull(),
+                    ->helperText('Erscheint kursiv im Bühnenplan.')
+                    ->rows(2),
                 // Altdaten aus AppSheet, die das Formular der PHP-Version nicht mehr zeigt.
-                TextEntry::make('legacy_notes')
-                    ->label('Anmerkung aus AppSheet')
-                    ->state(fn (?EventStage $record): ?string => $record?->notes)
-                    ->visible(fn (?EventStage $record): bool => filled($record?->notes))
-                    ->columnSpan(2),
-                TextEntry::make('legacy_other')
-                    ->label('Sonstige Podeste laut AppSheet')
-                    ->state(fn (?EventStage $record): ?string => $record?->other_info)
-                    ->visible(fn (?EventStage $record): bool => filled($record?->other_info))
-                    ->columnSpan(2),
+                Grid::make(['default' => 1, 'lg' => 2])
+                    ->schema([
+                        TextEntry::make('legacy_notes')
+                            ->label('Anmerkung aus AppSheet')
+                            ->state(fn (?EventStage $record): ?string => $record?->notes)
+                            ->visible(fn (?EventStage $record): bool => filled($record?->notes)),
+                        TextEntry::make('legacy_other')
+                            ->label('Sonstige Podeste laut AppSheet')
+                            ->state(fn (?EventStage $record): ?string => $record?->other_info)
+                            ->visible(fn (?EventStage $record): bool => filled($record?->other_info)),
+                    ]),
             ]);
     }
 
@@ -555,6 +583,7 @@ class EventForm
     private static function offsetField(string $name): TextInput
     {
         return self::meterField($name, 'Versatz', live: false)
+            ->hintIcon(Heroicon::OutlinedInformationCircle, tooltip: 'Abstand zur Bühnen-Vorderkante, Richtung Upstage (weg vom Publikum)')
             ->dehydrateStateUsing(fn (mixed $state): int => $state === null || $state === '' ? StagePlan::DEFAULT_WING_OFFSET : (int) $state);
     }
 
@@ -579,17 +608,5 @@ class EventForm
             EventStage::PODEST_FIELDS,
             array_map(fn (string $field): mixed => $get($field), EventStage::PODEST_FIELDS),
         ));
-    }
-
-    /** @param  array{main: int, wing_sl: int, wing_sr: int, rollpodest: int, other: int, total: int}  $podests */
-    private static function podestText(array $podests): string
-    {
-        $inventory = StagePodests::inventory();
-        $text = "Hauptbühne {$podests['main']} + Wing SL {$podests['wing_sl']} + Wing SR {$podests['wing_sr']}"
-            . " + Rollipodest {$podests['rollpodest']} + sonstige {$podests['other']} = {$podests['total']}";
-
-        return $podests['total'] > $inventory
-            ? $text . ' – ' . ($podests['total'] - $inventory) . " über dem Bestand von {$inventory}, Nachbestellung nötig"
-            : $text . " – im Bestand von {$inventory}";
     }
 }

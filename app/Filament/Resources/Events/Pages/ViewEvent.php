@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events\Pages;
 
+use App\Filament\Concerns\BoxedPage;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\Concerns\HasEventHeading;
 use Filament\Actions\EditAction;
@@ -10,6 +11,7 @@ use Filament\Resources\Pages\ViewRecord;
 /** Derselbe Workspace wie beim Bearbeiten, für Rollen, die Events nur lesen dürfen. */
 class ViewEvent extends ViewRecord
 {
+    use BoxedPage;
     use HasEventHeading;
 
     protected static string $resource = EventResource::class;

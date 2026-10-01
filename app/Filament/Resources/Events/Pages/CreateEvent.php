@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events\Pages;
 
+use App\Filament\Concerns\BoxedPage;
 use App\Filament\Resources\Events\EventResource;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -11,6 +12,8 @@ use Filament\Resources\Pages\CreateRecord;
  */
 class CreateEvent extends CreateRecord
 {
+    use BoxedPage;
+
     protected static string $resource = EventResource::class;
 
     protected function getRedirectUrl(): string

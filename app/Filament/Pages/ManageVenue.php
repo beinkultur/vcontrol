@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Access\Area;
+use App\Filament\Concerns\BoxedPage;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\StagePodests;
@@ -28,6 +29,8 @@ use UnitEnum;
  */
 class ManageVenue extends Page
 {
+    use BoxedPage;
+
     protected static ?string $slug = 'halle';
 
     protected static ?string $title = 'Halle';

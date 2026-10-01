@@ -65,7 +65,7 @@ class EventStageTest extends TestCase
                 'stage.extra_platforms' => 3,
                 'stage.stage_notes' => 'Egonase 2x3m',
             ])
-            ->assertSee('= 79 – im Bestand von 86')
+            ->assertSee('Im Bestand – 7 Podeste Reserve.')
             ->call('save')
             ->assertHasNoFormErrors();
 

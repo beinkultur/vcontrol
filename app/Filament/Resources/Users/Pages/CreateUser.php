@@ -3,12 +3,15 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Access\AccountSafety;
+use App\Filament\Concerns\BoxedPage;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateUser extends CreateRecord
 {
+    use BoxedPage;
+
     protected static string $resource = UserResource::class;
 
     protected function beforeCreate(): void
