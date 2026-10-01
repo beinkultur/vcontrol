@@ -899,3 +899,75 @@ a.vc-card:hover {
     font-size: 0.8rem;
     color: var(--gray-500);
 }
+
+/* Codes Tageszugang */
+.vc-codes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1rem;
+}
+
+.vc-codes__value {
+    margin: 0.25rem 0 0.35rem;
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-codes__hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.8rem;
+    color: var(--gray-500);
+}
+
+.vc-codes__lookup {
+    display: grid;
+    gap: 0.35rem;
+    max-width: 16rem;
+    margin-bottom: 0.75rem;
+}
+
+.vc-codes__result {
+    margin: 0;
+}
+
+.vc-codes__table-wrap {
+    overflow-x: auto;
+}
+
+.vc-codes__table {
+    width: 100%;
+    max-width: 32rem;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.vc-codes__table th {
+    padding: 0.35rem 0.75rem 0.35rem 0;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gray-500);
+}
+
+.vc-codes__table td {
+    padding: 0.3rem 0.75rem 0.3rem 0;
+    border-top: 1px solid var(--gray-100);
+}
+
+.dark .vc-codes__table td {
+    border-top-color: rgb(255 255 255 / 0.06);
+}
+
+.vc-codes__code {
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-codes__row--today td {
+    font-weight: 700;
+}

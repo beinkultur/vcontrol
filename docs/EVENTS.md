@@ -170,10 +170,17 @@ Bedienbar:
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Spalte
   „Zus. Podeste“: über den im Mietpreis enthaltenen hinaus (47 Events).
 
+- **Codes Tageszugang** (`/codes`, Recht „Codes“) wie in der PHP-Version:
+  aktuell gültiger Code mit ▲ (gehört zur Eingabe am Zugangssystem, wird nicht
+  gespeichert), Code nach Datum (auch `?datum=JJJJ-MM-TT`), die nächsten 30 Tage.
+  Gepflegt wird nicht hier: Die Codes kommen per Import (859 Codes bis Ende 2028).
+  Für den Go-live-Import aus AppSheet: Tabelle „Codes“ (`Codes.code`,
+  `Codes.validFrom`, ein Code je Tag).
+
 Noch nicht: Leistungsgruppen
 bearbeiten, Datei-Bibliothek (übergreifende Dateien verknüpfen),
 Kalender, Anfragen und
-Freitermin, Extern-Portal, Zugangscodes, Audit-Log, Sortierung
+Freitermin, Extern-Portal, Audit-Log, Sortierung
 „Finanz-Warnung zuerst“.
 
 - **Leistungen:** Die PHP-Version legt je Event alle 19 Leistungen an

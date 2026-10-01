@@ -52,6 +52,7 @@ class ImportLegacy extends Command
             $this->importFiles($legacy);
             $this->importOperations($legacy);
             $this->importDamages($legacy);
+            $this->importAccessCodes($legacy);
         });
 
         return self::SUCCESS;
@@ -603,6 +604,23 @@ class ImportLegacy extends Command
         if ($missing !== []) {
             $this->warn('  Schadensfotos in der PHP-Version nicht gefunden: ' . implode(', ', $missing));
         }
+    }
+
+    /** Tageszugangscodes (vc_access_codes), ein Code je Tag. */
+    private function importAccessCodes(Connection $legacy): void
+    {
+        $userIds = DB::table('users')->pluck('id')->flip();
+        $this->sync('access_codes', $legacy->table('vc_access_codes')->orderBy('id')->get()
+            ->map(fn (object $c): array => [
+                'id' => $c->id,
+                'code' => $c->code,
+                'valid_from' => $c->valid_from,
+                'valid_on' => $c->valid_on,
+                'created_by' => isset($userIds[$c->created_by_user_id]) ? $c->created_by_user_id : null,
+                'created_by_name' => $this->author($c->created_by_name, $c->created_by_user_id),
+                'created_at' => $c->created_at,
+                'updated_at' => $c->created_at,
+            ])->values()->all());
     }
 
     /** Pfad einer Datei der PHP-Version wie dort FileStorage::resolveFullPath – nur unter den Upload-Ordnern. */
