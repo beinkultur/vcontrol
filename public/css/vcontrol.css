@@ -971,3 +971,47 @@ a.vc-card:hover {
 .vc-codes__row--today td {
     font-weight: 700;
 }
+
+/* Audit: Werte vorher/nachher */
+.vc-audit-changes {
+    overflow-x: auto;
+}
+
+.vc-audit-changes table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.vc-audit-changes th {
+    padding: 0.35rem 0.75rem 0.35rem 0;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gray-500);
+}
+
+.vc-audit-changes td {
+    padding: 0.35rem 0.75rem 0.35rem 0;
+    border-top: 1px solid var(--gray-100);
+    vertical-align: top;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.dark .vc-audit-changes td {
+    border-top-color: rgb(255 255 255 / 0.06);
+}
+
+.vc-audit-changes__field {
+    width: 30%;
+    font-weight: 600;
+}
+
+.vc-audit-changes__old {
+    color: var(--gray-500);
+    text-decoration: line-through;
+    text-decoration-color: rgb(239 68 68 / 0.5);
+}

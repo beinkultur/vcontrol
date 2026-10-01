@@ -24,6 +24,11 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   vendor/ nie –, und leert die Caches. Bei mehr als 20 Löschungen bricht es vorher
   ab (`MAX_DELETE=n` hebt die Grenze). Neue Migrationen danach selbst mit
   `php artisan migrate --force` ausführen.
+- Änderungsprotokoll: Alles, was über Eloquent gespeichert wird, protokolliert
+  `App\Support\Audit` automatisch. Wer an Eloquent vorbei schreibt (`DB::table`,
+  `->query()->update()/delete()`, Pivot ohne eigenes Modell), muss `Audit::record()`
+  aufrufen – sonst fehlt die Änderung im Audit. Neue Tabellen in
+  `AuditPresenter::SUBJECTS`, neue Felder in `FIELDS` eintragen.
 - Für die Entwicklung kommen die Daten aus der PHP-Version: `php artisan vc:import`,
   beliebig oft wiederholbar – überschreibt aber alles, was hier eingegeben wurde.
   Vorher in der Tabelle `sessions` nachsehen, ob seit dem letzten Import jemand

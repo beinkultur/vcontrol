@@ -22,6 +22,7 @@ class EditEvent extends EditRecord
     {
         return [
             $this->stagePlanAction(),
+            $this->historyAction(),
         ];
     }
 

@@ -4,6 +4,7 @@ namespace App\Filament\Support;
 
 use App\Models\Event;
 use App\Models\EventIncomingInvoice;
+use App\Support\Audit;
 use App\Support\IncomingInvoices;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
@@ -67,8 +68,22 @@ final class IncomingInvoiceFields
 
         $values = ['is_active' => $active, 'is_received' => $received, 'updated_by' => Auth::id(), 'updated_at' => now()];
         $query = DB::table('event_incoming_invoices')->where(['event_id' => $event->id, 'invoice_key' => $key]);
+        $before = $stored ? (array) $query->first(['is_active', 'is_received']) : null;
         $stored
             ? $query->update($values)
             : DB::table('event_incoming_invoices')->insert($values + ['event_id' => $event->id, 'invoice_key' => $key, 'created_at' => now()]);
+
+        $after = ['is_active' => (int) $active, 'is_received' => (int) $received];
+        if ($before === null || array_map('intval', $before) != $after) {
+            Audit::record(
+                'event_incoming_invoices',
+                $stored ? Audit::UPDATED : Audit::CREATED,
+                $before === null ? null : array_map('intval', $before),
+                $after,
+                key: $event->id . ':' . $key,
+                label: EventIncomingInvoice::SLOTS[$key] ?? $key,
+                eventId: (int) $event->id,
+            );
+        }
     }
 }

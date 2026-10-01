@@ -35,4 +35,12 @@ class OrderSlipItem extends Model
     {
         return rtrim(rtrim(number_format((float) $this->quantity, 2, ',', ''), '0'), ',');
     }
+
+    /** Für das Änderungsprotokoll: das Event des Kopfes */
+    public function auditEventId(): ?int
+    {
+        $eventId = OrderSlip::query()->whereKey($this->getAttributes()['order_slip_id'] ?? null)->value('event_id');
+
+        return $eventId === null ? null : (int) $eventId;
+    }
 }

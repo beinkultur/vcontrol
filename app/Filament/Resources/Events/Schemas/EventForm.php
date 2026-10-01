@@ -432,7 +432,7 @@ class EventForm
     {
         return [
             Section::make('Räume')
-                ->description('Jeder Raum einmal: Backstage, Büro oder neutral (nicht belegt).')
+                ->description('Jeder Raum einmal: Backstage, Büro oder – (nicht belegt).')
                 ->columns(['default' => 1, 'lg' => 2, 'xl' => 3])
                 ->schema(RoomUsageFields::all()),
             // Vor dem Abschnitt „Check“: legt bei neuen Events die Zeile an, die Haus-Delay dort nur ändert

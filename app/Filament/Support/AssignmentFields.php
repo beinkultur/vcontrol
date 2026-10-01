@@ -101,7 +101,8 @@ final class AssignmentFields
     {
         [$type, $id] = array_pad(explode(':', (string) $state, 2), 2, null);
         if (!in_array($type, self::TYPES, true) || (int) $id <= 0) {
-            $event->assignments()->where('role', $role->value)->delete();
+            // Einzeln statt per Abfrage, damit das Änderungsprotokoll es sieht
+            $event->assignments()->where('role', $role->value)->get()->each->delete();
 
             return;
         }

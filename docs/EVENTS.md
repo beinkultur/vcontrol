@@ -170,6 +170,16 @@ Bedienbar:
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Spalte
   „Zus. Podeste“: über den im Mietpreis enthaltenen hinaus (47 Events).
 
+- **Änderungsprotokoll** (`/audit`, Verwaltung › Audit, Recht „Audit“ wie in der
+  PHP-Version; 01.10.2026): jede Änderung über Eloquent automatisch
+  (`App\Support\Audit`, Listener im AppServiceProvider) – angelegt, geändert,
+  gelöscht, mit Werten vorher/nachher, Benutzer, Zeitpunkt, IP und Browser.
+  Passwörter und Feed-Schlüssel als „***“, Unterschriften als „[Unterschrift]“.
+  Ohne Eloquent geschriebene Stellen melden sich selbst (Raumbelegung,
+  Eingangsrechnungen), Rollen-Zuordnungen über das Pivot-Modell `RoleUser`,
+  `vc:import` mit einem Eintrag je Lauf. Anzeige mit deutschen Feldnamen und
+  Namen statt IDs (`App\Support\AuditPresenter`), Filter nach Event, Bereich,
+  Aktion, Benutzer, Zeitraum; im Event-Kopf „Verlauf“ (gefiltert aufs Event).
 - **Codes Tageszugang** (`/codes`, Recht „Codes“) wie in der PHP-Version:
   aktuell gültiger Code mit ▲ (gehört zur Eingabe am Zugangssystem, wird nicht
   gespeichert), Code nach Datum (auch `?datum=JJJJ-MM-TT`), die nächsten 30 Tage.
@@ -180,7 +190,7 @@ Bedienbar:
 Noch nicht: Leistungsgruppen
 bearbeiten, Datei-Bibliothek (übergreifende Dateien verknüpfen),
 Kalender, Anfragen und
-Freitermin, Extern-Portal, Audit-Log, Sortierung
+Freitermin, Extern-Portal, Sortierung
 „Finanz-Warnung zuerst“.
 
 - **Leistungen:** Die PHP-Version legt je Event alle 19 Leistungen an

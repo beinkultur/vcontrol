@@ -17,4 +17,12 @@ class HandoverProtocolItem extends Model
     {
         return $this->belongsTo(HandoverProtocol::class, 'protocol_id');
     }
+
+    /** Für das Änderungsprotokoll: das Event des Kopfes */
+    public function auditEventId(): ?int
+    {
+        $eventId = HandoverProtocol::query()->whereKey($this->getAttributes()['protocol_id'] ?? null)->value('event_id');
+
+        return $eventId === null ? null : (int) $eventId;
+    }
 }

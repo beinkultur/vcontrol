@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events\Pages\Concerns;
 
+use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Support\EventDisplay;
 use Filament\Actions\Action;
@@ -26,6 +27,17 @@ trait HasEventHeading
             'meta' => EventDisplay::meta($this->getRecord()),
             'actions' => $this->getCachedHeaderActions(),
         ]);
+    }
+
+    /** Änderungsprotokoll dieses Events, für alle mit Recht „Audit“ */
+    protected function historyAction(): Action
+    {
+        return Action::make('history')
+            ->label('Verlauf')
+            ->icon(Heroicon::OutlinedClock)
+            ->color('gray')
+            ->visible(fn (): bool => AuditLogResource::canViewAny())
+            ->url(fn (): string => AuditLogResource::getUrl('index', ['filters' => ['event' => ['value' => $this->getRecord()->getKey()]]]));
     }
 
     protected function stagePlanAction(): Action

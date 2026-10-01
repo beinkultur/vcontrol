@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Damage;
 use App\Models\EventFile;
+use App\Support\Audit;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
@@ -54,6 +55,8 @@ class ImportLegacy extends Command
             $this->importDamages($legacy);
             $this->importAccessCodes($legacy);
         });
+        // Der Import schreibt an Eloquent vorbei – ein Eintrag für den ganzen Lauf
+        Audit::record('import', Audit::IMPORTED, null, ['quelle' => 'PHP-Version'], label: 'Import aus der PHP-Version');
 
         return self::SUCCESS;
     }
