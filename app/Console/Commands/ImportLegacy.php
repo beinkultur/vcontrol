@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Damage;
 use App\Models\EventFile;
-use App\Support\StagePodests;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
@@ -286,7 +285,7 @@ class ImportLegacy extends Command
         ), 'event_id');
 
         $this->sync('event_stages', array_map(
-            fn (object $s): array => $this->stageRow($this->columns($s, ['event_id', 'stage_info', 'width', 'depth', 'height', 'wing_sl_width', 'wing_sl_depth', 'wing_sr_width', 'wing_sr_depth', 'wing_sl_offset', 'wing_sr_offset', 'extra_platforms', 'rollpodest_width', 'rollpodest_depth', 'podest_total', 'stair_third', 'stair_sl_offset', 'stair_sr_offset', 'backwall_cm', 'other_info', 'stage_notes', 'notes', 'sold_out_award'])),
+            fn (object $s): array => $this->columns($s, ['event_id', 'stage_info', 'width', 'depth', 'height', 'wing_sl_width', 'wing_sl_depth', 'wing_sr_width', 'wing_sr_depth', 'wing_sl_offset', 'wing_sr_offset', 'extra_platforms', 'rollpodest_width', 'rollpodest_depth', 'podest_total', 'stair_third', 'stair_sl_offset', 'stair_sr_offset', 'backwall_cm', 'other_info', 'stage_notes', 'notes', 'sold_out_award']),
             $rows('vc_event_stage'),
         ), 'event_id');
 
@@ -294,31 +293,6 @@ class ImportLegacy extends Command
             fn (object $c): array => $this->columns($c, ['event_id', 'hands', 'traffic', 'pvc_setup', 'pvc_teardown', 'cleaning', 'interim_cleaning', 'bar_setup', 'bar_teardown', 'chairs_ordered', 'merch_fee', 'merch_fee_check', 'special_cleaning', 'power_ant', 'house_rig_early', 'briefing_complete']),
             $rows('vc_event_checklist'),
         ), 'event_id');
-    }
-
-    /**
-     * „sonst. Podeste“ aus AppSheet (other_info) zählt wie „Sonstige“ mit
-     * (Entscheidung vom 01.10.2026): Eine reine Zahl wandert dorthin, die Summe
-     * steigt entsprechend. In den AppSheet-Summen war das Feld nie enthalten.
-     * Steht dort Text, bleibt er als Altdaten stehen.
-     *
-     * @param  array<string, mixed>  $row
-     * @return array<string, mixed>
-     */
-    private function stageRow(array $row): array
-    {
-        $other = trim((string) $row['other_info']);
-        if (preg_match('/^\d+$/', $other) !== 1 || (int) $other === 0) {
-            return $row;
-        }
-
-        $row['extra_platforms'] = (int) $row['extra_platforms'] + (int) $other;
-        $row['podest_total'] = $row['podest_total'] !== null
-            ? (int) $row['podest_total'] + (int) $other
-            : (StagePodests::calculate($row)['total'] ?: null);
-        $row['other_info'] = null;
-
-        return $row;
     }
 
     /** Listen am Event: Leistungen, Leistungsgruppen, Rollen, Räume, Eingangsrechnungen. */

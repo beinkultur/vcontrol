@@ -24,9 +24,11 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   vendor/ nie –, und leert die Caches. Bei mehr als 20 Löschungen bricht es vorher
   ab (`MAX_DELETE=n` hebt die Grenze). Neue Migrationen danach selbst mit
   `php artisan migrate --force` ausführen.
-- Daten kommen aus der PHP-Version: `php artisan vc:import`, beliebig oft
-  wiederholbar. Bis zum Umstieg ist die PHP-Version führend; was hier geändert
-  wird, überschreibt der nächste Import.
+- Für die Entwicklung kommen die Daten aus der PHP-Version: `php artisan vc:import`,
+  beliebig oft wiederholbar – überschreibt aber alles, was hier eingegeben wurde.
+  Vorher in der Tabelle `sessions` nachsehen, ob seit dem letzten Import jemand
+  gearbeitet hat, und dann erst fragen. Zum Go-live wird Laravel nicht aus der
+  PHP-Version, sondern direkt aus dem AppSheet-Export befüllt (docs/EVENTS.md).
 - Filament-Code gegen `vendor/filament` auf dem Server prüfen, nicht aus dem
   Gedächtnis von Version 3 schreiben: Version 5 hat andere Namespaces
   (`Filament\Schemas\…`, `Filament\Actions\…`).

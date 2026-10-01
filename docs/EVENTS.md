@@ -40,6 +40,19 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 
 Später, mit seinem Modul: Ablaufplan (`vc_event_attachments`).
 
+## Go-live: Daten aus AppSheet
+
+Zum Go-live wird Laravel direkt aus dem CSV-Export der AppSheet-App befüllt,
+**nicht** aus der PHP-Version (Vorgabe vom 01.10.2026). `vc:import` spiegelt
+die PHP-Datenbank nur, um während der Entwicklung mit echten Daten zu arbeiten,
+und überschreibt dabei alles, was in Laravel eingegeben wurde.
+
+Für den noch zu bauenden AppSheet-Import festgelegt:
+- Bühne wie `src/AppSheetStage.php` der PHP-Version: BÜHNE-SONSTIGE als Anzahl →
+  „Sonstige“ (`extra_platforms`, zählt mit; Text → `other_info`), BÜHNE-ANM →
+  „Anmerkungen Bühne“ (`stage_notes`), Podest-Summe aus den Maßen berechnen
+  (Standard-Rollipodest zählt mit, wie beim Speichern des Formulars).
+
 ## Stand der Übernahme (01.10.2026)
 
 Übernommen: Kern, alle sechs 1:1-Tabellen, Leistungen, Leistungsgruppen,
@@ -141,13 +154,14 @@ Bedienbar:
 - **Bühne:** Maße, Wings, Rollipodest, Höhe und die Podest-Rechnung wie in
   der PHP-Version; in der Event-Liste die Kurzform „14×8 H1,4 62P“ (gelb bei
   anderer als der Standardhöhe, rot bei mehr Podesten als im Bestand). Die Summe
-  wird nur neu berechnet, wenn sich ein Maß ändert – die Summen aus AppSheet
+  wird nur neu berechnet, wenn sich ein Maß ändert – die gespeicherten Summen
   bleiben sonst stehen (mit allen 239 Zeilen geprüft, bestätigt am 01.10.2026).
-  „sonst. Podeste“ aus AppSheet (12×, nie in den AppSheet-Summen) übernimmt
-  `vc:import` seit 01.10.2026 als „Sonstige“, sie zählen also mit: bei 11
-  Events zusammen 76 Podeste mehr zusätzlich berechnet, Culcha Candela liegt
-  mit 89 über dem Bestand. Die PHP-Version zählt sie weiterhin nicht.
-  „Anmerkungen“ aus AppSheet (17×) erscheinen schreibgeschützt. Der
+  AppSheet liefert keine Summe mit, die PHP-Version berechnet sie aus den Maßen.
+  „sonst. Podeste“ aus AppSheet (12×) zählen seit 01.10.2026 als „Sonstige“
+  mit, in beiden Versionen (PHP: Import und Migration 056): bei 11 Events
+  zusammen 76 Podeste mehr zusätzlich berechnet, Culcha Candela liegt mit 89
+  über dem Bestand. Die „Anmerkungen Bühne“ aus AppSheet (17×) stehen im Feld
+  „Anmerkungen Bühne“ (bearbeitbar, kursiv im Bühnenplan). Der
   Sold-Out-Award (auch Bühnen-Tabelle) steht in der Durchführung,
   ja/nein/leer wie in der PHP-Version.
 - **Detailansicht** (nur lesen): Kerndaten, Zeiten, Finanzen (mit Recht),

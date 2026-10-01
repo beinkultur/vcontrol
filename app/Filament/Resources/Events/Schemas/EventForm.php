@@ -604,19 +604,12 @@ class EventForm
                     ->label('Anmerkungen Bühne')
                     ->helperText('Erscheint kursiv im Bühnenplan.')
                     ->rows(2),
-                // Altdaten aus AppSheet, die das Formular der PHP-Version nicht mehr zeigt.
-                // „sonst. Podeste“ als reine Zahl übernimmt der Import in „Sonstige“.
-                Grid::make(['default' => 1, 'lg' => 2])
-                    ->schema([
-                        TextEntry::make('legacy_notes')
-                            ->label('Anmerkung aus AppSheet')
-                            ->state(fn (?EventStage $record): ?string => $record?->notes)
-                            ->visible(fn (?EventStage $record): bool => filled($record?->notes)),
-                        TextEntry::make('legacy_other')
-                            ->label('Sonstige Podeste laut AppSheet')
-                            ->state(fn (?EventStage $record): ?string => $record?->other_info)
-                            ->visible(fn (?EventStage $record): bool => filled($record?->other_info)),
-                    ]),
+                // „sonst. Podeste“ aus AppSheet, wenn dort Text statt einer Anzahl steht.
+                // Anzahlen stehen in „Sonstige“, die Anmerkungen in „Anmerkungen Bühne“.
+                TextEntry::make('legacy_other')
+                    ->label('Sonstige Podeste laut AppSheet')
+                    ->state(fn (?EventStage $record): ?string => $record?->other_info)
+                    ->visible(fn (?EventStage $record): bool => filled($record?->other_info)),
             ]);
     }
 
