@@ -11,6 +11,8 @@
         ->sortBy(fn ($file) => sprintf('%05d %s', $file->tag?->sort_order ?? 99999, mb_strtolower($file->displayName())))
         ->groupBy(fn ($file) => $file->tag?->name ?? 'Sonstiges');
     $areas = \App\Support\EventProgress::planningAreas($event, $guestCount, $files->count());
+    $slips = $event->orderSlips()->with('items')->get();
+    $openHandovers = $event->handoverProtocols()->where('status', \App\Models\HandoverProtocol::OPEN)->count();
     $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
@@ -37,6 +39,8 @@
             filled($event->status) ? 'Status ' . \App\Support\EventDisplay::statusLabel($event->status) : null,
             $time($event->schedule?->start_time) ? 'Show ' . $time($event->schedule->start_time) : null,
             $event->pax !== null ? 'PAX abgerechnet ' . number_format($event->pax, 0, ',', '.') : null,
+            $slips->isNotEmpty() ? $slips->count() . ' ' . ($slips->count() === 1 ? 'Bestellschein' : 'Bestellscheine') . ' · ' . \App\Models\OrderSlip::money($slips->sum(fn ($slip) => $slip->total())) : null,
+            $openHandovers > 0 ? $openHandovers . ' ' . ($openHandovers === 1 ? 'Übergabe' : 'Übergaben') . ' offen' : null,
             $event->closed ? 'Event abgeschlossen' : null,
         ])],
     ];

@@ -74,6 +74,15 @@ Bedienbar:
   der PHP-Version: Sonderreinigung, Haus-Delay, Miete Elektro-Ameise, Haus-Rig
   ab 7 Uhr, Sold-Out-Award, dazu PAX abgerechnet. Die Zählerstände gibt es nur
   hier, nicht in der PHP-Version.
+- **Durchführung › Übergabeprotokolle** wie in der PHP-Version: Inventar an
+  einen Empfänger (mit dessen Unterschrift), „Zurückerhalten“, Unterschrift
+  später ergänzen. **Durchführung › Bestellscheine**: „Bestellt von“, Artikel
+  mit Menge (Preis und Summe aus der Artikelliste, bleiben auf dem Schein
+  stehen), Unterschrift, „abgerechnet“ setzt die Buchhaltung. Beides nicht
+  löschbar wie dort. Übersichten unter „Protokolle“ (Recht „Protokolle“, für
+  alle Rollen gleich der PHP-Version geprüft). Artikel unter Stammdaten (die
+  PHP-Version hat dafür keine Seite). Unterschrift: eigenes Feld
+  `App\Filament\Forms\SignaturePad` (PNG als data:-URL wie dort).
 - **Kalender-Feed** `/kalender/events.ics` wie in der PHP-Version: alle
   bestätigten Events ganztägig, Zugriff mit geheimem Schlüssel (Einstellung der
   Halle) oder angemeldet mit Kalender-Recht. Adresse unter Events › „Kalender
@@ -112,9 +121,9 @@ Bedienbar:
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Spalte
   „Zus. Podeste“: über den im Mietpreis enthaltenen hinaus (47 Events).
 
-Noch nicht: Leistungsgruppen bearbeiten, Datei-Bibliothek (übergreifende
-Dateien verknüpfen),
-Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
+Noch nicht: Durchführung › Checklisten und Schäden, Leistungsgruppen
+bearbeiten, Datei-Bibliothek (übergreifende Dateien verknüpfen),
+Kalender, Anfragen und
 Freitermin, Extern-Portal, Zugangscodes, Audit-Log, Sortierung
 „Finanz-Warnung zuerst“.
 

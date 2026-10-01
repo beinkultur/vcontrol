@@ -59,17 +59,17 @@ class EventExecutionTest extends TestCase
 
     public function test_ja_nein_punkte_wie_in_der_php_version(): void
     {
-        // Die Planung hat „entfällt“ gesetzt – bleibt, solange niemand in der Durchführung wählt
+        // Ein altes „entfällt“ gibt es bei der Sonderreinigung nicht mehr: nur ja/nein
         $this->event->checklist()->create(['special_cleaning' => 'na']);
 
         $this->form()
-            ->assertSchemaStateSet(['special_cleaning' => 'na', 'house_delay' => null, 'power_ant' => null])
+            ->assertSchemaStateSet(['special_cleaning' => null, 'house_delay' => null, 'power_ant' => null])
             ->fillForm(['house_delay' => 1, 'power_ant' => 0, 'house_rig_early' => 1, 'sold_out_award' => 1])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $this->event->refresh();
-        $this->assertSame('na', $this->event->checklist->special_cleaning);
+        $this->assertNull($this->event->checklist->special_cleaning);
         $this->assertTrue($this->event->operation->house_delay);
         $this->assertFalse($this->event->checklist->power_ant);
         $this->assertTrue($this->event->checklist->house_rig_early);

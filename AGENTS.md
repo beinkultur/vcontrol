@@ -66,6 +66,10 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   nie unter `public/`; ausgeliefert über eine Route mit Rechteprüfung.
   Upload-Grenze 15 MB: `config/livewire.php` und `public/.user.ini`.
 - Seitenbreite: Listen voll, Formulare/Dashboards mit `BoxedPage` (1400 px).
+- Verfasser/Bearbeiter mit dauerhaftem Namen: Trait `App\Models\Concerns\StampsAuthor`
+  (Spalten created_by, created_by_name, updated_by, updated_by_name).
+- Unterschriften: Feld `App\Filament\Forms\SignaturePad` (Alpine im View, kein
+  Build); Anzeige über `filament.events.signature-image`, nur geprüfte PNG-data:-URLs.
 - Eigene Stile ohne Build-Schritt: `public/css/vcontrol.css`, eingebunden per
   Render-Hook im `AppPanelProvider`. Tailwind-Klassen in eigenen Blade-Dateien
   wirken nicht (Filament bringt nur die eigenen, fertig gebauten Klassen mit).

@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Storage;
  */
 class ImportLegacy extends Command
 {
+    /** @var array<int, string>|null */
+    private ?array $userNames = null;
+
     protected $signature = 'vc:import';
 
     protected $description = 'Übernimmt Stammdaten, Rollen mit Rechten, Benutzer und Veranstalter aus der PHP-Version';
@@ -46,6 +49,7 @@ class ImportLegacy extends Command
             $this->importEventDetails($legacy);
             $this->importEventLists($legacy);
             $this->importFiles($legacy);
+            $this->importOperations($legacy);
         });
 
         return self::SUCCESS;
@@ -371,9 +375,9 @@ class ImportLegacy extends Command
                 'subject' => $n->subject,
                 'body' => $n->body,
                 'created_by' => isset($userIds[$n->created_by_user_id]) ? $n->created_by_user_id : null,
-                'created_by_name' => $n->created_by_name,
+                'created_by_name' => $this->author($n->created_by_name, $n->created_by_user_id),
                 'updated_by' => isset($userIds[$n->updated_by_user_id]) ? $n->updated_by_user_id : null,
-                'updated_by_name' => $n->updated_by_name,
+                'updated_by_name' => $this->author($n->updated_by_name, $n->updated_by_user_id),
                 'created_at' => $n->created_at,
                 'updated_at' => $n->updated_at,
             ])->values()->all());
@@ -442,9 +446,9 @@ class ImportLegacy extends Command
                 'uploaded_at' => $f->uploaded_at,
                 'is_shared' => (bool) $f->is_shared,
                 'created_by' => isset($userIds[$f->created_by_user_id]) ? $f->created_by_user_id : null,
-                'created_by_name' => $f->created_by_name,
+                'created_by_name' => $this->author($f->created_by_name, $f->created_by_user_id),
                 'updated_by' => isset($userIds[$f->updated_by_user_id]) ? $f->updated_by_user_id : null,
-                'updated_by_name' => $f->updated_by_name,
+                'updated_by_name' => $this->author($f->updated_by_name, $f->updated_by_user_id),
                 'created_at' => $f->created_at,
                 'updated_at' => $f->updated_at,
             ];
@@ -473,6 +477,66 @@ class ImportLegacy extends Command
         }
     }
 
+    /** Bestellscheine mit Artikeln und Übergabeprotokolle, samt Unterschriften. */
+    private function importOperations(Connection $legacy): void
+    {
+        $eventIds = DB::table('events')->pluck('id')->flip();
+        $userIds = DB::table('users')->pluck('id')->flip();
+        $user = fn (mixed $id): mixed => isset($userIds[$id]) ? $id : null;
+
+        $this->sync('article_categories', $legacy->table('vc_article_categories')->orderBy('id')->get()
+            ->map(fn (object $c): array => [
+                'id' => $c->id, 'name' => $c->name, 'sort_order' => (int) $c->sort_order, 'is_active' => (bool) $c->active,
+                'created_at' => $c->created_at, 'updated_at' => $c->updated_at,
+            ])->values()->all());
+        $this->sync('articles', $legacy->table('vc_articles')->orderBy('id')->get()
+            ->map(fn (object $a): array => [
+                'id' => $a->id, 'category_id' => $a->category_id, 'name' => $a->name, 'short_name' => $a->short_name,
+                'unit' => $a->unit, 'price' => $a->price, 'is_active' => (bool) $a->active,
+                'created_at' => $a->created_at, 'updated_at' => $a->updated_at,
+            ])->values()->all());
+
+        $this->sync('order_slips', $legacy->table('vc_order_slips')->orderBy('id')->get()
+            ->filter(fn (object $s): bool => isset($eventIds[$s->event_id]))
+            ->map(fn (object $s): array => [
+                'id' => $s->id, 'event_id' => $s->event_id, 'ordered_from' => $s->ordered_from, 'ordered_at' => $s->ordered_at,
+                'signature' => $s->signature_data, 'comment' => $s->comment, 'is_settled' => (bool) $s->settled,
+                'created_by' => $user($s->created_by_user_id), 'created_by_name' => $this->author($s->created_by_name, $s->created_by_user_id),
+                'updated_by' => $user($s->updated_by_user_id), 'updated_by_name' => $this->author($s->updated_by_name, $s->updated_by_user_id),
+                'created_at' => $s->created_at, 'updated_at' => $s->updated_at,
+            ])->values()->all());
+        $slipIds = DB::table('order_slips')->pluck('id')->flip();
+        $articleIds = DB::table('articles')->pluck('id')->flip();
+        $this->sync('order_slip_items', $legacy->table('vc_order_slip_items')->orderBy('id')->get()
+            ->filter(fn (object $i): bool => isset($slipIds[$i->order_slip_id]))
+            ->map(fn (object $i): array => [
+                'id' => $i->id, 'order_slip_id' => $i->order_slip_id,
+                'article_id' => isset($articleIds[$i->article_id]) ? $i->article_id : null,
+                'category_id' => $i->category_id, 'category_name' => $i->category_name, 'article_name' => $i->article_name,
+                'unit' => $i->unit, 'unit_price' => $i->unit_price, 'quantity' => $i->quantity, 'line_total' => $i->line_total,
+                'sort_order' => (int) $i->sort_order,
+            ])->values()->all());
+
+        $this->sync('handover_protocols', $legacy->table('vc_handover_protocols')->orderBy('id')->get()
+            ->filter(fn (object $p): bool => isset($eventIds[$p->event_id]))
+            ->map(fn (object $p): array => [
+                'id' => $p->id, 'event_id' => $p->event_id, 'handed_to' => $p->handed_to, 'handed_at' => $p->handed_at,
+                'signature' => $p->signature_data, 'status' => $p->status, 'returned_at' => $p->returned_at,
+                'returned_by' => $user($p->returned_by_user_id), 'comment' => $p->comment,
+                'created_by' => $user($p->created_by_user_id), 'created_by_name' => $this->author($p->created_by_name, $p->created_by_user_id),
+                'updated_by' => $user($p->updated_by_user_id), 'updated_by_name' => $this->author($p->updated_by_name, $p->updated_by_user_id),
+                'created_at' => $p->created_at, 'updated_at' => $p->updated_at,
+            ])->values()->all());
+        $protocolIds = DB::table('handover_protocols')->pluck('id')->flip();
+        $this->sync('handover_protocol_items', $legacy->table('vc_handover_protocol_items')->orderBy('id')->get()
+            ->filter(fn (object $i): bool => isset($protocolIds[$i->protocol_id]))
+            ->map(fn (object $i): array => [
+                'id' => $i->id, 'protocol_id' => $i->protocol_id, 'inventory_item_id' => $i->inventory_item_id,
+                'category_id' => $i->category_id, 'category_name' => $i->category_name, 'item_name' => $i->item_name,
+                'sort_order' => (int) $i->sort_order,
+            ])->values()->all());
+    }
+
     /** Pfad einer Datei der PHP-Version wie dort FileStorage::resolveFullPath – nur unter den Upload-Ordnern. */
     private function legacyFile(string $root, string $stored): ?string
     {
@@ -494,6 +558,22 @@ class ImportLegacy extends Command
         }
 
         return null;
+    }
+
+    /**
+     * Name des Verfassers wie RecordMeta der PHP-Version: der gespeicherte Name,
+     * sonst der Name des Benutzerkontos.
+     */
+    private function author(?string $stored, mixed $userId): ?string
+    {
+        if (filled($stored)) {
+            return $stored;
+        }
+        $this->userNames ??= DB::table('users')->get(['id', 'first_name', 'last_name', 'email'])
+            ->mapWithKeys(fn (object $u): array => [$u->id => trim($u->first_name . ' ' . $u->last_name) ?: $u->email])
+            ->all();
+
+        return $this->userNames[$userId] ?? null;
     }
 
     private function replace(string $table, array $rows): void

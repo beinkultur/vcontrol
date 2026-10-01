@@ -117,6 +117,18 @@ class Event extends Model
         return $this->hasMany(EventNote::class);
     }
 
+    /** @return HasMany<OrderSlip, $this> */
+    public function orderSlips(): HasMany
+    {
+        return $this->hasMany(OrderSlip::class);
+    }
+
+    /** @return HasMany<HandoverProtocol, $this> */
+    public function handoverProtocols(): HasMany
+    {
+        return $this->hasMany(HandoverProtocol::class);
+    }
+
     /** Dateien direkt an diesem Event. @return HasMany<EventFile, $this> */
     public function files(): HasMany
     {

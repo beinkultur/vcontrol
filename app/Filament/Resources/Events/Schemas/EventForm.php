@@ -9,6 +9,8 @@ use App\Enums\OptionField;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\HandoverProtocolsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\OrderSlipsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
 use App\Filament\Support\AssignmentFields;
 use App\Filament\Support\IncomingInvoiceFields;
@@ -167,8 +169,14 @@ class EventForm
                                 Tab::make('Sonstiges')->id('sonstiges')->schema([self::other()]),
                             ]),
                         ]),
-                        // In der PHP-Version dazu Übergabe, Bestellscheine, Checklisten, Schäden – noch nicht portiert
-                        self::phase('Durchführung', 'durchfuehrung')->schema(self::execution()),
+                        // In der PHP-Version dazu Checklisten und Schäden – noch nicht portiert
+                        self::phase('Durchführung', 'durchfuehrung')->schema([
+                            self::sections('durchfuehrung', [
+                                Tab::make('Betrieb')->id('betrieb')->schema(self::execution()),
+                                Tab::make('Übergabeprotokolle')->id('uebergabe')->schema([self::embedded(HandoverProtocolsRelationManager::class)]),
+                                Tab::make('Bestellscheine')->id('bestellscheine')->schema([self::embedded(OrderSlipsRelationManager::class)]),
+                            ]),
+                        ]),
                     ]),
             ]);
     }
@@ -491,7 +499,8 @@ class EventForm
      * Ja/nein für Werte aus anderen 1:1-Tabellen (Checkliste, Betrieb, Bühne).
      * Ohne Bindung gespeichert per updateOrCreate – ein zweiter Abschnitt auf
      * derselben Beziehung legte bei neuen Events die Zeile doppelt an. Leer
-     * heißt: nicht erfasst. Textwerte wie in der Checkliste (ja/nein/entfällt).
+     * heißt: nicht erfasst. Textwerte wie in der Checkliste („yes“/„no“), aber
+     * nur ja/nein (Wunsch vom 01.10.2026).
      */
     private static function yesNo(string $relation, string $column, string $label, bool $textValues = false): ToggleButtons
     {
@@ -500,8 +509,8 @@ class EventForm
             ->grouped()
             ->dehydrated(false);
         $field = $textValues
-            ? $field->options(self::CHECK_OPTIONS)
-                ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
+            ? $field->options(['yes' => 'ja', 'no' => 'nein'])
+                ->colors(['yes' => 'success', 'no' => 'danger'])
                 ->icons(['yes' => Heroicon::Check, 'no' => Heroicon::XMark])
             : $field->boolean('ja', 'nein');
 
@@ -509,7 +518,11 @@ class EventForm
             // Für Ja/Nein als 1/0 wie die Schaltflächen: Filament wandelt vor diesem Aufruf um.
             ->afterStateHydrated(function (ToggleButtons $component, ?Event $record) use ($relation, $column, $textValues): void {
                 $value = $record?->{$relation}?->{$column};
-                $component->state($value === null || $textValues ? $value : (int) $value);
+                $component->state(match (true) {
+                    $value === null => null,
+                    $textValues => in_array($value, ['yes', 'no'], true) ? $value : null, // „entfällt“ gibt es hier nicht
+                    default => (int) $value,
+                });
             })
             ->saveRelationshipsUsing(fn (Event $record, mixed $state) => $record->{$relation}()->updateOrCreate([], [
                 $column => match (true) {
