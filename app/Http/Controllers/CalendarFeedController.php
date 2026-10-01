@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * /kalender/events.ics wie in der PHP-Version: mit Schlüssel für Kalender-Apps,
- * ohne Schlüssel für angemeldete Benutzer mit Recht auf den Kalender.
+ * ohne Schlüssel für angemeldete, aktive Benutzer mit Recht auf den Kalender.
+ * Die Route liegt außerhalb des Panels – dessen Prüfung auf gesperrte Konten
+ * greift hier nicht, deshalb is_active ausdrücklich.
  */
 class CalendarFeedController extends Controller
 {
@@ -19,7 +21,7 @@ class CalendarFeedController extends Controller
     {
         $user = Auth::user();
         $allowed = EventIcsFeed::tokenMatches($request->query('token'))
-            || ($user instanceof User && $user->access()->can(Area::Kalender));
+            || ($user instanceof User && $user->is_active && $user->access()->can(Area::Kalender));
 
         if (!$allowed) {
             return EventIcsFeed::isEnabled()

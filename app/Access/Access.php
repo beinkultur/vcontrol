@@ -82,6 +82,50 @@ final class Access
         return $this->calendarLevel($calendarKey)->atLeast($minimum);
     }
 
+    /**
+     * „Nie mehr Rechte vergeben, als man selbst hat“: Liegen diese Stufen
+     * (Bereich => Stufe, Kalender => Stufe) alle innerhalb der eigenen? Admins
+     * dürfen alles. Verglichen werden die vergebenen Stufen auch abgeschalteter
+     * Module – sie wirken wieder, sobald das Modul an ist.
+     *
+     * @param  array<string, mixed>  $areas
+     * @param  array<string, mixed>  $calendars
+     */
+    public function covers(array $areas, array $calendars = []): bool
+    {
+        if ($this->isSuper()) {
+            return true;
+        }
+        foreach ($areas as $key => $value) {
+            // Unbekannte Schlüssel wirken nirgends (level() fragt nur Area ab)
+            if (Area::tryFrom((string) $key) !== null
+                && Level::fromStored($value)->rank() > ($this->areas()[(string) $key] ?? Level::None)->rank()) {
+                return false;
+            }
+        }
+        foreach ($calendars as $key => $value) {
+            if (Level::fromStored($value)->rank() > $this->calendarLevel((string) $key)->rank()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** Hat dieser Benutzer höchstens die eigenen Rechte? Admins nur gegenüber Admins. */
+    public function coversUser(User $other): bool
+    {
+        $theirs = $other->access();
+        if ($theirs->isSuper()) {
+            return $this->isSuper();
+        }
+
+        return $this->covers(
+            array_map(fn (Level $level): string => $level->value, $theirs->areas()),
+            array_map(fn (Level $level): string => $level->value, $theirs->calendars()),
+        );
+    }
+
     /** @return array<string, Level> */
     private function areas(): array
     {

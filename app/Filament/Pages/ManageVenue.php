@@ -90,7 +90,7 @@ class ManageVenue extends Page
                     ->schema([
                         TextInput::make('venue_name')
                             ->label('Name der Halle')
-                            ->helperText('Erscheint in der Kopfzeile neben „VenueControl“.')
+                            ->helperText('Erscheint in der Kopfzeile und auf der Anmeldeseite.')
                             ->required()
                             ->maxLength(120),
                     ]),

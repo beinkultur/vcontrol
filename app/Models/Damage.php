@@ -19,6 +19,11 @@ class Damage extends Model
 
     public const DISK = 'local';
 
+    /** Fotos liegen nur hier (DamageFields) – die Fotoroute liefert nichts anderes aus. */
+    public const PHOTO_DIRECTORY = 'damages';
+
+    public const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
     /**
      * @return array<string, string>
      */

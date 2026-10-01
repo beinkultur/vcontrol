@@ -22,6 +22,14 @@ return [
     'legacy_config' => env('VC_LEGACY_CONFIG'),
 
     /*
+    | Sperrt `php artisan vc:import`. Ab dem Go-live setzen: Dann kommen die
+    | Daten aus AppSheet, ein Import aus der PHP-Version würde alles in Laravel
+    | Eingegebene überschreiben (auch Passwörter und gesperrte Konten).
+    */
+
+    'import_locked' => (bool) env('VC_IMPORT_LOCKED', false),
+
+    /*
     | Sollwerte des Smoke-Tests der PHP-Version (Statuscode je Rolle und Seite).
     | Standard: scripts/smoke_baseline.json neben der legacy_config.
     */

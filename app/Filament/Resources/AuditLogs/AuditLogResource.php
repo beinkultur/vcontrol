@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AuditLogs;
 
+use App\Access\Area;
 use App\Filament\Resources\AuditLogs\Pages\ListAuditLogs;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\AuditLog;
@@ -21,11 +22,17 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 /**
  * Änderungsprotokoll wie /audit der PHP-Version (Recht „Audit“): wer hat wann
  * was geändert, mit den Werten vorher und nachher. Nur lesen.
+ *
+ * Jeder sieht nur Einträge aus Bereichen, die er auch sonst lesen darf
+ * (AuditPresenter::visibleSubjects) – gefiltert in der Abfrage, damit Liste,
+ * Detaildialog, „Verlauf“ und Filter gleichermaßen geschützt sind. IP-Adresse
+ * und Browser nur für Admins.
  */
 class AuditLogResource extends Resource
 {
@@ -45,6 +52,25 @@ class AuditLogResource extends Resource
 
     protected static ?int $navigationSort = 90;
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            return $query->whereRaw('1 = 0');
+        }
+        $subjects = AuditPresenter::visibleSubjects($user);
+
+        return $subjects === null ? $query : $query->whereIn('subject', $subjects);
+    }
+
+    private static function isAdmin(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->access()->isSuper();
+    }
+
     public static function infolist(Schema $schema): Schema
     {
         return $schema
@@ -61,8 +87,12 @@ class AuditLogResource extends Resource
                 View::make('filament.audit.changes')
                     ->viewData(fn (AuditLog $record): array => ['rows' => AuditPresenter::changes($record), 'action' => $record->action])
                     ->columnSpanFull(),
-                TextEntry::make('ip_address')->label('IP-Adresse')->placeholder('–'),
-                TextEntry::make('user_agent')->label('Browser')->placeholder('–')->columnSpan(2),
+                TextEntry::make('ip_address')->label('IP-Adresse')->placeholder('–')
+                    ->state(fn (AuditLog $record): ?string => $record->getAttribute('ip_address'))
+                    ->visible(fn (): bool => self::isAdmin()),
+                TextEntry::make('user_agent')->label('Browser')->placeholder('–')->columnSpan(2)
+                    ->state(fn (AuditLog $record): ?string => $record->getAttribute('user_agent'))
+                    ->visible(fn (): bool => self::isAdmin()),
             ]);
     }
 
@@ -94,18 +124,19 @@ class AuditLogResource extends Resource
             ->filters([
                 SelectFilter::make('event')
                     ->label('Event')
+                    ->visible(fn (): bool => Auth::user() instanceof User && Auth::user()->access()->can(Area::Events))
                     ->relationship('event', 'title', fn (Builder $query): Builder => $query->orderByDesc('starts_at'))
                     ->getOptionLabelFromRecordUsing(fn (Event $event): string => ($event->starts_at?->format('d.m.Y') ?? '–') . ' · ' . $event->title)
                     ->searchable(),
                 SelectFilter::make('subject')
                     ->label('Bereich')
-                    ->options(AuditPresenter::SUBJECTS),
+                    ->options(fn (): array => Auth::user() instanceof User ? AuditPresenter::subjectOptions(Auth::user()) : []),
                 SelectFilter::make('action')
                     ->label('Aktion')
                     ->options(AuditPresenter::ACTIONS),
                 SelectFilter::make('user_id')
                     ->label('Benutzer')
-                    ->options(fn (): array => User::query()->whereIn('id', AuditLog::query()->select('user_id')->distinct())
+                    ->options(fn (): array => User::query()->whereIn('id', static::getEloquentQuery()->select('user_id')->distinct())
                         ->orderBy('last_name')->get()->mapWithKeys(fn (User $user): array => [$user->id => $user->getFilamentName()])->all())
                     ->searchable(),
                 Filter::make('period')

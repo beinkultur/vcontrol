@@ -65,6 +65,24 @@ class CalendarFeedTest extends TestCase
 
         $this->actingAs($this->userWith($this->role('buchhaltung', ['buchhaltung' => 'read'])));
         $this->get('/kalender/events.ics')->assertForbidden();
+
+        // Gesperrtes Konto mit noch laufender Sitzung: kein Feed mehr
+        $gesperrt = $this->userWith($this->role('technik2', ['kalender' => 'read']));
+        $gesperrt->update(['is_active' => false]);
+        $this->actingAs($gesperrt->fresh());
+        $this->get('/kalender/events.ics')->assertForbidden();
+    }
+
+    public function test_steuerzeichen_im_titel_ergeben_keine_eigene_zeile(): void
+    {
+        Setting::put(Setting::CALENDAR_FEED_TOKEN, 'geheim-123');
+        Event::create(['title' => "Konzert\rX-INJECT:1\x07", 'status' => 'bestätigt', 'starts_at' => '2026-12-01 00:00:00']);
+
+        $ics = str_replace("\r\n ", '', $this->get('/kalender/events.ics?token=geheim-123')->assertOk()->getContent());
+
+        $this->assertStringContainsString('SUMMARY:Konzert\\nX-INJECT:1' . "\r\n", $ics);
+        $this->assertStringNotContainsString("\rX-INJECT", $ics);
+        $this->assertStringNotContainsString("\x07", $ics);
     }
 
     public function test_adresse_auf_der_hallenseite_und_in_der_liste(): void

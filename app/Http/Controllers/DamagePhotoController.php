@@ -9,7 +9,11 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/** Foto eines Schadens; sehen darf es, wer Schäden sehen darf (DamagePolicy::viewAny). */
+/**
+ * Foto eines Schadens; sehen darf es, wer Schäden sehen darf (DamagePolicy::viewAny).
+ * Ausgeliefert werden nur Bilder aus damages/ – auch wenn ein Datensatz auf eine
+ * andere Datei der Disk zeigen sollte –, in einer Sandbox ohne Skripte.
+ */
 class DamagePhotoController extends Controller
 {
     public function __invoke(Damage $damage, int $index): StreamedResponse
@@ -22,8 +26,13 @@ class DamagePhotoController extends Controller
 
         $path = array_values($damage->photos ?? [])[$index] ?? null;
         $disk = Storage::disk(Damage::DISK);
-        abort_unless(is_string($path) && $disk->exists($path), 404);
+        abort_unless(is_string($path) && str_starts_with($path, Damage::PHOTO_DIRECTORY . '/') && $disk->exists($path), 404);
+        $type = $disk->mimeType($path);
+        abort_unless(in_array($type, Damage::PHOTO_TYPES, true), 404);
 
-        return $disk->response($path, $damage->photo_names[$path] ?? basename($path), [], 'inline');
+        return $disk->response($path, $damage->photo_names[$path] ?? basename($path), [
+            'Content-Type' => $type,
+            'Content-Security-Policy' => EventFileController::SANDBOX,
+        ], 'inline');
     }
 }

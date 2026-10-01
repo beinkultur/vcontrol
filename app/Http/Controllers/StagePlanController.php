@@ -26,9 +26,12 @@ class StagePlanController extends Controller
     {
         Gate::authorize('view', $event);
 
+        // Texte sind escaped (StagePlan); die Sandbox verhindert Skripte trotzdem,
+        // falls doch einmal etwas durchrutscht – SVG läuft sonst vom App-Ursprung.
         return response('<?xml version="1.0" encoding="UTF-8"?>' . StagePlan::toSvg(StagePlan::build($event->stage, $event)), 200, [
             'Content-Type' => 'image/svg+xml; charset=utf-8',
             'Content-Disposition' => 'inline; filename="buehnenplan-' . $event->id . '.svg"',
+            'Content-Security-Policy' => EventFileController::SANDBOX,
         ]);
     }
 }

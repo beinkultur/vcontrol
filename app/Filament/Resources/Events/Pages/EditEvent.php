@@ -27,19 +27,23 @@ class EditEvent extends EditRecord
     }
 
     /**
-     * Wer das Event nur lesen darf, landet in der Ansicht statt auf einer 403 –
-     * etwa über den Link in der Schadensmeldung. Phase und Bereich bleiben.
+     * Wer das Event nur lesen darf, landet beim Aufruf in der Ansicht statt auf
+     * einer 403 – etwa über den Link in der Schadensmeldung. Phase und Bereich
+     * bleiben. Nur hier: Bei jeder späteren Anfrage der Seite (hydrate, save)
+     * gilt Filaments 403 – sonst speicherte etwa ein Herabgestufter mit noch
+     * offenem Tab weiter.
      */
-    protected function authorizeAccess(): void
+    public function mount(int|string $record): void
     {
-        $event = $this->getRecord();
+        $event = $this->resolveRecord($record);
         if (!EventResource::canEdit($event) && EventResource::canView($event)) {
+            $this->record = $event;
             $query = (string) request()->server('QUERY_STRING'); // Reihenfolge wie im Link
             $this->redirect(EventResource::getUrl('view', ['record' => $event]) . ($query ? '?' . $query : ''));
 
             return;
         }
 
-        parent::authorizeAccess();
+        parent::mount($record);
     }
 }

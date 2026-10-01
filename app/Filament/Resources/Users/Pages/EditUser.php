@@ -27,7 +27,7 @@ class EditUser extends EditRecord
     {
         /** @var User $user */
         $user = $this->getRecord();
-        $violation = AccountSafety::violation($user, (array) ($this->data['roles'] ?? []), (bool) ($this->data['is_active'] ?? false));
+        $violation = AccountSafety::violation($user, (array) ($this->data['roles'] ?? []), (bool) ($this->data['is_active'] ?? false), (array) ($this->data['calendar_permissions'] ?? []));
         if ($violation !== null) {
             Notification::make()->danger()->title($violation)->send();
             $this->halt();

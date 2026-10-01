@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\StagePlanPage;
+use App\Http\Controllers\EventFileController;
 use App\Models\Event;
 use App\Models\EventStage;
 use App\Support\StagePlan;
@@ -132,7 +133,8 @@ class StagePlanTest extends TestCase
             ->assertSee('<svg', escape: false);
         $this->get(route('events.stage-plan-svg', $this->event))
             ->assertOk()
-            ->assertHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+            ->assertHeader('Content-Type', 'image/svg+xml; charset=utf-8')
+            ->assertHeader('Content-Security-Policy', EventFileController::SANDBOX);
     }
 
     public function test_verlinkt_im_workspace(): void

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Access\Area;
 use App\Enums\AccountType;
 use App\Enums\AssignmentRole;
 use App\Enums\Responsible;
@@ -73,6 +74,78 @@ final class AuditPresenter
         'settings' => 'Einstellung',
         'import' => 'Import',
     ];
+
+    /**
+     * Wer welche Einträge sieht: dieselben Bereiche wie für die Datensätze selbst
+     * (Policies) – sonst läse etwa eventmanager ohne Buchhaltung die Miete im
+     * Audit. Was hier fehlt (Import, neue Tabellen), sehen nur Admins.
+     *
+     * @var array<string, list<Area>> Tabelle => einer dieser Bereiche lesbar
+     */
+    private const SUBJECT_AREAS = [
+        'events' => [Area::Events],
+        'event_pr' => [Area::Events],
+        'event_schedules' => [Area::Events],
+        'event_checklists' => [Area::Events],
+        'event_stages' => [Area::Events],
+        'event_operations' => [Area::Events],
+        'event_assignments' => [Area::Events],
+        'event_services' => [Area::Events],
+        'event_service_groups' => [Area::Events],
+        'event_room' => [Area::Events],
+        'event_guests' => [Area::Events],
+        'event_notes' => [Area::Events],
+        'event_files' => [Area::Events],
+        'event_file_links' => [Area::Events],
+        'event_file_tags' => [Area::Events],
+        'event_finances' => [Area::Buchhaltung],
+        'event_incoming_invoices' => [Area::Buchhaltung],
+        // wie OperationsPolicy::viewAny
+        'order_slips' => [Area::Events, Area::Protokolle, Area::EventsOperations],
+        'order_slip_items' => [Area::Events, Area::Protokolle, Area::EventsOperations],
+        'handover_protocols' => [Area::Events, Area::Protokolle, Area::EventsOperations],
+        'handover_protocol_items' => [Area::Events, Area::Protokolle, Area::EventsOperations],
+        'damages' => [Area::Events, Area::Protokolle, Area::EventsOperations],
+        'event_show_checklists' => [Area::Events, Area::Protokolle, Area::EventsOperations],
+        'access_codes' => [Area::Codes],
+        'users' => [Area::AdminBenutzer],
+        'role_user' => [Area::AdminBenutzer],
+        'roles' => [Area::AdminRollen],
+        'promoters' => [Area::Veranstalter],
+        'promoter_contacts' => [Area::Veranstalter],
+        'employees' => [Area::AdminMitarbeiter],
+        'trades' => [Area::AdminGewerke],
+        'rooms' => [Area::AdminRaeume],
+        'field_options' => [Area::AdminFeldoptionen],
+        'inventory_categories' => [Area::AdminInventar],
+        'inventory_items' => [Area::AdminInventar],
+        'articles' => [Area::AdminInventar],
+        'article_categories' => [Area::AdminInventar],
+        'calendars' => [Area::AdminKalender],
+        'settings' => [Area::AdminStammdaten],
+    ];
+
+    /** @return list<string>|null Tabellen, deren Einträge der Benutzer sieht; null = alle (Admin) */
+    public static function visibleSubjects(User $user): ?array
+    {
+        $access = $user->access();
+        if ($access->isSuper()) {
+            return null;
+        }
+
+        return array_keys(array_filter(
+            self::SUBJECT_AREAS,
+            fn (array $areas): bool => collect($areas)->contains(fn (Area $area): bool => $access->can($area)),
+        ));
+    }
+
+    /** @return array<string, string> Bereiche für den Filter, nur die sichtbaren */
+    public static function subjectOptions(User $user): array
+    {
+        $visible = self::visibleSubjects($user);
+
+        return $visible === null ? self::SUBJECTS : Arr::only(self::SUBJECTS, $visible);
+    }
 
     public const ACTIONS = [
         Audit::CREATED => 'Angelegt',

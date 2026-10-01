@@ -23,5 +23,6 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
 });
 
 // Kalender-Feed: Kalender-Apps rufen ohne Anmeldung ab, deshalb mit Schlüssel
-// statt hinter dem Panel-Login (siehe CalendarFeedController).
-Route::get('/kalender/events.ics', CalendarFeedController::class)->name('calendar.feed');
+// statt hinter dem Panel-Login (siehe CalendarFeedController). Gedrosselt je IP,
+// damit niemand den Schlüssel durchprobiert.
+Route::get('/kalender/events.ics', CalendarFeedController::class)->middleware('throttle:30,1')->name('calendar.feed');

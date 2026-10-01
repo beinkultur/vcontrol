@@ -7,6 +7,7 @@ use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Models\Event;
 use App\Models\FieldOption;
 use App\Models\Promoter;
+use App\Models\User;
 use App\Support\EventNumber;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
@@ -105,5 +106,37 @@ class EventWorkspaceTest extends TestCase
 
         // Ohne Leserecht bleibt es bei 403
         $this->actingAs($this->userWith($this->role('extern')))->get('/events/' . $event->id . '/edit')->assertForbidden();
+    }
+
+    public function test_herabgestufter_bearbeiter_speichert_nicht_weiter(): void
+    {
+        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
+        $role = $this->role('eventmanager', ['events' => 'edit']);
+        $user = $this->userWith($role);
+        $this->actingAs($user);
+        $page = Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
+            ->set('data.title', 'Gekapert');
+
+        // Recht entzogen, während der Bearbeiten-Tab noch offen ist
+        $role->update(['permissions' => ['events' => 'read']]);
+        $this->actingAs(User::query()->findOrFail($user->id));
+
+        $page->call('save')->assertForbidden();
+        $this->assertSame('Konzert', $event->fresh()->title);
+    }
+
+    public function test_reiter_haben_kurze_kennungen_in_der_adresse(): void
+    {
+        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
+        $this->actingAs($this->userWith($this->role('eventmanager', ['events' => 'edit', 'events_operations' => 'edit'])));
+
+        // Beim Klicken schreibt Filament den Schlüssel des Reiters in die Adresse –
+        // er muss der Kennung entsprechen, nicht einem Slug der Beschriftung.
+        $this->get('/events/' . $event->id . '/edit?phase=durchfuehrung&bereich=schaeden')
+            ->assertOk()
+            ->assertSee('data-tab-key="durchfuehrung"', false)
+            ->assertSee('data-tab-key="schaeden"', false)
+            ->assertDontSee('::tab"', false)
+            ->assertDontSee('span-classvc-step', false);
     }
 }

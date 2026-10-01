@@ -26,6 +26,23 @@ class EventFile extends Model
 
     public const ARCHIVE_EXTENSIONS = ['zip', 'rar', '7z'];
 
+    /** Endungen, die der Browser anzeigt statt herunterzuladen (siehe inlineType()) */
+    public const INLINE_TYPES = [
+        'pdf' => 'application/pdf',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        'txt' => 'text/plain',
+    ];
+
+    /** Inhalte, die kein Upload haben darf – egal unter welcher Endung */
+    public const BLOCKED_TYPES = [
+        'text/html', 'application/xhtml+xml', 'image/svg+xml', 'text/xml', 'application/xml',
+        'text/javascript', 'application/javascript', 'text/x-php', 'application/x-httpd-php',
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (EventFile $file): void {
@@ -110,9 +127,17 @@ class EventFile extends Model
         return route('event-files.download', $this);
     }
 
-    /** Im Browser anzeigen statt speichern: PDFs und Bilder. */
-    public function opensInline(): bool
+    /**
+     * Content-Type für die Anzeige im Browser statt Herunterladen (PDFs, Bilder,
+     * Text), fest je Endung. Nur wenn der beim Hochladen am Inhalt erkannte Typ
+     * dazu passt – eine „.pdf“ mit HTML darin käme sonst als Webseite vom
+     * App-Ursprung (gespeichertes XSS). Alles andere: null = herunterladen.
+     */
+    public function inlineType(): ?string
     {
-        return in_array(strtolower(pathinfo($this->original_name, PATHINFO_EXTENSION)), ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'txt'], true);
+        $type = self::INLINE_TYPES[strtolower(pathinfo((string) $this->original_name, PATHINFO_EXTENSION))] ?? null;
+        $detected = strtolower(trim(explode(';', (string) $this->mime_type)[0]));
+
+        return $type !== null && $detected === $type ? $type : null;
     }
 }

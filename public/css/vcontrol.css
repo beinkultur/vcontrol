@@ -540,6 +540,18 @@ a.vc-card:hover {
     }
 }
 
+/* Handy: Prozent unter den Titel statt darüber („Durchführung“ ist zu breit) */
+@media (max-width: 30rem) {
+    .vc-phases > .fi-tabs > .fi-tabs-item {
+        flex-wrap: wrap;
+        row-gap: 0.25rem;
+    }
+
+    .vc-step__title {
+        font-size: 0.875rem;
+    }
+}
+
 /* Unterbereiche: Leiste links, aktiver Bereich in der Farbe der Phase */
 .vc-sections > .fi-tabs {
     justify-content: flex-start;

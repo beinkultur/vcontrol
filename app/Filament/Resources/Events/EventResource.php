@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Events: Liste und Workspace (Übersicht, Buchung, Planung, Durchführung), für
@@ -56,6 +58,21 @@ class EventResource extends Resource
     public static function getGloballySearchableAttributes(): array
     {
         return ['title', 'va_id', 'promoter.name'];
+    }
+
+    /** Neueste zuerst, mit Datum und Veranstalter – sonst stehen gleichnamige Termine ununterscheidbar untereinander. */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('promoter')->orderByDesc('starts_at');
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return array_filter([
+            'Datum' => $record instanceof Event ? $record->starts_at?->format('d.m.Y') : null,
+            'Veranstalter' => $record instanceof Event ? $record->promoter?->name : null,
+        ]);
     }
 
     public static function getPages(): array

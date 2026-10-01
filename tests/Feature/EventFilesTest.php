@@ -7,6 +7,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
+use App\Http\Controllers\EventFileController;
 use App\Models\Event;
 use App\Models\EventFile;
 use App\Models\EventFileTag;
@@ -146,5 +147,58 @@ class EventFilesTest extends TestCase
         // Tags pflegt nur, wer Events bearbeiten darf (PHP-Version: /dateien/tags)
         $this->actingAs($this->userWith($this->role('catering', ['events' => 'read'])));
         $this->get('/datei-tags')->assertForbidden();
+    }
+
+    public function test_html_unter_anderer_endung_und_fremde_pfade_werden_abgewiesen(): void
+    {
+        $this->actingAs($this->userWith($this->role('technik', ['events' => 'edit'])));
+        Storage::disk(EventFile::DISK)->put('damages/foto.jpg', 'jpeg');
+
+        // HTML als „.pdf“ (im Test liefert Livewire den angegebenen statt des erkannten Typs)
+        $this->manager()->callTableAction('create', data: [
+            'tag_id' => $this->rider->id,
+            'upload' => UploadedFile::fake()->create('plan.pdf', 1, 'text/html'),
+        ])->assertHasTableActionErrors(['upload']);
+
+        // Pfad einer vorhandenen fremden Datei statt eines Uploads
+        $this->manager()->callTableAction('create', data: [
+            'tag_id' => $this->rider->id,
+            'upload' => ['damages/foto.jpg'],
+        ])->assertHasTableActionErrors(['upload']);
+
+        $this->assertSame(0, $this->event->files()->count());
+        Storage::disk(EventFile::DISK)->assertExists('damages/foto.jpg');
+    }
+
+    public function test_im_browser_nur_mit_passendem_inhalt_und_in_der_sandbox(): void
+    {
+        $this->actingAs($this->userWith($this->role('catering', ['events' => 'read'])));
+        $file = function (string $name, string $mime, string $content): EventFile {
+            Storage::disk(EventFile::DISK)->put('event-files/1/' . $name, $content);
+
+            return $this->event->files()->create([
+                'tag_id' => $this->rider->id, 'path' => 'event-files/1/' . $name, 'original_name' => $name,
+                'mime_type' => $mime, 'size' => strlen($content), 'version' => 1,
+            ]);
+        };
+
+        // Erkannter Inhalt HTML, Endung .txt: herunterladen, nie als Seite
+        $response = $this->get($file('liste.txt', 'text/html', '<script>alert(1)</script>')->downloadUrl())->assertOk();
+        $this->assertStringStartsWith('attachment', (string) $response->headers->get('Content-Disposition'));
+        $this->assertSame('application/octet-stream', $response->headers->get('Content-Type'));
+        $response->assertHeader('Content-Security-Policy', EventFileController::SANDBOX)
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+
+        // Echter Text: im Browser, aber in der Sandbox
+        $response = $this->get($file('notiz.txt', 'text/plain', 'Einlass 18 Uhr')->downloadUrl())->assertOk();
+        $this->assertStringStartsWith('inline', (string) $response->headers->get('Content-Disposition'));
+        $this->assertStringStartsWith('text/plain', (string) $response->headers->get('Content-Type'));
+        $response->assertHeader('Content-Security-Policy', EventFileController::SANDBOX);
+
+        // PDF: im Browser mit festem Typ; ohne Sandbox und ohne object-src, sonst zeigt Chrome nichts
+        $response = $this->get($file('rider.pdf', 'application/pdf', '%PDF-1.4')->downloadUrl())->assertOk();
+        $this->assertStringStartsWith('inline', (string) $response->headers->get('Content-Disposition'));
+        $this->assertSame('application/pdf', $response->headers->get('Content-Type'));
+        $this->assertFalse($response->headers->has('Content-Security-Policy'));
     }
 }

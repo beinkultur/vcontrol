@@ -118,7 +118,8 @@ final class Audit
         try {
             AuditLog::query()->create([
                 'user_id' => $user instanceof User ? $user->getKey() : null,
-                'user_name' => $user instanceof User ? $user->getFilamentName() : ($http ? null : 'System'),
+                // Spalte 120 Zeichen – ein längerer Name ließe sonst jeden Eintrag dieses Benutzers scheitern
+                'user_name' => $user instanceof User ? Str::limit($user->getFilamentName(), 120, '') : ($http ? null : 'System'),
                 'subject' => $subject,
                 'subject_key' => $key,
                 'subject_label' => $label !== null ? Str::limit($label, 195) : null,

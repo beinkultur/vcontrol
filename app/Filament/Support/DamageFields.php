@@ -58,13 +58,15 @@ final class DamageFields
                 ->label('Fotos (optional)')
                 ->helperText('JPG, PNG, WebP oder GIF, bis ' . self::MAX_PHOTOS . ' Fotos zu je 15 MB.')
                 ->image()
-                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+                ->acceptedFileTypes(Damage::PHOTO_TYPES)
                 ->multiple()
                 ->maxFiles(self::MAX_PHOTOS)
                 ->maxSize(15 * 1024)
                 ->disk(Damage::DISK)
-                ->directory('damages')
+                ->directory(Damage::PHOTO_DIRECTORY)
                 ->visibility('private')
+                // Nur die eigenen Fotos: sonst ließe sich per Livewire ein fremder Pfad unterschieben
+                ->preventFilePathTampering()
                 ->storeFileNamesIn('photo_names')
                 ->reorderable()
                 ->columnSpanFull(),

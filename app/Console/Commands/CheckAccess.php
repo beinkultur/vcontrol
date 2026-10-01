@@ -45,6 +45,10 @@ class CheckAccess extends Command
 
     public function handle(Kernel $kernel): int
     {
+        // Ohne gespeicherte Sessions: Sonst stünde je Seite und Rolle eine Zeile mit
+        // echter Benutzer-ID in `sessions` – und die verrät, ob jemand gearbeitet hat.
+        config(['session.driver' => 'array']);
+
         $baseline = $this->baseline();
         if ($baseline === null) {
             return self::FAILURE;

@@ -162,4 +162,37 @@ class AuditTest extends TestCase
         $this->get('/audit')->assertForbidden();
         Livewire::test(ViewEvent::class, ['record' => $konzert->getRouteKey()])->assertActionHidden('history');
     }
+
+    public function test_jeder_sieht_nur_eintraege_aus_seinen_bereichen(): void
+    {
+        $this->actingAs($this->admin());
+        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()]);
+        $event->finance()->create(['rent' => 1000]);
+        $eventLog = $this->last('events');
+        $financeLog = $this->last('event_finances');
+        $planer = $this->userWith($this->role('eventmanager', ['events' => 'edit', 'audit' => 'read']));
+        $kasse = $this->userWith($this->role('buchhaltung', ['events' => 'read', 'buchhaltung' => 'read', 'audit' => 'read']));
+        $userLog = $this->last('users');
+
+        // Ohne Buchhaltung keine Miete, ohne Benutzerverwaltung keine Konten
+        $this->actingAs($planer);
+        Livewire::test(ListAuditLogs::class)
+            ->assertCanSeeTableRecords([$eventLog])
+            ->assertCanNotSeeTableRecords([$financeLog, $userLog])
+            ->assertDontSee('Miete');
+        $this->assertArrayNotHasKey('event_finances', AuditPresenter::subjectOptions($planer));
+
+        $this->actingAs($kasse);
+        Livewire::test(ListAuditLogs::class)
+            ->assertCanSeeTableRecords([$eventLog, $financeLog])
+            ->assertCanNotSeeTableRecords([$userLog]);
+
+        $this->actingAs($this->admin());
+        Livewire::test(ListAuditLogs::class)->assertCanSeeTableRecords([$eventLog, $financeLog, $userLog]);
+        $this->assertNull(AuditPresenter::visibleSubjects($this->admin()));
+
+        // IP und Browser nicht im Livewire-Zustand (Detaildialog füllt aus attributesToArray)
+        $this->assertArrayNotHasKey('ip_address', $financeLog->attributesToArray());
+        $this->assertArrayNotHasKey('user_agent', $financeLog->attributesToArray());
+    }
 }

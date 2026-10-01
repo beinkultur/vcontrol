@@ -42,7 +42,8 @@ cd "$(dirname "$0")/.."
 
 EXCLUDES=(
     --exclude .git/ --exclude vendor/ --exclude node_modules/
-    --exclude .env --exclude storage/ --exclude bootstrap/cache/
+    --exclude .env --exclude '.env.*' --exclude auth.json --exclude .DS_Store
+    --exclude storage/ --exclude bootstrap/cache/
     --exclude database/database.sqlite
     --exclude public/css/filament/ --exclude public/js/filament/ --exclude public/fonts/filament/
     --exclude .phpunit.result.cache --exclude .phpunit.cache/

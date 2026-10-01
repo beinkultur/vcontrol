@@ -6,6 +6,7 @@ use App\Models\Damage;
 use App\Models\EventFile;
 use App\Support\Audit;
 use Illuminate\Console\Command;
+use Illuminate\Console\ConfirmableTrait;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,15 +18,28 @@ use Illuminate\Support\Facades\Storage;
  */
 class ImportLegacy extends Command
 {
+    use ConfirmableTrait;
+
     /** @var array<int, string>|null */
     private ?array $userNames = null;
 
-    protected $signature = 'vc:import';
+    protected $signature = 'vc:import {--force : ohne Rückfrage, auch in Produktion}';
 
     protected $description = 'Übernimmt Stammdaten, Rollen mit Rechten, Benutzer und Veranstalter aus der PHP-Version';
 
     public function handle(): int
     {
+        // Nach dem Go-live kommen die Daten aus AppSheet: dann VC_IMPORT_LOCKED=true
+        if (config('venuecontrol.import_locked')) {
+            $this->error('vc:import ist gesperrt (VC_IMPORT_LOCKED) – die Daten kommen nicht mehr aus der PHP-Version.');
+
+            return self::FAILURE;
+        }
+        // In Produktion nur mit --force: überschreibt alles, was hier eingegeben wurde
+        if (!$this->confirmToProceed('vc:import überschreibt alle Daten mit dem Stand der PHP-Version')) {
+            return self::FAILURE;
+        }
+
         $legacy = $this->legacyConnection();
         if ($legacy === null) {
             return self::FAILURE;

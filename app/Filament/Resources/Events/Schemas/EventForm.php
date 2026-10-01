@@ -55,6 +55,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
@@ -112,8 +113,7 @@ class EventForm
                     ->persistTabInQueryString('phase')
                     ->extraAttributes(['class' => 'vc-phases'])
                     ->tabs([
-                        Tab::make(self::stepLabel('⌂', 'Übersicht', 'Dashboard & Fortschritt'))
-                            ->id('uebersicht')
+                        self::tab(self::stepLabel('⌂', 'Übersicht', 'Dashboard & Fortschritt'), 'uebersicht')
                             ->schema([
                                 View::make('filament.events.dashboard')
                                     ->viewData(fn (Event $record, $livewire): array => [
@@ -124,25 +124,23 @@ class EventForm
                             ]),
                         self::phase('Buchung', 'buchung')->schema([
                             self::sections('buchung', array_values(array_filter([
-                                Tab::make('Daten')
-                                    ->id('daten')
+                                self::tab('Daten', 'daten')
                                     ->schema([Section::make()->columns(3)->schema(self::bookingData())]),
                                 // Nur mit Recht auf die Buchhaltung, bearbeiten nur mit Schreibrecht dort.
                                 // Nicht bloß ausgeblendet: Filament füllt auch verborgene Abschnitte,
                                 // die Finanzdaten stünden sonst im Seitenquelltext.
                                 self::can(Area::Buchhaltung)
-                                    ? Tab::make('Buchhaltung')->id('buchhaltung')->schema(self::accounting())
+                                    ? self::tab('Buchhaltung', 'buchhaltung')->schema(self::accounting())
                                     : null,
-                                Tab::make('PR')
-                                    ->id('pr')
+                                self::tab('PR', 'pr')
                                     ->schema([self::pr()]),
                             ]))),
                         ]),
                         self::phase('Planung', 'planung')->schema([
                             self::sections('planung', [
-                                Tab::make('Zeiten')->id('zeiten')->schema([self::times()]),
-                                Tab::make('Checkliste')->id('checkliste')->schema([self::checklist()]),
-                                Tab::make('Bühne')->id('buehne')->schema([
+                                self::tab('Zeiten', 'zeiten')->schema([self::times()]),
+                                self::tab('Checkliste', 'checkliste')->schema([self::checklist()]),
+                                self::tab('Bühne', 'buehne')->schema([
                                     Actions::make([
                                         Action::make('stagePlan')
                                             ->label('Bühnenplan anzeigen')
@@ -151,34 +149,34 @@ class EventForm
                                     ])->alignEnd(),
                                     self::stage(),
                                 ]),
-                                Tab::make('Personal')->id('personal')->schema([
+                                self::tab('Personal', 'personal')->schema([
                                     Section::make()
                                         ->columns(2)
                                         ->schema(AssignmentFields::all(except: [AssignmentRole::ProjectLead])),
                                 ]),
-                                Tab::make('Gewerke')->id('gewerke')->schema([
+                                self::tab('Gewerke', 'gewerke')->schema([
                                     Section::make()
                                         ->description('Wer die Leistung stellt, welches Gewerk oder welcher Anbieter. Leer heißt: nicht festgelegt.')
                                         ->schema(ServiceFields::all()),
                                 ]),
-                                Tab::make('Gästeliste')->id('gaeste')->schema([self::embedded(GuestsRelationManager::class)]),
-                                Tab::make('Dateien')->id('dateien')->schema([
+                                self::tab('Gästeliste', 'gaeste')->schema([self::embedded(GuestsRelationManager::class)]),
+                                self::tab('Dateien', 'dateien')->schema([
                                     self::embedded(FilesRelationManager::class),
                                     // Übergreifende Dateien hängen an mehreren Events, gepflegt werden sie zentral
                                     View::make('filament.events.linked-files')
                                         ->viewData(fn (Event $record): array => ['files' => $record->linkedFiles()->with('tag')->get()])
                                         ->visible(fn (Event $record): bool => $record->linkedFiles()->exists()),
                                 ]),
-                                Tab::make('Sonstiges')->id('sonstiges')->schema([self::other()]),
+                                self::tab('Sonstiges', 'sonstiges')->schema([self::other()]),
                             ]),
                         ]),
                         self::phase('Durchführung', 'durchfuehrung')->schema([
                             self::sections('durchfuehrung', [
-                                Tab::make('Betrieb')->id('betrieb')->schema(self::execution()),
-                                Tab::make('Übergabeprotokolle')->id('uebergabe')->schema([self::embedded(HandoverProtocolsRelationManager::class)]),
-                                Tab::make('Bestellscheine')->id('bestellscheine')->schema([self::embedded(OrderSlipsRelationManager::class)]),
-                                Tab::make('Checklisten')->id('checklisten')->schema([self::embedded(ShowChecklistsRelationManager::class)]),
-                                Tab::make('Schäden')->id('schaeden')->schema([self::embedded(DamagesRelationManager::class)]),
+                                self::tab('Betrieb', 'betrieb')->schema(self::execution()),
+                                self::tab('Übergabeprotokolle', 'uebergabe')->schema([self::embedded(HandoverProtocolsRelationManager::class)]),
+                                self::tab('Bestellscheine', 'bestellscheine')->schema([self::embedded(OrderSlipsRelationManager::class)]),
+                                self::tab('Checklisten', 'checklisten')->schema([self::embedded(ShowChecklistsRelationManager::class)]),
+                                self::tab('Schäden', 'schaeden')->schema([self::embedded(DamagesRelationManager::class)]),
                             ]),
                         ]),
                     ]),
@@ -197,9 +195,20 @@ class EventForm
     {
         [$number, , $description] = self::PHASES[$id];
 
-        return Tab::make(self::stepLabel($number, $label, $description))
-            ->id($id)
+        return self::tab(self::stepLabel($number, $label, $description), $id)
             ->badge(fn (?Event $record): ?string => $record ? EventProgress::phases($record)[$id] . ' %' : null);
+    }
+
+    /**
+     * Reiter mit fester Kennung in der Adresse (?phase=planung&bereich=buehne).
+     * Filament 5.9 liest die Adresse über id(), schreibt beim Klicken aber key()
+     * hinein – ohne beides stünde danach ein Slug der Beschriftung in der Adresse.
+     * Nicht vererbbar wie Filaments eigener Reiter-Schlüssel, sonst bekämen alle
+     * Felder darunter ein Präfix im Schlüssel.
+     */
+    private static function tab(string|Htmlable $label, string $id): Tab
+    {
+        return Tab::make($label)->id($id)->key($id, isInheritable: false);
     }
 
     /** Reiterbeschriftung als Schritt: Nummer, Titel, Beschreibung (Stil: .vc-phases). */

@@ -16,7 +16,7 @@ class CreateUser extends CreateRecord
 
     protected function beforeCreate(): void
     {
-        $violation = AccountSafety::violation(null, (array) ($this->data['roles'] ?? []), (bool) ($this->data['is_active'] ?? false));
+        $violation = AccountSafety::violation(null, (array) ($this->data['roles'] ?? []), (bool) ($this->data['is_active'] ?? false), (array) ($this->data['calendar_permissions'] ?? []));
         if ($violation !== null) {
             Notification::make()->danger()->title($violation)->send();
             $this->halt();

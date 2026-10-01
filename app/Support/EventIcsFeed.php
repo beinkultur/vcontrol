@@ -100,10 +100,17 @@ final class EventIcsFeed
         ]));
     }
 
-    /** Sonderzeichen nach RFC 5545 maskieren. */
+    /**
+     * Sonderzeichen nach RFC 5545 maskieren. Jeder Zeilenumbruch (auch ein
+     * einzelnes CR) wird zu „\n“, andere Steuerzeichen fallen weg – sonst ließe
+     * sich über einen Titel eine eigene Zeile in den Feed schreiben.
+     */
     private static function escape(string $value): string
     {
-        return str_replace(['\\', ';', ',', "\n"], ['\\\\', '\;', '\\,', '\\n'], str_replace("\r\n", "\n", $value));
+        $value = str_replace(["\r\n", "\r"], "\n", $value);
+        $value = preg_replace('/[\x00-\x08\x0B-\x1F\x7F]/', '', $value) ?? '';
+
+        return str_replace(['\\', ';', ',', "\n"], ['\\\\', '\;', '\\,', '\\n'], $value);
     }
 
     /** Zeilen auf 75 Oktett falten; nach Zeichen schneiden, damit kein UTF-8 zerrissen wird. */

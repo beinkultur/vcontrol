@@ -29,11 +29,13 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   `->query()->update()/delete()`, Pivot ohne eigenes Modell), muss `Audit::record()`
   aufrufen – sonst fehlt die Änderung im Audit. Neue Tabellen in
   `AuditPresenter::SUBJECTS`, neue Felder in `FIELDS` eintragen.
-- Für die Entwicklung kommen die Daten aus der PHP-Version: `php artisan vc:import`,
-  beliebig oft wiederholbar – überschreibt aber alles, was hier eingegeben wurde.
-  Vorher in der Tabelle `sessions` nachsehen, ob seit dem letzten Import jemand
-  gearbeitet hat, und dann erst fragen. Zum Go-live wird Laravel nicht aus der
-  PHP-Version, sondern direkt aus dem AppSheet-Export befüllt (docs/EVENTS.md).
+- Für die Entwicklung kommen die Daten aus der PHP-Version: `php artisan vc:import --force`
+  (in Produktion nur mit `--force`), beliebig oft wiederholbar – überschreibt aber
+  alles, was hier eingegeben wurde. Vorher in der Tabelle `sessions` nachsehen, ob
+  seit dem letzten Import jemand gearbeitet hat (Zeilen mit IP 127.0.0.1 und
+  Browser „Symfony“ stammen von Prüfbefehlen), und dann erst fragen. Zum Go-live
+  wird Laravel nicht aus der PHP-Version, sondern direkt aus dem AppSheet-Export
+  befüllt (docs/EVENTS.md); dann `VC_IMPORT_LOCKED=true` setzen.
 - Filament-Code gegen `vendor/filament` auf dem Server prüfen, nicht aus dem
   Gedächtnis von Version 3 schreiben: Version 5 hat andere Namespaces
   (`Filament\Schemas\…`, `Filament\Actions\…`).
@@ -102,6 +104,18 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   Sollwerten der PHP-Version.
 - Strenger als die PHP-Version: Admin-Konten und die Admin-Rolle ändern nur
   Admins; niemand löscht sich selbst; der letzte aktive Admin bleibt Admin.
+  Allgemein: Niemand vergibt mehr Rechte, als er selbst hat (`Access::covers()`) –
+  Rollen und Konten mit mehr Rechten ändert nur, wer diese Rechte hat
+  (RolePolicy, UserPolicy), und beim Speichern prüfen `AccountSafety` bzw.
+  `GrantsOnlyOwnRights` die neuen Stufen.
+- Passwort ändert jeder selbst unter Profil (`App\Filament\Pages\Auth\EditProfile`,
+  nur das Passwort); „Angemeldet bleiben“ gilt 30 Tage (`config/auth.php`).
+- Das Audit zeigt jedem nur Einträge aus Bereichen, die er auch sonst lesen darf
+  (`AuditPresenter::SUBJECT_AREAS`) – neue Tabellen dort eintragen, sonst sehen
+  sie nur Admins.
+- Sicherheits-Header und HTTPS-Zwang: `App\Http\Middleware\SecurityHeaders`.
+  Dateien nie mit dem gespeicherten MIME-Typ inline ausliefern (siehe
+  `EventFile::inlineType()`), FileUpload-Felder mit `->preventFilePathTampering()`.
 - Die Server-CLI ist PHP 8.3 (`php`), daneben gibt es `php85`. Code muss unter beiden
   laufen.
 - Oberfläche, Texte, Kommentare und Commit-Nachrichten auf Deutsch.

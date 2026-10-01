@@ -18,13 +18,20 @@
                 state: $wire.$entangle(@js($statePath)),
                 drawing: false,
                 ctx: null,
+                observer: null,
                 init() {
                     this.ctx = this.$refs.canvas.getContext('2d');
-                    new ResizeObserver(() => this.resize()).observe(this.$refs.canvas);
+                    this.observer = new ResizeObserver(() => this.resize());
+                    this.observer.observe(this.$refs.canvas);
                     this.resize();
+                },
+                {{-- Dialog zu oder Seitenwechsel: sonst meldet sich der Observer am entfernten Canvas --}}
+                destroy() {
+                    this.observer?.disconnect();
                 },
                 resize() {
                     const canvas = this.$refs.canvas;
+                    if (!canvas) return;
                     const width = canvas.clientWidth;
                     if (width === 0) return;
                     const ratio = window.devicePixelRatio || 1;

@@ -19,7 +19,9 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -59,8 +61,16 @@ class FilesRelationManager extends RelationManager
                     ->disk(EventFile::DISK)
                     ->directory(fn (): string => 'event-files/' . $this->getOwnerRecord()->getKey())
                     ->visibility('private')
+                    // Nur frische Uploads – sonst ließe sich per Livewire der Pfad einer fremden Datei unterschieben
+                    ->preventFilePathTampering()
                     ->maxSize(EventFile::MAX_KB)
                     ->rule(fn (): string => 'extensions:' . implode(',', self::extensions()))
+                    // Die Endung allein sagt nichts: HTML oder SVG als „.pdf“ wäre ausführbarer Inhalt
+                    ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                        if ($value instanceof UploadedFile && in_array(strtolower((string) $value->getMimeType()), EventFile::BLOCKED_TYPES, true)) {
+                            $fail('Webseiten, SVG-Grafiken und Skripte sind als Datei nicht erlaubt.');
+                        }
+                    })
                     ->storeFileNamesIn('original_name')
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->columnSpanFull(),

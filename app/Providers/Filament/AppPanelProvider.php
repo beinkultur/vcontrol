@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -36,6 +37,8 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('')
             ->login()
+            // Benutzermenü › Profil: eigenes Passwort ändern (Name und E-Mail nur zur Ansicht)
+            ->profile(EditProfile::class, isSimple: false)
             // Jede Seite braucht eine vollständige Policy – fehlt eine Methode, bricht
             // Filament ab, statt die Aktion stillschweigend zu erlauben.
             ->strictAuthorization()

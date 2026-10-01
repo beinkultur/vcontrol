@@ -53,6 +53,17 @@ class AccessCodesTest extends TestCase
             ->assertSee('10.10.2026: ');
     }
 
+    public function test_ungueltiges_datum_in_der_adresse(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-09 10:00'));
+
+        foreach (['9999-99-99', '2026-02-30', 'foo', '2026-10-8'] as $datum) {
+            $this->get('/codes?datum=' . $datum)
+                ->assertOk()
+                ->assertSee('3 Codes hinterlegt');
+        }
+    }
+
     public function test_nur_mit_recht_codes(): void
     {
         $this->get('/codes')->assertOk();
