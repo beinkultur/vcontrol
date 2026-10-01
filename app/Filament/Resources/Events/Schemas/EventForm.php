@@ -9,8 +9,10 @@ use App\Enums\OptionField;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\DamagesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\HandoverProtocolsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\OrderSlipsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\ShowChecklistsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
 use App\Filament\Support\AssignmentFields;
 use App\Filament\Support\IncomingInvoiceFields;
@@ -169,12 +171,13 @@ class EventForm
                                 Tab::make('Sonstiges')->id('sonstiges')->schema([self::other()]),
                             ]),
                         ]),
-                        // In der PHP-Version dazu Checklisten und Schäden – noch nicht portiert
                         self::phase('Durchführung', 'durchfuehrung')->schema([
                             self::sections('durchfuehrung', [
                                 Tab::make('Betrieb')->id('betrieb')->schema(self::execution()),
                                 Tab::make('Übergabeprotokolle')->id('uebergabe')->schema([self::embedded(HandoverProtocolsRelationManager::class)]),
                                 Tab::make('Bestellscheine')->id('bestellscheine')->schema([self::embedded(OrderSlipsRelationManager::class)]),
+                                Tab::make('Checklisten')->id('checklisten')->schema([self::embedded(ShowChecklistsRelationManager::class)]),
+                                Tab::make('Schäden')->id('schaeden')->schema([self::embedded(DamagesRelationManager::class)]),
                             ]),
                         ]),
                     ]),

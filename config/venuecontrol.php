@@ -28,4 +28,11 @@ return [
 
     'legacy_baseline' => env('VC_LEGACY_BASELINE'),
 
+
+    /*
+    | Empfänger für neue Schadensmeldungen (mit Komma getrennt). Leer: alle
+    | aktiven Benutzer mit der Rolle „hausmeister“ – wie in der PHP-Version.
+    */
+    'damage_notify' => env('VC_DAMAGE_NOTIFY'),
+
 ];

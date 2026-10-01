@@ -117,6 +117,18 @@ class Event extends Model
         return $this->hasMany(EventNote::class);
     }
 
+    /** @return HasMany<EventShowChecklist, $this> */
+    public function showChecklists(): HasMany
+    {
+        return $this->hasMany(EventShowChecklist::class);
+    }
+
+    /** @return HasMany<Damage, $this> */
+    public function damages(): HasMany
+    {
+        return $this->hasMany(Damage::class);
+    }
+
     /** @return HasMany<OrderSlip, $this> */
     public function orderSlips(): HasMany
     {

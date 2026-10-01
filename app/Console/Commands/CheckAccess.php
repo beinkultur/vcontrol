@@ -38,6 +38,7 @@ class CheckAccess extends Command
         'GET /admin/stammdaten' => '/halle',
         'GET /protokolle/uebergabe' => '/uebergabeprotokolle',
         'GET /protokolle/bestellscheine' => '/bestellscheine',
+        'GET /protokolle/schaeden' => '/schaeden',
     ];
 
     public function handle(Kernel $kernel): int

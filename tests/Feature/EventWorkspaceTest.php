@@ -95,12 +95,15 @@ class EventWorkspaceTest extends TestCase
         $this->assertSame('1000.00', (string) $event->finance()->first()->rent);
     }
 
-    public function test_leserolle_kommt_nicht_in_den_workspace(): void
+    public function test_leserolle_landet_in_der_ansicht(): void
     {
         $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
         $leser = $this->userWith($this->role('catering', ['events' => 'read']));
 
-        $this->actingAs($leser)->get('/events/' . $event->id . '/edit')->assertForbidden();
+        $this->actingAs($leser)->get('/events/' . $event->id . '/edit')->assertRedirect('/events/' . $event->id);
         $this->actingAs($leser)->get('/events/' . $event->id)->assertOk();
+
+        // Ohne Leserecht bleibt es bei 403
+        $this->actingAs($this->userWith($this->role('extern')))->get('/events/' . $event->id . '/edit')->assertForbidden();
     }
 }

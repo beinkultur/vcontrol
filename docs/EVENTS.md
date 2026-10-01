@@ -38,13 +38,13 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `event_assignments` | `vc_event_role_assignments` | Rollen am Event (VL, VfV …) an Mitarbeiter, Gewerk oder Benutzer, mit Zeiten |
 | `event_incoming_invoices` | `vc_event_incoming_invoices` | die sechs erwarteten Eingangsrechnungen |
 
-Später, jeweils mit ihrem Modul: Gäste, Notizen, Dateien, Schäden,
-Bestellscheine, Übergabeprotokolle, Ablaufplan (`vc_event_attachments`).
+Später, mit seinem Modul: Ablaufplan (`vc_event_attachments`).
 
-## Stand der Übernahme (30.09.2026)
+## Stand der Übernahme (01.10.2026)
 
 Übernommen: Kern, alle sechs 1:1-Tabellen, Leistungen, Leistungsgruppen,
-Rollen, Raumbelegung, Eingangsrechnungen, Gästeliste, Notizen.
+Rollen, Raumbelegung, Eingangsrechnungen, Gästeliste, Notizen, Dateien,
+Bestellscheine, Übergabeprotokolle, Schäden mit Fotos.
 
 Bedienbar:
 - **Event-Liste** wie in der PHP-Version: Spalten Datum, Status, Veranstaltung
@@ -58,8 +58,9 @@ Bedienbar:
   Die Übersicht ist das Dashboard (Finanz-Warnung, Phasen-Karten mit
   Stichpunkten, Stammdaten, Planungsbereiche, Notizen). Unterbereiche als
   eigene Reiter: Buchung › Daten | Buchhaltung | PR, Planung › Zeiten |
-  Checkliste | Bühne | Personal | Gewerke | Gästeliste | Sonstiges,
-  Durchführung › Betrieb. Die Reiter stehen in der URL
+  Checkliste | Bühne | Personal | Gewerke | Gästeliste | Dateien | Sonstiges,
+  Durchführung › Betrieb | Übergabeprotokolle | Bestellscheine | Checklisten |
+  Schäden. Die Reiter stehen in der URL
   (`?phase=planung&bereich=buehne`). Leserollen sehen denselben Workspace nur
   lesend – ohne Buchhaltung (fehlt ganz, nicht nur ausgeblendet) und ohne
   WLAN-Passwort, wie in der PHP-Version. Neu anlegen: nur die Daten, danach
@@ -83,6 +84,30 @@ Bedienbar:
   alle Rollen gleich der PHP-Version geprüft). Artikel unter Stammdaten (die
   PHP-Version hat dafür keine Seite). Unterschrift: eigenes Feld
   `App\Filament\Forms\SignaturePad` (PNG als data:-URL wie dort).
+- **Durchführung › Checklisten** (01.10.2026) nach der „EventsCheckliste“ aus
+  AppSheet – die PHP-Version hat dafür nur einen Platzhalter, Altdaten gibt es
+  keine: Material (Emergency Case, Barriercase, Produktionscase vollständig?,
+  Schlagschrauber zugänglich?, Barriers zurück?, Geländerschrauben, Busstrom
+  abgeschaltet?, Backstages gecheckt?) und Kleinteile (Unterlegscheiben
+  klein/groß, Schrauben kurz/lang, Geländerschrauben), je Ja/Nein mit
+  Anmerkung; House-Rep. (vorbelegt mit dem Benutzer) und Prom.-Rep.
+  (vorbelegt mit dem Ansprechpartner vor Ort) mit Unterschrift, Bemerkungen.
+  Mehrere je Event, löschbar mit Recht „Event-Operationen“. Prüfpunkte in
+  `App\Support\ShowChecklist`.
+- **Durchführung › Schäden** wie in der PHP-Version: Zeitpunkt, Beschreibung,
+  bis 20 Fotos (je 15 MB), „behoben“ setzen Event-Operationen oder die
+  Buchhaltung; nicht löschbar. Übersicht unter Protokolle › Schäden, dort auch
+  allgemeine Schäden ohne Event. Neue Schäden gehen per Mail an
+  `VC_DAMAGE_NOTIFY` (Komma-Liste), sonst an alle aktiven Benutzer mit der Rolle
+  „hausmeister“. Fotos liegen nicht öffentlich, Auslieferung über
+  `/schaeden/{id}/foto/{n}` mit Rechteprüfung; `vc:import` übernimmt die
+  Schäden samt Fotos (50 Schäden, 1 Foto, bytegleich geprüft).
+- **Event-Operationen in der Ansicht:** Übergabe, Bestellscheine, Checklisten
+  und Schäden sind auch in der Lese-Ansicht des Events bearbeitbar, wenn die
+  Rolle „Event-Operationen“ bearbeiten darf (etwa der Hausmeister: Events
+  lesen, Operationen bearbeiten) – wie in der PHP-Version. Wer die
+  Bearbeiten-Seite eines Events ohne Schreibrecht aufruft (z. B. über den Link
+  in der Schadensmail), landet in der Ansicht, Phase und Bereich bleiben.
 - **Kalender-Feed** `/kalender/events.ics` wie in der PHP-Version: alle
   bestätigten Events ganztägig, Zugriff mit geheimem Schlüssel (Einstellung der
   Halle) oder angemeldet mit Kalender-Recht. Adresse unter Events › „Kalender
@@ -121,7 +146,7 @@ Bedienbar:
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Spalte
   „Zus. Podeste“: über den im Mietpreis enthaltenen hinaus (47 Events).
 
-Noch nicht: Durchführung › Checklisten und Schäden, Leistungsgruppen
+Noch nicht: Leistungsgruppen
 bearbeiten, Datei-Bibliothek (übergreifende Dateien verknüpfen),
 Kalender, Anfragen und
 Freitermin, Extern-Portal, Zugangscodes, Audit-Log, Sortierung

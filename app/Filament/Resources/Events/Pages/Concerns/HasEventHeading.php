@@ -6,8 +6,12 @@ use App\Filament\Resources\Events\EventResource;
 use App\Support\EventDisplay;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\View\View;
 
-/** Kopf des Workspace wie in der PHP-Version: Titel, darunter Datum · Veranstalter · VA-ID · Status. */
+/**
+ * Kompakter Kopf des Workspace in einer Zeile: links der Titel, rechts
+ * Datum · Veranstalter · VA-ID · Status und die Aktionen (Bühnenplan …).
+ */
 trait HasEventHeading
 {
     public function getHeading(): string
@@ -15,9 +19,13 @@ trait HasEventHeading
         return (string) $this->getRecord()->getAttribute('title');
     }
 
-    public function getSubheading(): ?string
+    public function getHeader(): ?View
     {
-        return EventDisplay::meta($this->getRecord());
+        return view('filament.events.header', [
+            'heading' => $this->getHeading(),
+            'meta' => EventDisplay::meta($this->getRecord()),
+            'actions' => $this->getCachedHeaderActions(),
+        ]);
     }
 
     protected function stagePlanAction(): Action

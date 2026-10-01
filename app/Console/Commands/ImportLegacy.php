@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Damage;
 use App\Models\EventFile;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
@@ -50,6 +51,7 @@ class ImportLegacy extends Command
             $this->importEventLists($legacy);
             $this->importFiles($legacy);
             $this->importOperations($legacy);
+            $this->importDamages($legacy);
         });
 
         return self::SUCCESS;
@@ -535,6 +537,69 @@ class ImportLegacy extends Command
                 'category_id' => $i->category_id, 'category_name' => $i->category_name, 'item_name' => $i->item_name,
                 'sort_order' => (int) $i->sort_order,
             ])->values()->all());
+    }
+
+    /**
+     * Schäden mit Fotos. Die Fotos werden aus der PHP-Version kopiert (Disk „local“,
+     * damages/import/{Schaden}/); Kopien ohne Datensatz verschwinden wieder.
+     */
+    private function importDamages(Connection $legacy): void
+    {
+        $root = dirname((string) config('venuecontrol.legacy_config'), 2);
+        $disk = Storage::disk(Damage::DISK);
+        $eventIds = DB::table('events')->pluck('id')->flip();
+        $userIds = DB::table('users')->pluck('id')->flip();
+        $user = fn (mixed $id): mixed => isset($userIds[$id]) ? $id : null;
+        $photos = $legacy->table('vc_damage_photos')->orderBy('sort_order')->orderBy('id')->get()->groupBy('damage_id');
+
+        $rows = [];
+        $kept = [];
+        $missing = [];
+        foreach ($legacy->table('vc_damages')->orderBy('id')->get() as $d) {
+            $paths = [];
+            $names = [];
+            foreach ($photos->get($d->id, collect()) as $photo) {
+                $target = 'damages/import/' . $d->id . '/' . $photo->id . '-' . basename((string) $photo->file_path);
+                $source = $this->legacyFile($root, (string) $photo->file_path);
+                if ($source === null) {
+                    $missing[] = $photo->original_name ?: basename((string) $photo->file_path);
+
+                    continue;
+                }
+                if (!$disk->exists($target) || $disk->size($target) !== filesize($source)) {
+                    $disk->put($target, fopen($source, 'r'));
+                }
+                $paths[] = $target;
+                $names[$target] = $photo->original_name ?: basename((string) $photo->file_path);
+                $kept[$target] = true;
+            }
+            $rows[] = [
+                'id' => $d->id,
+                'event_id' => isset($eventIds[$d->event_id]) ? $d->event_id : null,
+                'recorded_at' => $d->recorded_at,
+                'description' => $d->description,
+                'is_fixed' => (bool) $d->fixed,
+                'photos' => $paths === [] ? null : json_encode($paths, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'photo_names' => $names === [] ? null : json_encode($names, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'recorded_by_name' => $d->recorded_by_name,
+                'created_by' => $user($d->created_by_user_id),
+                'created_by_name' => $this->author($d->created_by_name, $d->created_by_user_id),
+                'updated_by' => $user($d->updated_by_user_id),
+                'updated_by_name' => $this->author($d->updated_by_name, $d->updated_by_user_id),
+                'created_at' => $d->created_at,
+                'updated_at' => $d->updated_at,
+            ];
+        }
+        $this->sync('damages', $rows);
+
+        foreach ($disk->allFiles('damages/import') as $path) {
+            if (!isset($kept[$path])) {
+                $disk->delete($path);
+            }
+        }
+        if ($missing !== []) {
+            $this->warn('  Schadensfotos in der PHP-Version nicht gefunden: ' . implode(', ', $missing));
+        }
     }
 
     /** Pfad einer Datei der PHP-Version wie dort FileStorage::resolveFullPath – nur unter den Upload-Ordnern. */

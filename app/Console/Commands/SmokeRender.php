@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Damage;
 use App\Models\Event;
 use App\Models\EventFile;
 use App\Models\User;
@@ -97,6 +98,11 @@ class SmokeRender extends Command
         }
         foreach (EventFile::query()->orderBy('id')->limit(5)->get() as $file) {
             $paths[] = route('event-files.download', $file, absolute: false);
+        }
+        foreach (Damage::query()->whereNotNull('photos')->orderByDesc('id')->limit(3)->get() as $damage) {
+            foreach ($damage->photoUrls() as $url) {
+                $paths[] = parse_url($url, PHP_URL_PATH);
+            }
         }
 
         return array_values(array_unique($paths));

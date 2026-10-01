@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CalendarFeedController;
+use App\Http\Controllers\DamagePhotoController;
 use App\Http\Controllers\EventFileController;
 use App\Http\Controllers\GuestListPrintController;
 use App\Http\Controllers\StagePlanController;
@@ -18,6 +19,7 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
     Route::get('/events/{event}/buehnenplan/druck', [StagePlanController::class, 'print'])->name('events.stage-plan-print');
     Route::get('/events/{event}/buehnenplan.svg', [StagePlanController::class, 'svg'])->name('events.stage-plan-svg');
     Route::get('/dateien/{file}/download', EventFileController::class)->name('event-files.download');
+    Route::get('/schaeden/{damage}/foto/{index}', DamagePhotoController::class)->whereNumber('index')->name('damages.photo');
 });
 
 // Kalender-Feed: Kalender-Apps rufen ohne Anmeldung ab, deshalb mit Schlüssel

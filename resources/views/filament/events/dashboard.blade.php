@@ -13,6 +13,8 @@
     $areas = \App\Support\EventProgress::planningAreas($event, $guestCount, $files->count());
     $slips = $event->orderSlips()->with('items')->get();
     $openHandovers = $event->handoverProtocols()->where('status', \App\Models\HandoverProtocol::OPEN)->count();
+    $checklists = $event->showChecklists()->count();
+    $openDamages = $event->damages()->where('is_fixed', false)->count();
     $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
@@ -41,6 +43,8 @@
             $event->pax !== null ? 'PAX abgerechnet ' . number_format($event->pax, 0, ',', '.') : null,
             $slips->isNotEmpty() ? $slips->count() . ' ' . ($slips->count() === 1 ? 'Bestellschein' : 'Bestellscheine') . ' · ' . \App\Models\OrderSlip::money($slips->sum(fn ($slip) => $slip->total())) : null,
             $openHandovers > 0 ? $openHandovers . ' ' . ($openHandovers === 1 ? 'Übergabe' : 'Übergaben') . ' offen' : null,
+            $checklists > 0 ? $checklists . ' ' . ($checklists === 1 ? 'Checkliste' : 'Checklisten') : null,
+            $openDamages > 0 ? $openDamages . ' ' . ($openDamages === 1 ? 'Schaden' : 'Schäden') . ' offen' : null,
             $event->closed ? 'Event abgeschlossen' : null,
         ])],
     ];

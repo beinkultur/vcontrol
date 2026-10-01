@@ -44,6 +44,16 @@ class OrderSlipsRelationManager extends RelationManager
 
     protected static ?string $pluralModelLabel = 'Bestellscheine';
 
+    /**
+     * Auch in der Ansicht des Events bearbeitbar: Event-Operationen sind wie in der
+     * PHP-Version ein eigenes Recht (siehe Policy), etwa für den Hausmeister, der
+     * Events nur lesen darf.
+     */
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
