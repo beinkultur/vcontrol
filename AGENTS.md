@@ -18,8 +18,12 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   auf dem Server installieren und `composer.json` und `composer.lock` sofort zurück
   ins Repo holen – sonst überschreibt der nächste Deploy den neueren Stand.
 - Deploy: `scripts/deploy.sh` (Standard ipa.vcontrol.eu, sonst die Halle als
-  Parameter). Überträgt per rsync und leert die Caches. Neue Migrationen danach
-  selbst mit `php artisan migrate --force` ausführen.
+  Parameter; `--dry-run` zeigt nur an). Überträgt per rsync, löscht auf dem
+  Server, was im Repo gelöscht oder umbenannt wurde – nur in app, config,
+  database, resources, routes, tests; Wurzelverzeichnis, public/, storage/ und
+  vendor/ nie –, und leert die Caches. Bei mehr als 20 Löschungen bricht es vorher
+  ab (`MAX_DELETE=n` hebt die Grenze). Neue Migrationen danach selbst mit
+  `php artisan migrate --force` ausführen.
 - Daten kommen aus der PHP-Version: `php artisan vc:import`, beliebig oft
   wiederholbar. Bis zum Umstieg ist die PHP-Version führend; was hier geändert
   wird, überschreibt der nächste Import.
