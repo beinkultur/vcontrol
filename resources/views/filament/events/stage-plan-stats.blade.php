@@ -20,12 +20,12 @@
     </dl>
 
     <ul class="vc-plan-legend">
-        <li><span class="vc-swatch" style="background:#d4d4d4;border-color:#737373"></span> Standardbühne 14×8 ({{ $tiers['standard'] }} / {{ \App\Support\StagePlan::STANDARD_PODEST_COUNT }})</li>
-        <li><span class="vc-swatch" style="background:#93c5fd;border-color:#2563eb"></span> Hausbestand ({{ $tiers['in_house'] }} / max. {{ \App\Support\StagePlan::IN_HOUSE_EXTRA_2X1 }} + {{ \App\Support\StagePlan::IN_HOUSE_EXTRA_1X1 }}×1×1)</li>
+        <li><span class="vc-swatch" style="background:#d4d4d4;border-color:#737373"></span> Standardbühne {{ $plan['base']['width'] }}×{{ $plan['base']['depth'] }} ({{ $tiers['standard'] }} / {{ $plan['base']['podests'] }})</li>
+        <li><span class="vc-swatch" style="background:#93c5fd;border-color:#2563eb"></span> Hausbestand ({{ $tiers['in_house'] }} / max. {{ $plan['house']['2x1'] }} + {{ $plan['house']['1x1'] }}×1×1)</li>
         <li><span class="vc-swatch" style="background:#fdba74;border-color:#ea580c"></span> angemietet ({{ $tiers['rented'] }})</li>
         <li><span class="vc-swatch" style="background:#c4b5fd;border-color:#6d28d9"></span> Treppen</li>
         <li><span class="vc-swatch vc-swatch--line" style="border-color:#dc2626"></span> Raummitte</li>
-        <li><span class="vc-swatch vc-swatch--line" style="border-color:#16a34a"></span> Raumbegrenzung ±10 m (25 × 15 m)</li>
+        <li><span class="vc-swatch vc-swatch--line" style="border-color:#16a34a"></span> Raumbegrenzung ±{{ \App\Support\StagePodests::formatMeters($plan['room']['boundary']) }} m</li>
         <li><span class="vc-swatch vc-swatch--line" style="border-color:#000"></span> Rückwand ({{ $plan['stage']['backwall_cm'] }} cm)</li>
     </ul>
 </div>

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\StagePlanPage;
 use App\Models\Event;
@@ -43,6 +44,32 @@ class StagePlanTest extends TestCase
         $this->assertSame(6, $plan['stats']['additional']);
         $this->assertSame('IPA stage 16×10×1.0m + wing SL 3×4', $plan['subtitle']);
         $this->assertStringContainsString('+6 angemietet nötig', StagePlan::toSvg($plan));
+    }
+
+    public function test_standardbuehne_und_hausbestand_der_halle(): void
+    {
+        $this->actingAs($this->admin());
+        Livewire::test(ManageVenue::class)
+            ->fillForm([
+                'venue_name' => 'Zweite Halle',
+                'stage_base_width' => 12, 'stage_base_depth' => 6, 'stage_house_2x1' => 10, 'stage_house_1x1' => 0,
+                'stage_roll_width' => 0, 'stage_roll_depth' => 0, 'stage_height' => '1.0',
+                'stage_label' => 'Halle 2 stage', 'stage_boundary' => '8',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        // 14×8 auf einer 12×6-Standardbühne: 36 Standard, 2 m Tiefe und je 1 m Seitenstreifen
+        // dazu (12 + 8 Podeste), davon die ersten 10 aus dem Hausbestand
+        $plan = StagePlan::build(new EventStage(['width' => 14, 'depth' => 8, 'height' => 1.0]), $this->event);
+        $this->assertSame(['standard' => 36, 'in_house' => 10, 'rented' => 10], $plan['stats']['tier_counts']);
+        $this->assertSame(0, $plan['stats']['roll_reserved']);
+        $this->assertSame('Halle 2 stage 14×8×1.0m', $plan['subtitle']);
+        $this->assertSame(4.5, $plan['room']['boundary_left']);
+
+        $svg = StagePlan::toSvg($plan);
+        $this->assertStringContainsString('standard stage 12x6', $svg);
+        $this->assertStringContainsString('up to 10 additional platforms', $svg);
     }
 
     public function test_seite_mit_einstellungen_und_zeichnung(): void

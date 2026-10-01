@@ -143,5 +143,45 @@ class EventStageTest extends TestCase
 
         $this->assertSame('100', Setting::lookup(Setting::PODEST_INVENTORY));
         $this->assertSame('40', Setting::lookup(Setting::PODEST_INCLUDED));
+        $this->assertSame(100, StagePodests::inventory());
+    }
+
+    public function test_buehnen_stammdaten_je_halle(): void
+    {
+        // Voreinstellung: Inselpark Arena
+        Livewire::test(ManageVenue::class)
+            ->assertFormSet([
+                'stage_base_width' => 14, 'stage_base_depth' => 8, 'stage_house_2x1' => 24, 'stage_house_1x1' => 2,
+                'stage_roll_width' => 4, 'stage_roll_depth' => 3, 'stage_height' => 1.4,
+                'stage_heights' => ['0,4', '0,6', '1', '1,4'], 'stage_label' => 'IPA stage', 'stage_boundary' => 10.0,
+            ])
+            ->fillForm([
+                'venue_name' => 'Zweite Halle',
+                'stage_base_width' => 12, 'stage_base_depth' => 6, 'stage_house_2x1' => 10, 'stage_house_1x1' => 0,
+                'stage_roll_width' => 0, 'stage_roll_depth' => 0, 'stage_height' => '1.2',
+                'stage_heights' => ['0,8', '1'], 'stage_label' => 'Halle 2 stage', 'stage_boundary' => '8.5',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('12', Setting::lookup('stage_base_width'));
+        $this->assertSame('0.8;1', Setting::lookup('stage_heights'));
+        $this->assertSame('8.5', Setting::lookup('stage_boundary'));
+
+        // Standardhöhe ist immer wählbar; ohne Rollipodest zählt keins mit
+        $this->assertSame([0.8, 1.0, 1.2], StagePodests::heights());
+        $this->assertSame(0, StagePodests::calculate(['width' => 12, 'depth' => 6])['rollpodest']);
+        $this->assertFalse(StagePodests::summary(new EventStage(['width' => 12, 'depth' => 6, 'height' => 1.2]))['height']);
+        $this->assertTrue(StagePodests::summary(new EventStage(['width' => 12, 'depth' => 6, 'height' => 1.4]))['height']);
+    }
+
+    public function test_buehnen_stammdaten_werden_geprueft(): void
+    {
+        Livewire::test(ManageVenue::class)
+            ->fillForm(['stage_base_width' => 13, 'stage_heights' => ['hoch'], 'stage_label' => '', 'stage_boundary' => 20])
+            ->call('save')
+            ->assertHasFormErrors(['stage_base_width', 'stage_heights.0', 'stage_label' => 'required', 'stage_boundary']);
+
+        $this->assertNull(Setting::lookup('stage_base_width'));
     }
 }

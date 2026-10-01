@@ -3,29 +3,15 @@
 namespace App\Support;
 
 use App\Models\EventStage;
-use App\Models\Setting;
 
 /**
  * Podeste einer Bühne wie in der PHP-Version (EventStageSummary): Grundfläche
  * in ganzen Metern ÷ 2 für Hauptbühne, beide Wings und das Rollipodest, dazu
- * sonstige Podeste. Bestand und Mietanteil stellt jede Halle selbst ein.
+ * sonstige Podeste. Bestand, Mietanteil, Rollipodest und Höhen stellt jede
+ * Halle selbst ein (StageSettings).
  */
 final class StagePodests
 {
-    public const DEFAULT_ROLL_WIDTH = 4;
-
-    public const DEFAULT_ROLL_DEPTH = 3;
-
-    public const DEFAULT_HEIGHT = 1.4;
-
-    /** Bühnenhöhen in Metern, die die Halle stellen kann. */
-    public const HEIGHTS = [0.4, 0.6, 1.0, 1.4];
-
-    public const DEFAULT_INVENTORY = 86;
-
-    /** Im Mietpreis enthalten: 56 Podeste Bühne + 6 Rollipodest (Inselpark Arena). */
-    public const DEFAULT_INCLUDED = 62;
-
     /**
      * @param  array<string, mixed>  $stage  Werte wie in event_stages
      * @return array{main: int, wing_sl: int, wing_sr: int, rollpodest: int, other: int, total: int}
@@ -36,9 +22,10 @@ final class StagePodests
         $wingSl = self::fromArea($stage['wing_sl_width'] ?? null, $stage['wing_sl_depth'] ?? null);
         $wingSr = self::fromArea($stage['wing_sr_width'] ?? null, $stage['wing_sr_depth'] ?? null);
         // Ohne Angabe steht das Rollipodest in Standardgröße; 0 heißt: keins.
+        $settings = StageSettings::current();
         $roll = self::fromArea(
-            self::meters($stage['rollpodest_width'] ?? null) ?? self::DEFAULT_ROLL_WIDTH,
-            self::meters($stage['rollpodest_depth'] ?? null) ?? self::DEFAULT_ROLL_DEPTH,
+            self::meters($stage['rollpodest_width'] ?? null) ?? $settings->rollWidth,
+            self::meters($stage['rollpodest_depth'] ?? null) ?? $settings->rollDepth,
         );
         $other = max(0, self::meters($stage['extra_platforms'] ?? null) ?? 0);
 
@@ -54,12 +41,18 @@ final class StagePodests
 
     public static function inventory(): int
     {
-        return once(fn (): int => (int) (Setting::lookup(Setting::PODEST_INVENTORY) ?? self::DEFAULT_INVENTORY));
+        return StageSettings::current()->inventory;
     }
 
     public static function includedInRent(): int
     {
-        return once(fn (): int => (int) (Setting::lookup(Setting::PODEST_INCLUDED) ?? self::DEFAULT_INCLUDED));
+        return StageSettings::current()->included;
+    }
+
+    /** @return list<float> Bühnenhöhen in Metern, die die Halle stellen kann */
+    public static function heights(): array
+    {
+        return StageSettings::current()->heightChoices();
     }
 
     /** Für die Abrechnung: Podeste über dem im Mietpreis enthaltenen Kontingent. */
@@ -109,7 +102,7 @@ final class StagePodests
             $parts[] = "{$total}P";
         }
 
-        $heightAlert = $height !== null && abs($height - self::DEFAULT_HEIGHT) >= 0.011;
+        $heightAlert = $height !== null && abs($height - StageSettings::current()->height) >= 0.011;
         $podestAlert = $total !== null && $total > self::inventory();
 
         return [

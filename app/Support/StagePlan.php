@@ -6,41 +6,33 @@ use App\Models\Event;
 use App\Models\EventStage;
 
 /**
- * Bühnenplan (Draufsicht) aus der PHP-Version (StagePlan), fast unverändert:
- * Podest-Raster wie der Standard der Inselpark Arena, 14 × 8 m. Blick von der
- * Bühne zum Publikum: SL = rechts im Plan, SR = links im Plan. Maße in Metern,
- * im SVG mal SCALE.
+ * Bühnenplan (Draufsicht) aus der PHP-Version (StagePlan), fast unverändert.
+ * Blick von der Bühne zum Publikum: SL = rechts im Plan, SR = links im Plan.
+ * Maße in Metern, im SVG mal SCALE.
  *
- * Hallenspezifisch und für eine zweite Halle noch einstellbar zu machen:
- * Raum 25 × 15 m, Standardbühne, Hauskontingent, Rückwand.
+ * Standardbühne, Hausbestand, Raumbegrenzung und Beschriftung stellt jede Halle
+ * ein (StageSettings, voreingestellt die Inselpark Arena: 14 × 8 m, 24 + 2).
  */
 final class StagePlan
 {
+    /**
+     * Rahmen des Plans, fest für alle Hallen: keine echte Raumgröße, sondern das
+     * Seitenverhältnis von Bühne zu Plan.
+     */
     public const ROOM_WIDTH = 25;
 
     public const ROOM_DEPTH = 15;
 
-    public const BASE_WIDTH = 14;
-
-    public const BASE_DEPTH = 8;
-
+    /** Ein Podest: 2 × 1 m */
     public const PODEST_W = 2;
 
     public const PODEST_D = 1;
-
-    public const BOUNDARY_OFFSET = 10;
 
     public const STAIR_H = 1.0;
 
     public const MARGIN_DOWNSTAGE = 4.0;
 
     public const MARGIN_UPSTAGE = 0.5;
-
-    public const STANDARD_PODEST_COUNT = 56;
-
-    public const IN_HOUSE_EXTRA_2X1 = 24;
-
-    public const IN_HOUSE_EXTRA_1X1 = 2;
 
     public const DEFAULT_BACKWALL_CM = 160;
 
@@ -54,11 +46,14 @@ final class StagePlan
     public static function build(?EventStage $stage, Event $event): array
     {
         $values = $stage?->getAttributes() ?? [];
+        $settings = StageSettings::current();
+        $baseW = $settings->baseWidth;
+        $baseD = $settings->baseDepth;
 
-        $reqW = max(self::BASE_WIDTH, self::intVal($values['width'] ?? null) ?? self::BASE_WIDTH);
-        $reqD = max(self::BASE_DEPTH, self::intVal($values['depth'] ?? null) ?? self::BASE_DEPTH);
-        if (($reqW - self::BASE_WIDTH) % 2 !== 0) {
-            $reqW = self::BASE_WIDTH + (int) (floor(($reqW - self::BASE_WIDTH) / 2) * 2);
+        $reqW = max($baseW, self::intVal($values['width'] ?? null) ?? $baseW);
+        $reqD = max($baseD, self::intVal($values['depth'] ?? null) ?? $baseD);
+        if (($reqW - $baseW) % 2 !== 0) {
+            $reqW = $baseW + (int) (floor(($reqW - $baseW) / 2) * 2);
         }
 
         $wingSlW = self::intVal($values['wing_sl_width'] ?? null);
@@ -79,21 +74,21 @@ final class StagePlan
         $roomCx = self::ROOM_WIDTH / 2;
         $stageDownY = self::resolveStageDownY($reqD, $backwallM, $wingSlW, $wingSlD, $wingSlOff, $wingSrW, $wingSrD, $wingSrOff);
         $stageLeft = $roomCx - $reqW / 2;
-        $coreLeft = $roomCx - self::BASE_WIDTH / 2;
-        $sideCols = (int) (($reqW - self::BASE_WIDTH) / 2);
-        $extraDepthDown = max(0, $reqD - self::BASE_DEPTH);
+        $coreLeft = $roomCx - $baseW / 2;
+        $sideCols = (int) (($reqW - $baseW) / 2);
+        $extraDepthDown = max(0, $reqD - $baseD);
         $standardFrontY = $stageDownY - $extraDepthDown;
 
-        // Standard 14×8: mittlerer und hinterer (upstage) Teil
-        for ($row = 0; $row < self::BASE_DEPTH; $row++) {
-            for ($col = 0; $col < intdiv(self::BASE_WIDTH, self::PODEST_W); $col++) {
+        // Standardbühne (14 × 8): mittlerer und hinterer (upstage) Teil
+        for ($row = 0; $row < $baseD; $row++) {
+            for ($col = 0; $col < intdiv($baseW, self::PODEST_W); $col++) {
                 $platforms[] = self::podest($coreLeft + $col * self::PODEST_W, $standardFrontY - ($row + 1) * self::PODEST_D, self::PODEST_W, self::PODEST_D, 'main', false, true);
             }
         }
 
-        // Tiefer als 8 m: nur downstage (Richtung Publikum) auf dem 14-m-Kern
+        // Tiefer als die Standardbühne: nur downstage (Richtung Publikum) auf deren Breite
         for ($row = 0; $row < $extraDepthDown; $row++) {
-            for ($col = 0; $col < intdiv(self::BASE_WIDTH, self::PODEST_W); $col++) {
+            for ($col = 0; $col < intdiv($baseW, self::PODEST_W); $col++) {
                 $platforms[] = self::podest($coreLeft + $col * self::PODEST_W, $stageDownY - ($row + 1) * self::PODEST_D, self::PODEST_W, self::PODEST_D, 'main_extension', false, false);
             }
         }
@@ -102,7 +97,7 @@ final class StagePlan
             $platforms = array_merge(
                 $platforms,
                 self::tileStrip1m($coreLeft - ($s + 1), $stageDownY, $reqD, 'extension'),
-                self::tileStrip1m($coreLeft + self::BASE_WIDTH + $s, $stageDownY, $reqD, 'extension'),
+                self::tileStrip1m($coreLeft + $baseW + $s, $stageDownY, $reqD, 'extension'),
             );
         }
 
@@ -113,10 +108,10 @@ final class StagePlan
             $platforms = array_merge($platforms, self::tileRect($stageLeft - $wingSrW, $stageDownY - $wingSrOff, $wingSrW, $wingSrD, 'wing_sr'));
         }
 
-        self::assignPlatformTiers($platforms);
+        self::assignPlatformTiers($platforms, $settings->house2x1, $settings->house1x1);
 
         $constructionUpY = self::constructionUpY($platforms);
-        $height = isset($values['height']) && $values['height'] !== '' ? (float) $values['height'] : StagePodests::DEFAULT_HEIGHT;
+        $height = isset($values['height']) && $values['height'] !== '' ? (float) $values['height'] : $settings->height;
         $stairW = max(0.2, round($height - 0.2, 2));
 
         // SL = rechts im Plan, SR = links im Plan
@@ -137,9 +132,13 @@ final class StagePlan
                 'width' => self::ROOM_WIDTH,
                 'depth' => self::ROOM_DEPTH,
                 'center_x' => $roomCx,
-                'boundary_left' => $roomCx - self::BOUNDARY_OFFSET,
-                'boundary_right' => $roomCx + self::BOUNDARY_OFFSET,
+                'boundary' => $settings->boundary,
+                'boundary_left' => $roomCx - $settings->boundary,
+                'boundary_right' => $roomCx + $settings->boundary,
             ],
+            // Für Legende und Zahlen: Standardbühne und Hausbestand dieser Halle
+            'base' => ['width' => $baseW, 'depth' => $baseD, 'podests' => $settings->basePodests()],
+            'house' => ['2x1' => $settings->house2x1, '1x1' => $settings->house1x1],
             'stage' => [
                 'width' => $reqW,
                 'depth' => $reqD,
@@ -165,7 +164,7 @@ final class StagePlan
             'title' => trim((string) $event->title) ?: 'Event',
             'headline' => trim(($event->starts_at?->format('d.m.Y') ?? '') . ' ' . $event->title),
             'notes' => trim((string) ($values['stage_notes'] ?? '')),
-            'subtitle' => self::subtitle($reqW, $reqD, $height, $wingSlW, $wingSlD, $wingSrW, $wingSrD),
+            'subtitle' => self::subtitle($settings->label, $reqW, $reqD, $height, $wingSlW, $wingSlD, $wingSrW, $wingSrD),
         ];
     }
 
@@ -188,7 +187,7 @@ final class StagePlan
         $svg .= '<rect width="100%" height="100%" fill="#fff"/>';
         $svg .= sprintf('<rect x="0" y="0" width="%d" height="%d" fill="none" stroke="#cbd5e1" stroke-width="1"/>', $w, $roomH);
 
-        // Raumbegrenzung ±10 m (grün), Raummitte (rot), Rückwand (schwarz)
+        // Raumbegrenzung (grün, Inselpark Arena ±10 m), Raummitte (rot), Rückwand (schwarz)
         foreach ([$boundL, $boundR] as $bx) {
             $svg .= sprintf('<line x1="%.1f" y1="%d" x2="%.1f" y2="%d" stroke="#16a34a" stroke-width="1" stroke-dasharray="6 4"/>', $bx, $lineEndY, $bx, $roomH);
         }
@@ -219,8 +218,8 @@ final class StagePlan
         $tiers = $stats['tier_counts'];
         $y0 = $roomH + 22;
         $textX = 128;
-        $svg .= self::legendItem(1.0, $y0, '#d4d4d4', '#737373', 'standard stage 14x8');
-        $svg .= self::legendItem(1.0, $y0 + 9, '#93c5fd', '#2563eb', 'up to 24 additional platforms (charged additionally)');
+        $svg .= self::legendItem(1.0, $y0, '#d4d4d4', '#737373', sprintf('standard stage %dx%d', $plan['base']['width'], $plan['base']['depth']));
+        $svg .= self::legendItem(1.0, $y0 + 9, '#93c5fd', '#2563eb', sprintf('up to %d additional platforms (charged additionally)', $plan['house']['2x1']));
         $svg .= self::legendItem(1.0, $y0 + 18, '#fdba74', '#ea580c', 'must be rented additionally (at your own expense)');
         $svg .= self::legendItem(1.0, $y0 + 27, '#c4b5fd', '#6d28d9', 'stairs');
 
@@ -250,12 +249,13 @@ final class StagePlan
         return ($event->starts_at ?? now())->format('Ymd') . ' ' . trim((string) $event->title) . ' – Bühnenplan – VenueControl';
     }
 
-    /** @param  list<array<string, mixed>>  $platforms */
-    private static function assignPlatformTiers(array &$platforms): void
+    /**
+     * Standard, Hausbestand (die ersten n Zusatzpodeste) oder angemietet.
+     *
+     * @param  list<array<string, mixed>>  $platforms
+     */
+    private static function assignPlatformTiers(array &$platforms, int $house21, int $house11): void
     {
-        $house21 = self::IN_HOUSE_EXTRA_2X1;
-        $house11 = self::IN_HOUSE_EXTRA_1X1;
-
         foreach ($platforms as &$p) {
             if ($p['standard_slot']) {
                 $p['tier'] = 'standard';
@@ -394,9 +394,9 @@ final class StagePlan
         return max(0, (int) round((float) str_replace(',', '.', (string) $value))) / 100;
     }
 
-    private static function subtitle(int $w, int $d, float $h, ?int $wslW, ?int $wslD, ?int $wsrW, ?int $wsrD): string
+    private static function subtitle(string $label, int $w, int $d, float $h, ?int $wslW, ?int $wslD, ?int $wsrW, ?int $wsrD): string
     {
-        $parts = [sprintf('IPA stage %d×%d×%.1fm', $w, $d, $h)];
+        $parts = [sprintf('%s %d×%d×%.1fm', $label, $w, $d, $h)];
         if ($wslW && $wslD) {
             $parts[] = sprintf('wing SL %d×%d', $wslW, $wslD);
         }

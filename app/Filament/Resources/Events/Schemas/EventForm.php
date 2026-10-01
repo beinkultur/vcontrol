@@ -29,6 +29,7 @@ use App\Support\EventProgress;
 use Closure;
 use App\Support\StagePlan;
 use App\Support\StagePodests;
+use App\Support\StageSettings;
 use Filament\Actions\Action;
 use App\Models\User;
 use Filament\Forms\Components\CheckboxList;
@@ -568,9 +569,9 @@ class EventForm
                             ->columns(3)
                             ->schema([
                                 self::meterField('rollpodest_width', 'Breite')
-                                    ->placeholder((string) StagePodests::DEFAULT_ROLL_WIDTH),
+                                    ->placeholder(fn (): string => (string) StageSettings::current()->rollWidth),
                                 self::meterField('rollpodest_depth', 'Tiefe')
-                                    ->placeholder((string) StagePodests::DEFAULT_ROLL_DEPTH),
+                                    ->placeholder(fn (): string => (string) StageSettings::current()->rollDepth),
                                 TextInput::make('extra_platforms')
                                     ->label('Sonstige')
                                     ->integer()
@@ -604,6 +605,7 @@ class EventForm
                     ->helperText('Erscheint kursiv im Bühnenplan.')
                     ->rows(2),
                 // Altdaten aus AppSheet, die das Formular der PHP-Version nicht mehr zeigt.
+                // „sonst. Podeste“ als reine Zahl übernimmt der Import in „Sonstige“.
                 Grid::make(['default' => 1, 'lg' => 2])
                     ->schema([
                         TextEntry::make('legacy_notes')
@@ -644,7 +646,7 @@ class EventForm
     private static function heightOptions(mixed $current): array
     {
         $options = [];
-        foreach (StagePodests::HEIGHTS as $height) {
+        foreach (StagePodests::heights() as $height) {
             $options[number_format($height, 2, '.', '')] = StagePodests::formatMeters($height) . ' m';
         }
         if ($current !== null && $current !== '' && !isset($options[number_format((float) $current, 2, '.', '')])) {

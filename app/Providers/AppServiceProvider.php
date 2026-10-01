@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Employee;
 use App\Models\Trade;
 use App\Models\User;
+use App\Support\StageSettings;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,7 +16,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bühnen-Stammdaten der Halle: einmal je Anfrage aus der Datenbank
+        $this->app->scoped(StageSettings::class, fn (): StageSettings => StageSettings::load());
     }
 
     /**

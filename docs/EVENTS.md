@@ -127,19 +127,29 @@ Bedienbar:
   Plan-Einstellungen (Versatz Wings und Treppen, Abstand Rückwand) und Zahlen.
   Druckansicht A4 quer und SVG-Datei. Verlinkt im Kopf des Workspace, unter
   Planung › Bühne und auf der Übersicht. Für alle 239 Events zeichengleich mit
-  der PHP-Version geprüft. Hallenspezifisch und für eine zweite Halle noch
-  einstellbar zu machen: Raum 25 × 15 m, Standardbühne 14 × 8 m,
-  Hausbestand 24 + 2, Beschriftung „IPA stage“ (Konstanten in
-  `App\Support\StagePlan`).
+  der PHP-Version geprüft (vor der Übernahme von „sonst. Podeste“, siehe
+  unten). Der Planrahmen 25 × 15 m ist fest: keine echte Raumgröße, er legt nur
+  das Seitenverhältnis von Bühne zu Plan fest.
+- **Bühnen-Stammdaten je Halle** (Verwaltung › Halle, `App\Support\StageSettings`,
+  01.10.2026): Standardbühne (14 × 8 m), Zusatzpodeste im Hausbestand (24 × 2×1 m,
+  2 × 1×1 m), Rollipodest in Standardgröße (4 × 3 m), Standardhöhe (1,4 m) und
+  wählbare Höhen, Podest-Bestand (86) und Mietanteil (62), Beschriftung im Plan
+  („IPA stage“) und Raumbegrenzung (±10 m). Voreingestellt sind die Werte der
+  Inselpark Arena; damit sind alle 239 Pläne, Kurzformen und Abrechnungszahlen
+  unverändert (geprüft). Bestand und Mietanteil gelten rückwirkend für alle
+  Events – so entschieden am 01.10.2026.
 - **Bühne:** Maße, Wings, Rollipodest, Höhe und die Podest-Rechnung wie in
   der PHP-Version; in der Event-Liste die Kurzform „14×8 H1,4 62P“ (gelb bei
-  anderer Höhe als 1,4 m, rot bei mehr Podesten als im Bestand). Bestand (86) und
-  Mietanteil (62) stellt jede Halle unter „Halle“ ein. Die Summe wird nur neu
-  berechnet, wenn sich ein Maß ändert – die Summen aus AppSheet bleiben sonst
-  stehen (mit allen 239 Zeilen geprüft). Die AppSheet-Felder „Anmerkungen“
-  (17×) und „sonst. Podeste“ (12×), die die PHP-Version nicht mehr zeigt,
-  erscheinen schreibgeschützt. Der Sold-Out-Award (auch Bühnen-Tabelle) steht
-  in der Durchführung, ja/nein/leer wie in der PHP-Version.
+  anderer als der Standardhöhe, rot bei mehr Podesten als im Bestand). Die Summe
+  wird nur neu berechnet, wenn sich ein Maß ändert – die Summen aus AppSheet
+  bleiben sonst stehen (mit allen 239 Zeilen geprüft, bestätigt am 01.10.2026).
+  „sonst. Podeste“ aus AppSheet (12×, nie in den AppSheet-Summen) übernimmt
+  `vc:import` seit 01.10.2026 als „Sonstige“, sie zählen also mit: bei 11
+  Events zusammen 76 Podeste mehr zusätzlich berechnet, Culcha Candela liegt
+  mit 89 über dem Bestand. Die PHP-Version zählt sie weiterhin nicht.
+  „Anmerkungen“ aus AppSheet (17×) erscheinen schreibgeschützt. Der
+  Sold-Out-Award (auch Bühnen-Tabelle) steht in der Durchführung,
+  ja/nein/leer wie in der PHP-Version.
 - **Detailansicht** (nur lesen): Kerndaten, Zeiten, Finanzen (mit Recht),
   Rollen mit Uhrzeit, Räume, Leistungen, Bühne, Checkliste, Sold-Out-Award.
 - **Buchhaltung** mit Offen/Abgeschlossen/Alle/Endabrechnung/Archiv und
