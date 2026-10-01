@@ -19,8 +19,13 @@ class LoginTest extends TestCase
             ->assertSee('E-Mail-Adresse');
     }
 
-    public function test_admin_sieht_das_dashboard(): void
+    public function test_startseite_nach_der_anmeldung_ist_die_event_liste(): void
     {
-        $this->actingAs($this->admin())->get('/')->assertOk();
+        $this->actingAs($this->admin())->get('/')->assertRedirect('/events');
+    }
+
+    public function test_ohne_event_recht_der_erste_erlaubte_menuepunkt(): void
+    {
+        $this->actingAs($this->userWith($this->role('pforte', ['codes' => 'read'])))->get('/')->assertRedirect('/codes');
     }
 }

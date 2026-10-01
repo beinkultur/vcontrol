@@ -1015,3 +1015,13 @@ a.vc-card:hover {
     text-decoration: line-through;
     text-decoration-color: rgb(239 68 68 / 0.5);
 }
+
+/* Kopfzeile: nur der Hallenname, in einer Zeile; Menüpunkte etwas enger, damit
+   Events bis Verwaltung auch bei 1280 px in eine Zeile passen */
+.fi-logo {
+    white-space: nowrap;
+}
+
+.fi-topbar-nav-groups {
+    column-gap: 0.5rem;
+}

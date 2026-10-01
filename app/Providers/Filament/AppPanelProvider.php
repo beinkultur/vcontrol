@@ -7,18 +7,17 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use App\Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /**
@@ -40,10 +39,13 @@ class AppPanelProvider extends PanelProvider
             // Jede Seite braucht eine vollständige Policy – fehlt eine Methode, bricht
             // Filament ab, statt die Aktion stillschweigend zu erlauben.
             ->strictAuthorization()
-            // Mit dem Hallennamen – jede Halle hat ihre eigene Installation
+            // Mit dem Hallennamen – jede Halle hat ihre eigene Installation. In der
+            // Kopfzeile (und auf der Anmeldeseite) steht nur die Halle, „VenueControl“
+            // bleibt im Fenstertitel.
             ->brandName(fn (): string => collect([config('app.name'), Setting::lookup(Setting::VENUE_NAME)])
                 ->filter()
                 ->implode(' · '))
+            ->brandLogo(fn (): HtmlString => new HtmlString(e(Setting::lookup(Setting::VENUE_NAME) ?: config('app.name'))))
             ->colors([
                 'primary' => Color::Blue,
             ])
@@ -58,13 +60,11 @@ class AppPanelProvider extends PanelProvider
             ))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                AccountWidget::class,
-            ])
+            // Kein Dashboard: / führt zum ersten Menüpunkt, den der Benutzer sehen darf –
+            // in der Regel die Event-Liste (Filament-Weiterleitung „home“).
+            // Reihenfolge: Events, Buchhaltung, Codes (ohne Gruppe, nach navigationSort),
+            // dann diese Gruppen.
+            ->navigationGroups(['Protokolle', 'Stammdaten', 'Verwaltung'])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
