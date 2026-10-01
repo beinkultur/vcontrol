@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Models\EventFile;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Übernimmt die Daten der PHP-Version (vc.bein.ws). Beliebig oft wiederholbar:
@@ -43,6 +45,7 @@ class ImportLegacy extends Command
             $this->importEvents($legacy);
             $this->importEventDetails($legacy);
             $this->importEventLists($legacy);
+            $this->importFiles($legacy);
         });
 
         return self::SUCCESS;
@@ -392,6 +395,107 @@ class ImportLegacy extends Command
      *
      * @param  list<array<string, mixed>>  $rows
      */
+    /**
+     * Event-Dateien: Datensätze mit IDs wie gehabt, die Dateien selbst werden aus
+     * der PHP-Version kopiert (Disk „local“, event-files/import/). Kopien, deren
+     * Datensatz es dort nicht mehr gibt, verschwinden wieder.
+     */
+    private function importFiles(Connection $legacy): void
+    {
+        $this->sync('event_file_tags', $legacy->table('vc_event_file_tags')->orderBy('id')->get()
+            ->map(fn (object $t): array => [
+                'id' => $t->id,
+                'name' => $t->name,
+                'sort_order' => (int) $t->sort_order,
+                'is_archived' => (bool) $t->is_archived,
+                'created_at' => $t->created_at,
+                'updated_at' => $t->updated_at,
+            ])->values()->all());
+
+        $root = dirname((string) config('venuecontrol.legacy_config'), 2);
+        $disk = Storage::disk(EventFile::DISK);
+        $eventIds = DB::table('events')->pluck('id')->flip();
+        $userIds = DB::table('users')->pluck('id')->flip();
+        $rows = [];
+        $missing = [];
+        foreach ($legacy->table('vc_event_files')->orderBy('id')->get() as $f) {
+            if ($f->event_id !== null && !isset($eventIds[$f->event_id])) {
+                continue;
+            }
+            $target = 'event-files/import/' . $f->id . '-' . basename((string) $f->file_path);
+            $source = $this->legacyFile($root, (string) $f->file_path);
+            if ($source === null) {
+                $missing[] = $f->original_name;
+            } elseif (!$disk->exists($target) || $disk->size($target) !== filesize($source)) {
+                $disk->put($target, fopen($source, 'r'));
+            }
+            $rows[] = [
+                'id' => $f->id,
+                'tag_id' => $f->tag_id,
+                'event_id' => $f->event_id,
+                'title' => $f->title,
+                'path' => $target,
+                'original_name' => $f->original_name,
+                'mime_type' => $f->mime_type,
+                'size' => $f->file_size,
+                'version' => (int) $f->version,
+                'uploaded_at' => $f->uploaded_at,
+                'is_shared' => (bool) $f->is_shared,
+                'created_by' => isset($userIds[$f->created_by_user_id]) ? $f->created_by_user_id : null,
+                'created_by_name' => $f->created_by_name,
+                'updated_by' => isset($userIds[$f->updated_by_user_id]) ? $f->updated_by_user_id : null,
+                'updated_by_name' => $f->updated_by_name,
+                'created_at' => $f->created_at,
+                'updated_at' => $f->updated_at,
+            ];
+        }
+        $this->sync('event_files', $rows);
+
+        $fileIds = DB::table('event_files')->pluck('id')->flip();
+        $this->replace('event_file_links', $legacy->table('vc_event_file_links')->get()
+            ->filter(fn (object $l): bool => isset($eventIds[$l->event_id], $fileIds[$l->file_id]))
+            ->map(fn (object $l): array => [
+                'event_id' => $l->event_id,
+                'file_id' => $l->file_id,
+                'created_by' => isset($userIds[$l->created_by_user_id]) ? $l->created_by_user_id : null,
+                'created_by_name' => $l->created_by_name,
+                'created_at' => $l->created_at,
+            ])->values()->all());
+
+        $kept = array_flip(array_column($rows, 'path'));
+        foreach ($disk->files('event-files/import') as $path) {
+            if (!isset($kept[$path])) {
+                $disk->delete($path);
+            }
+        }
+        if ($missing !== []) {
+            $this->warn('  In der PHP-Version nicht gefunden: ' . implode(', ', $missing));
+        }
+    }
+
+    /** Pfad einer Datei der PHP-Version wie dort FileStorage::resolveFullPath – nur unter den Upload-Ordnern. */
+    private function legacyFile(string $root, string $stored): ?string
+    {
+        $stored = trim($stored);
+        $candidate = match (true) {
+            str_starts_with($stored, '/uploads/') => $root . '/public' . $stored,
+            str_starts_with(ltrim($stored, '/'), 'storage/uploads/') => $root . '/' . ltrim($stored, '/'),
+            default => null,
+        };
+        $real = $candidate === null ? false : realpath($candidate);
+        if ($real === false || !is_file($real)) {
+            return null;
+        }
+        foreach (['/public/uploads', '/storage/uploads'] as $dir) {
+            $base = realpath($root . $dir);
+            if ($base !== false && str_starts_with($real, $base . DIRECTORY_SEPARATOR)) {
+                return $real;
+            }
+        }
+
+        return null;
+    }
+
     private function replace(string $table, array $rows): void
     {
         DB::table($table)->delete();

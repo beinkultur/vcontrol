@@ -67,6 +67,15 @@ Bedienbar:
   Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar.
 - Gästeliste mit Druckansicht für den Einlass (A4, nach Name sortiert, Summe,
   Spalte zum Abhaken).
+- **Dateien** wie in der PHP-Version: Planung › Dateien zum Hochladen (Tag,
+  Anzeigename, max. 15 MB, Archive nur für Admins), neue Version hochladen
+  (Versionsnummer zählt hoch, „Stand: Datum · vN“), Löschen; auf der Übersicht
+  nach Tag gruppiert. Dateien liegen nicht öffentlich (Disk „local“),
+  heruntergeladen wird über `/dateien/{id}/download` mit Rechteprüfung.
+  `vc:import` kopiert die Dateien aus der PHP-Version mit. Datei-Tags unter
+  Stammdaten (archivieren statt löschen, sobald benutzt). Übergreifende
+  Dateien werden angezeigt; die zentrale Bibliothek zum Verknüpfen
+  (PHP: `/dateien`) folgt noch.
 - **Bühnenplan** (`/events/{id}/buehnenplan`) wie in der PHP-Version:
   Draufsicht mit Podest-Raster (Standard 14×8, Hausbestand, angemietet),
   Wings, Treppen, Raummitte, Raumbegrenzung und Rückwand; daneben
@@ -92,7 +101,8 @@ Bedienbar:
   Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Spalte
   „Zus. Podeste“: über den im Mietpreis enthaltenen hinaus (47 Events).
 
-Noch nicht: Leistungsgruppen bearbeiten, Dateien,
+Noch nicht: Leistungsgruppen bearbeiten, Datei-Bibliothek (übergreifende
+Dateien verknüpfen),
 Protokolle (Übergabe, Bestellscheine, Schäden), Kalender, Anfragen und
 Freitermin, Extern-Portal, Zugangscodes, ICS-Feed, Audit-Log, Sortierung
 „Finanz-Warnung zuerst“.

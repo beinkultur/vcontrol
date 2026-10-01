@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Event;
+use App\Models\EventFile;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Console\Command;
@@ -93,6 +94,9 @@ class SmokeRender extends Command
             $paths[] = route('events.guest-list-print', $event, absolute: false);
             $paths[] = route('events.stage-plan-print', $event, absolute: false);
             $paths[] = route('events.stage-plan-svg', $event, absolute: false);
+        }
+        foreach (EventFile::query()->orderBy('id')->limit(5)->get() as $file) {
+            $paths[] = route('event-files.download', $file, absolute: false);
         }
 
         return array_values(array_unique($paths));

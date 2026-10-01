@@ -62,6 +62,10 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 - Filament-Dialoge mit `Livewire::test(...)->callAction(...)` prüfen. Nach
   abgelehnter Eingabe bleibt der Dialog offen: für den nächsten Aufruf eine
   frische Komponente nehmen. `fillForm()` wirkt nur mit APP_ENV=testing.
+- Dateien (Event-Dateien) liegen auf der Disk „local“ (`storage/app/private`),
+  nie unter `public/`; ausgeliefert über eine Route mit Rechteprüfung.
+  Upload-Grenze 15 MB: `config/livewire.php` und `public/.user.ini`.
+- Seitenbreite: Listen voll, Formulare/Dashboards mit `BoxedPage` (1400 px).
 - Eigene Stile ohne Build-Schritt: `public/css/vcontrol.css`, eingebunden per
   Render-Hook im `AppPanelProvider`. Tailwind-Klassen in eigenen Blade-Dateien
   wirken nicht (Filament bringt nur die eigenen, fertig gebauten Klassen mit).

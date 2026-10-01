@@ -32,7 +32,7 @@ final class EventProgress
      *
      * @return array<string, bool> Reiter-ID => begonnen
      */
-    public static function planningAreas(Event $event, int $guestCount): array
+    public static function planningAreas(Event $event, int $guestCount, int $fileCount): array
     {
         $s = $event->schedule;
         $c = $event->checklist;
@@ -45,6 +45,7 @@ final class EventProgress
             'personal' => $event->assignments->contains(fn (EventAssignment $a): bool => $a->role !== AssignmentRole::ProjectLead),
             'gewerke' => self::filledServices($event) > 0,
             'gaeste' => $guestCount > 0,
+            'dateien' => $fileCount > 0,
             'sonstiges' => filled($event->wlan) || (bool) $c?->briefing_complete,
         ];
     }

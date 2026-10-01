@@ -4,8 +4,14 @@
     $guestCount = $event->guests()->count();
     $guestTickets = (int) $event->guests()->sum('free_tickets');
     $services = \App\Support\EventProgress::filledServices($event);
-    $areas = \App\Support\EventProgress::planningAreas($event, $guestCount);
-    $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'sonstiges' => 'Sonstiges'];
+    // Dateien direkt am Event und übergreifende, nach Tag gruppiert wie in der PHP-Version
+    $files = $event->files()->with('tag')->get()->each(fn ($file) => $file->setAttribute('linked', false))
+        ->concat($event->linkedFiles()->with('tag')->get()->each(fn ($file) => $file->setAttribute('linked', true)));
+    $filesByTag = $files
+        ->sortBy(fn ($file) => sprintf('%05d %s', $file->tag?->sort_order ?? 99999, mb_strtolower($file->displayName())))
+        ->groupBy(fn ($file) => $file->tag?->name ?? 'Sonstiges');
+    $areas = \App\Support\EventProgress::planningAreas($event, $guestCount, $files->count());
+    $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
     $time = fn ($value): ?string => filled($value) ? substr((string) $value, 0, 5) : null;
@@ -103,6 +109,30 @@
                 @endforeach
             </ul>
             <a href="{{ \App\Filament\Resources\Events\EventResource::getUrl('stage-plan', ['record' => $event]) }}" wire:navigate class="vc-card__link">Bühnenplan anzeigen ›</a>
+        </section>
+
+        <section class="vc-card vc-card--span">
+            <h3 class="vc-card__heading">Dateien</h3>
+            @if ($files->isEmpty())
+                <p class="vc-card__empty">Noch keine Dateien hinterlegt.</p>
+            @else
+                <div class="vc-files">
+                    @foreach ($filesByTag as $tag => $tagFiles)
+                        <div class="vc-files__group">
+                            <h4 class="vc-files__tag">{{ $tag }}</h4>
+                            <ul class="vc-files__list">
+                                @foreach ($tagFiles as $file)
+                                    <li>
+                                        <a href="{{ $file->downloadUrl() }}" target="_blank" rel="noopener" class="vc-files__name">{{ $file->displayName() }}</a>
+                                        <span class="vc-muted">· {{ $file->standLabel() }}@if ($file->linked) · übergreifend @endif</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+            <a href="{{ $link('planung', 'dateien') }}" wire:navigate class="vc-card__link">Dateien verwalten ›</a>
         </section>
     </div>
 </div>

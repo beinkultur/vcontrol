@@ -117,6 +117,19 @@ class Event extends Model
         return $this->hasMany(EventNote::class);
     }
 
+    /** Dateien direkt an diesem Event. @return HasMany<EventFile, $this> */
+    public function files(): HasMany
+    {
+        return $this->hasMany(EventFile::class);
+    }
+
+    /** Übergreifende Dateien, die an dieses Event gehängt sind. @return BelongsToMany<EventFile, $this> */
+    public function linkedFiles(): BelongsToMany
+    {
+        return $this->belongsToMany(EventFile::class, 'event_file_links', 'event_id', 'file_id')
+            ->where('event_files.is_shared', true);
+    }
+
     /** @return HasMany<EventService, $this> */
     public function services(): HasMany
     {

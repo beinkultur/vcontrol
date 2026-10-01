@@ -7,6 +7,7 @@ use App\Access\Level;
 use App\Enums\AssignmentRole;
 use App\Enums\OptionField;
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
 use App\Filament\Support\AssignmentFields;
@@ -154,6 +155,13 @@ class EventForm
                                         ->schema(ServiceFields::all()),
                                 ]),
                                 Tab::make('Gästeliste')->id('gaeste')->schema([self::embedded(GuestsRelationManager::class)]),
+                                Tab::make('Dateien')->id('dateien')->schema([
+                                    self::embedded(FilesRelationManager::class),
+                                    // Übergreifende Dateien hängen an mehreren Events, gepflegt werden sie zentral
+                                    View::make('filament.events.linked-files')
+                                        ->viewData(fn (Event $record): array => ['files' => $record->linkedFiles()->with('tag')->get()])
+                                        ->visible(fn (Event $record): bool => $record->linkedFiles()->exists()),
+                                ]),
                                 Tab::make('Sonstiges')->id('sonstiges')->schema([self::other()]),
                             ]),
                         ]),

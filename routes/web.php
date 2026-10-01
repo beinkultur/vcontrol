@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EventFileController;
 use App\Http\Controllers\GuestListPrintController;
 use App\Http\Controllers\StagePlanController;
 use Filament\Facades\Filament;
@@ -15,4 +16,5 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
     Route::get('/events/{event}/gaesteliste', GuestListPrintController::class)->name('events.guest-list-print');
     Route::get('/events/{event}/buehnenplan/druck', [StagePlanController::class, 'print'])->name('events.stage-plan-print');
     Route::get('/events/{event}/buehnenplan.svg', [StagePlanController::class, 'svg'])->name('events.stage-plan-svg');
+    Route::get('/dateien/{file}/download', EventFileController::class)->name('event-files.download');
 });

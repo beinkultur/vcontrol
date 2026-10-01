@@ -641,3 +641,48 @@ a.vc-card:hover {
     margin: 0.6rem 0 0;
     font-size: 0.82rem;
 }
+
+/* ---------------------------------------------------------------------
+ * Übersicht: Dateien nach Tag
+ * ------------------------------------------------------------------ */
+
+.vc-card--span {
+    grid-column: 1 / -1;
+}
+
+.vc-files {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 0.75rem 1.5rem;
+}
+
+.vc-files__tag {
+    margin: 0 0 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--gray-500);
+}
+
+.vc-files__list {
+    display: grid;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.875rem;
+}
+
+.vc-files__name {
+    color: var(--primary-600);
+    text-decoration: none;
+}
+
+.vc-files__name:hover {
+    text-decoration: underline;
+}
+
+.dark .vc-files__name {
+    color: var(--primary-400);
+}
