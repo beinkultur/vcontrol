@@ -15,6 +15,16 @@
     $openHandovers = $event->handoverProtocols()->where('status', \App\Models\HandoverProtocol::OPEN)->count();
     $checklists = $event->showChecklists()->count();
     $openDamages = $event->damages()->where('is_fixed', false)->count();
+    // Daysheet: das zuletzt verschickte, dessen Link nicht gesperrt ist
+    $daysheet = $event->daysheets()->whereNull('revoked_at')->latest('created_at')->latest('id')->first();
+    $daysheetLine = match (true) {
+        $daysheet !== null => new \Illuminate\Support\HtmlString(
+            '<span class="vc-ok" aria-hidden="true">✓</span> Daysheet versendet am ' . e($daysheet->created_at->format('d.m.Y, H:i')) . ' Uhr'
+            . (filled($daysheet->created_by_name) ? ' (' . e($daysheet->created_by_name) . ')' : '')
+        ),
+        $event->starts_at !== null && $event->starts_at->copy()->endOfDay()->isFuture() => 'Daysheet noch nicht versendet',
+        default => null,
+    };
     $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
@@ -40,6 +50,7 @@
         'durchfuehrung' => ['num' => 3, 'title' => 'Durchführung', 'lines' => array_filter([
             filled($event->status) ? 'Status ' . \App\Support\EventDisplay::statusLabel($event->status) : null,
             $time($event->schedule?->start_time) ? 'Show ' . $time($event->schedule->start_time) : null,
+            $daysheetLine,
             $event->pax !== null ? 'PAX abgerechnet ' . number_format($event->pax, 0, ',', '.') : null,
             $slips->isNotEmpty() ? $slips->count() . ' ' . ($slips->count() === 1 ? 'Bestellschein' : 'Bestellscheine') . ' · ' . \App\Models\OrderSlip::money($slips->sum(fn ($slip) => $slip->total())) : null,
             $openHandovers > 0 ? $openHandovers . ' ' . ($openHandovers === 1 ? 'Übergabe' : 'Übergaben') . ' offen' : null,

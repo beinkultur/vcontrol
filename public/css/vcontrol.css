@@ -1037,3 +1037,13 @@ a.vc-card:hover {
 .fi-topbar-nav-groups {
     column-gap: 0.5rem;
 }
+
+/* Erledigt-Haken im Dashboard (z. B. Daysheet versendet), wie die Spalte „DS“ der Event-Liste */
+.vc-ok {
+    color: var(--success-600);
+    font-weight: 700;
+}
+
+.dark .vc-ok {
+    color: var(--success-400);
+}

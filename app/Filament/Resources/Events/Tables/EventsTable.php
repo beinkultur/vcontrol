@@ -9,7 +9,9 @@ use App\Support\StagePodests;
 use Filament\Forms\Components\Select;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\IconSize;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Enums\FiltersLayout;
@@ -18,6 +20,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\HtmlString;
 
 /**
  * Die Event-Liste – Herzstück der App. Spalten, Reihenfolge und Filter wie in
@@ -94,6 +98,16 @@ class EventsTable
                         default => 'gray',
                     })
                     ->tooltip('Breite × Tiefe, Höhe, Podeste'),
+                // Daysheet verschickt (Link nicht gesperrt): nur dann ein grüner Haken
+                IconColumn::make('daysheet_sent_at')
+                    ->label(new HtmlString('<span title="Daysheet versendet">DS</span>'))
+                    ->icon(fn (?string $state): ?Heroicon => filled($state) ? Heroicon::CheckCircle : null)
+                    ->color('success')
+                    ->size(IconSize::Small)
+                    ->tooltip(fn (?string $state): ?string => filled($state)
+                        ? 'Daysheet versendet am ' . Carbon::parse($state)->format('d.m.Y, H:i') . ' Uhr'
+                        : null)
+                    ->alignCenter(),
                 TextColumn::make('va_id')
                     ->label('VA-ID')
                     ->fontFamily(FontFamily::Mono)
@@ -103,9 +117,9 @@ class EventsTable
                     ->label('Fortschritt')
                     ->view('filament.events.list-progress'),
             ])
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with([
-                'promoter', 'finance', 'pr', 'schedule', 'checklist', 'stage', 'services', 'assignments.assignee',
-            ]))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                ->with(['promoter', 'finance', 'pr', 'schedule', 'checklist', 'stage', 'services', 'assignments.assignee'])
+                ->withMax(['daysheets as daysheet_sent_at' => fn (Builder $daysheets): Builder => $daysheets->whereNull('revoked_at')], 'created_at'))
             ->defaultGroup(
                 Group::make('month')
                     ->label('Monat')

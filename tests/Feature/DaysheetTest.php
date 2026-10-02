@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\ServiceCode;
 use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Filament\Resources\Events\RelationManagers\DaysheetsRelationManager;
 use App\Mail\DaysheetMail;
@@ -211,6 +212,26 @@ class DaysheetTest extends TestCase
         Livewire::test(DaysheetsRelationManager::class, ['ownerRecord' => $this->event, 'pageClass' => EditEvent::class])
             ->callTableAction('revoke', $daysheet);
         $this->assertTrue($daysheet->fresh()->isRevoked());
+    }
+
+    public function test_status_in_liste_und_dashboard(): void
+    {
+        $this->actingAs($this->admin());
+        $this->get('/events/' . $this->event->id . '/edit')->assertOk()->assertSee('Daysheet noch nicht versendet');
+        Livewire::test(ListEvents::class)->assertTableColumnStateSet('daysheet_sent_at', null, $this->event);
+
+        $this->travelTo(Carbon::parse('2026-10-06 10:15'));
+        [$daysheet] = $this->send();
+
+        $this->get('/events/' . $this->event->id . '/edit')
+            ->assertSee('Daysheet versendet am 06.10.2026, 10:15 Uhr')
+            ->assertDontSee('Daysheet noch nicht versendet');
+        Livewire::test(ListEvents::class)->assertTableColumnStateSet('daysheet_sent_at', '2026-10-06 10:15:00', $this->event);
+
+        // Gesperrter Link zählt nicht: kein Haken, wieder „noch nicht versendet“
+        $daysheet->update(['revoked_at' => now()]);
+        Livewire::test(ListEvents::class)->assertTableColumnStateSet('daysheet_sent_at', null, $this->event);
+        $this->get('/events/' . $this->event->id . '/edit')->assertSee('Daysheet noch nicht versendet');
     }
 
     public function test_standards_in_der_verwaltung(): void

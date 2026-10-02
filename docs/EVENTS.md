@@ -210,7 +210,10 @@ Bedienbar:
   speichern. Gespeichert wird nur der Hash des Schlüssels. Inhalt vorläufig wie
   der Extern-Bereich, wird noch festgelegt – an einer Stelle
   (`App\Support\ExternSheet`). Versand über `MAIL_MAILER` der Halle; solange
-  dort `log` steht, landen die Mails nur im Laravel-Log.
+  dort `log` steht, landen die Mails nur im Laravel-Log. Status: in der
+  Event-Liste Spalte „DS“ mit grünem Haken, sobald ein Daysheet verschickt ist
+  (gesperrte Links zählen nicht), im Dashboard (Karte Durchführung) „Daysheet
+  versendet am …“ bzw. bei kommenden Events „noch nicht versendet“.
 
 Noch nicht: Leistungsgruppen
 bearbeiten, Datei-Bibliothek (übergreifende Dateien verknüpfen),
