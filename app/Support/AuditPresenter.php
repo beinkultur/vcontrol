@@ -72,6 +72,7 @@ final class AuditPresenter
         'article_categories' => 'Artikel-Kategorie',
         'calendars' => 'Kalender-Ebene',
         'settings' => 'Einstellung',
+        'daysheets' => 'Daysheet',
         'import' => 'Import',
     ];
 
@@ -123,6 +124,7 @@ final class AuditPresenter
         'article_categories' => [Area::AdminInventar],
         'calendars' => [Area::AdminKalender],
         'settings' => [Area::AdminStammdaten],
+        'daysheets' => [Area::Events],
     ];
 
     /** @return list<string>|null Tabellen, deren Einträge der Benutzer sieht; null = alle (Admin) */
@@ -196,6 +198,9 @@ final class AuditPresenter
         // Gäste, Notizen, Dateien
         'free_tickets' => 'Freikarten', 'subject' => 'Betreff', 'body' => 'Text', 'path' => 'Datei', 'original_name' => 'Dateiname',
         'mime_type' => 'Typ', 'size' => 'Größe', 'version' => 'Version', 'uploaded_at' => 'Hochgeladen', 'is_shared' => 'Übergreifend',
+        'hidden_from_externals' => 'Für Externe verborgen',
+        // Daysheets
+        'recipients_to' => 'An', 'recipients_bcc' => 'BCC', 'expires_at' => 'Gültig bis', 'revoked_at' => 'Link gesperrt', 'token_hash' => 'Schlüssel',
         // Bestellscheine, Übergaben, Schäden, Checklisten
         'ordered_from' => 'Bestellt von', 'ordered_at' => 'Bestellt am', 'signature' => 'Unterschrift', 'is_settled' => 'Abgerechnet',
         'order_slip_id' => 'Bestellschein', 'article_name' => 'Artikel', 'category_name' => 'Kategorie', 'unit' => 'Einheit',
@@ -225,7 +230,7 @@ final class AuditPresenter
     /** Felder mit ja/nein */
     private const BOOLEANS = ['closed', 'accounting_closed', 'power_ant', 'house_rig_early', 'briefing_complete', 'sold_out_award', 'house_delay',
         'stair_third', 'split_setup_teardown', 'is_active', 'is_archived', 'is_system', 'is_super', 'is_shared', 'is_settled', 'is_fixed',
-        'is_received'];
+        'is_received', 'hidden_from_externals'];
 
     /** Fremdschlüssel → [Modell, Spalte(n) für den Namen] */
     private const REFERENCES = [

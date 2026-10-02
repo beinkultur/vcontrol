@@ -6,6 +6,7 @@ use App\Access\Area;
 use App\Filament\Concerns\BoxedPage;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Daysheets;
 use App\Support\EventIcsFeed;
 use App\Support\StagePlan;
 use App\Support\StagePodests;
@@ -13,6 +14,7 @@ use App\Support\StageSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -77,6 +79,9 @@ class ManageVenue extends Page
             'stage_heights' => array_map(StagePodests::formatMeters(...), $stage->heights),
             'stage_label' => $stage->label,
             'stage_boundary' => $stage->boundary,
+            'daysheet_to' => Daysheets::emails(explode(',', (string) Setting::lookup(Setting::DAYSHEET_TO))),
+            'daysheet_subject' => Setting::lookup(Setting::DAYSHEET_SUBJECT) ?: Daysheets::DEFAULT_SUBJECT,
+            'daysheet_text' => Setting::lookup(Setting::DAYSHEET_TEXT) ?: Daysheets::DEFAULT_TEXT,
         ]);
     }
 
@@ -187,6 +192,25 @@ class ManageVenue extends Page
                                     ]),
                             ]),
                     ]),
+                Section::make('Daysheet')
+                    ->description('Vorbelegung für „Daysheet versenden“ am Event. Der Eventmanager kann alles vor dem Versand ändern; die beteiligten Gewerke kommen automatisch ins BCC.')
+                    ->schema([
+                        TagsInput::make('daysheet_to')
+                            ->label('Standard-Empfänger')
+                            ->placeholder('E-Mail-Adresse und Enter')
+                            ->helperText('Steht unter „An“, z. B. das Büro der Halle.')
+                            ->splitKeys(['Tab', ',', ' ', ';'])
+                            ->nestedRecursiveRules(['email']),
+                        TextInput::make('daysheet_subject')
+                            ->label('Betreff')
+                            ->required()
+                            ->maxLength(200),
+                        Textarea::make('daysheet_text')
+                            ->label('Text der Mail')
+                            ->required()
+                            ->rows(10)
+                            ->helperText(Daysheets::PLACEHOLDER_HELP),
+                    ]),
             ]);
     }
 
@@ -266,6 +290,10 @@ class ManageVenue extends Page
             Setting::put($key, (string) $value);
         }
         StageSettings::forget();
+
+        Setting::put(Setting::DAYSHEET_TO, implode(',', Daysheets::emails((array) ($data['daysheet_to'] ?? []))));
+        Setting::put(Setting::DAYSHEET_SUBJECT, trim((string) $data['daysheet_subject']));
+        Setting::put(Setting::DAYSHEET_TEXT, trim(str_replace(["\r\n", "\r"], "\n", (string) $data['daysheet_text'])));
 
         Notification::make()->success()->title('Gespeichert')->send();
     }

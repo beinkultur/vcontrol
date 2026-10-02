@@ -7,10 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 
-/** Notiz an einem Event: Betreff und Text, mit Verfasser und letztem Bearbeiter. */
-#[Fillable(['event_id', 'subject', 'body'])]
+/**
+ * Notiz an einem Event: Betreff und Text, mit Verfasser und letztem Bearbeiter.
+ * Beteiligte Externe (Portal, Daysheet) lesen sie mit, außer bei
+ * hidden_from_externals.
+ */
+#[Fillable(['event_id', 'subject', 'body', 'hidden_from_externals'])]
 class EventNote extends Model
 {
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'hidden_from_externals' => 'boolean',
+        ];
+    }
+
     protected static function booted(): void
     {
         static::creating(function (EventNote $note): void {

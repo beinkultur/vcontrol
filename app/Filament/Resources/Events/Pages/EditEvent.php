@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events\Pages;
 use App\Filament\Concerns\BoxedPage;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\Concerns\HasEventHeading;
+use App\Filament\Support\DaysheetActions;
 use Filament\Resources\Pages\EditRecord;
 
 /**
@@ -22,6 +23,8 @@ class EditEvent extends EditRecord
     {
         return [
             $this->stagePlanAction(),
+            $this->externViewAction(),
+            DaysheetActions::send(),
             $this->historyAction(),
         ];
     }

@@ -117,6 +117,12 @@ class Event extends Model
         return $this->hasMany(EventNote::class);
     }
 
+    /** Versendete Daysheet-Links. @return HasMany<Daysheet, $this> */
+    public function daysheets(): HasMany
+    {
+        return $this->hasMany(Daysheet::class);
+    }
+
     /** @return HasMany<EventShowChecklist, $this> */
     public function showChecklists(): HasMany
     {

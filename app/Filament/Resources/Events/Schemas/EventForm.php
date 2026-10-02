@@ -10,6 +10,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\DamagesRelationManager;
+use App\Filament\Resources\Events\RelationManagers\DaysheetsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\HandoverProtocolsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\OrderSlipsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\ShowChecklistsRelationManager;
@@ -67,7 +68,7 @@ use Illuminate\Support\HtmlString;
 class EventForm
 {
     /** Zeiten in der Reihenfolge des Veranstaltungstags. */
-    private const TIMES = [
+    public const TIMES = [
         'get_in' => 'Get-in',
         'load_in' => 'Load-in',
         'admission' => 'Einlass',
@@ -177,6 +178,7 @@ class EventForm
                                 self::tab('Bestellscheine', 'bestellscheine')->schema([self::embedded(OrderSlipsRelationManager::class)]),
                                 self::tab('Checklisten', 'checklisten')->schema([self::embedded(ShowChecklistsRelationManager::class)]),
                                 self::tab('Schäden', 'schaeden')->schema([self::embedded(DamagesRelationManager::class)]),
+                                self::tab('Daysheets', 'daysheets')->schema([self::embedded(DaysheetsRelationManager::class)]),
                             ]),
                         ]),
                     ]),

@@ -41,6 +41,7 @@ class CheckAccess extends Command
         'GET /protokolle/schaeden' => '/schaeden',
         'GET /codes' => '/codes',
         'GET /audit' => '/audit',
+        'GET /extern/events' => '/extern/events',
     ];
 
     public function handle(Kernel $kernel): int

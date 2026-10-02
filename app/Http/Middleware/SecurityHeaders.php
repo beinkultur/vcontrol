@@ -27,10 +27,18 @@ final class SecurityHeaders
         $response = $next($request);
         $headers = $response->headers;
 
-        $headers->set('X-Content-Type-Options', 'nosniff');
-        $headers->set('X-Frame-Options', 'SAMEORIGIN');
-        $headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+        // Nur, was die Antwort nicht selbst festlegt (Daysheet: Referrer-Policy no-referrer)
+        $defaults = [
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(), payment=()',
+        ];
+        foreach ($defaults as $name => $value) {
+            if (!$headers->has($name)) {
+                $headers->set($name, $value);
+            }
+        }
         // Nur für Seiten: an PDFs würde object-src den Viewer im Browser blockieren
         $type = (string) $headers->get('Content-Type');
         if (!$headers->has('Content-Security-Policy') && ($type === '' || str_starts_with($type, 'text/html'))) {

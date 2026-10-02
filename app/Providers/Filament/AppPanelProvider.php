@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
+use App\Filament\Pages\Auth\Login;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -36,7 +37,7 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('')
-            ->login()
+            ->login(Login::class)
             // Benutzermenü › Profil: eigenes Passwort ändern (Name und E-Mail nur zur Ansicht)
             ->profile(EditProfile::class, isSimple: false)
             // Jede Seite braucht eine vollständige Policy – fehlt eine Methode, bricht
@@ -55,12 +56,15 @@ class AppPanelProvider extends PanelProvider
             ->spa()
             ->topNavigation()
             ->maxContentWidth(Width::Full)
-            // Eigene Stile ohne Build-Schritt (Event-Liste, Workspace), Version = Änderungszeit
-            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): string => sprintf(
-                '<link rel="stylesheet" href="%s?v=%d">',
-                asset('css/vcontrol.css'),
-                @filemtime(public_path('css/vcontrol.css')) ?: 0,
-            ))
+            // Eigene Stile ohne Build-Schritt (Event-Liste, Workspace; sheet.css: Event-Infos
+            // für Externe, auch auf der Daysheet-Seite), Version = Änderungszeit
+            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): string => collect(['css/vcontrol.css', 'css/sheet.css'])
+                ->map(fn (string $file): string => sprintf(
+                    '<link rel="stylesheet" href="%s?v=%d">',
+                    asset($file),
+                    @filemtime(public_path($file)) ?: 0,
+                ))
+                ->implode(''))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             // Kein Dashboard: / führt zum ersten Menüpunkt, den der Benutzer sehen darf –

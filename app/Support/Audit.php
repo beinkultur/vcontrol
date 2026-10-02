@@ -19,8 +19,8 @@ use Throwable;
  * ändern, löschen – mit den Werten vorher und nachher. Schreibzugriffe ohne
  * Eloquent (Pivot-Tabellen, zusammengesetzte Schlüssel) melden sich über record().
  *
- * Passwörter und der Schlüssel des Kalender-Feeds erscheinen nur als „***“,
- * Unterschriften als „[Unterschrift]“.
+ * Passwörter, der Schlüssel des Kalender-Feeds und der Hash eines Daysheet-Links
+ * erscheinen nur als „***“, Unterschriften als „[Unterschrift]“.
  */
 final class Audit
 {
@@ -35,7 +35,7 @@ final class Audit
     /** Keine inhaltliche Änderung */
     private const IGNORED = ['id', 'created_at', 'updated_at', 'created_by', 'created_by_name', 'updated_by', 'updated_by_name', 'remember_token'];
 
-    private const SECRETS = ['password', 'wlan_password'];
+    private const SECRETS = ['password', 'wlan_password', 'token_hash'];
 
     private const SIGNATURES = ['signature', 'house_rep_signature', 'promoter_rep_signature'];
 

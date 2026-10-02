@@ -36,6 +36,7 @@ class ViewEvent extends ViewRecord
     {
         return [
             $this->stagePlanAction(),
+            $this->externViewAction(),
             $this->historyAction(),
             EditAction::make(),
         ];

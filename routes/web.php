@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\DamagePhotoController;
+use App\Http\Controllers\DaysheetController;
 use App\Http\Controllers\EventFileController;
 use App\Http\Controllers\GuestListPrintController;
 use App\Http\Controllers\StagePlanController;
@@ -20,6 +21,19 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
     Route::get('/events/{event}/buehnenplan.svg', [StagePlanController::class, 'svg'])->name('events.stage-plan-svg');
     Route::get('/dateien/{file}/download', EventFileController::class)->name('event-files.download');
     Route::get('/schaeden/{damage}/foto/{index}', DamagePhotoController::class)->whereNumber('index')->name('damages.photo');
+    Route::get('/events/{event}/daysheet', [DaysheetController::class, 'preview'])->name('events.daysheet-preview');
+});
+
+// Daysheet: ohne Konto, der Schlüssel im Link berechtigt (bis zum Tag nach der
+// Veranstaltung, sperrbar).
+// Gedrosselt je IP, damit niemand Schlüssel durchprobiert.
+Route::middleware('throttle:60,1')->group(function (): void {
+    Route::get('/daysheet/{token}', [DaysheetController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{48}')
+        ->name('daysheet.show');
+    Route::get('/daysheet/{token}/dateien/{file}', [DaysheetController::class, 'file'])
+        ->where('token', '[A-Za-z0-9]{48}')
+        ->name('daysheet.file');
 });
 
 // Kalender-Feed: Kalender-Apps rufen ohne Anmeldung ab, deshalb mit Schlüssel

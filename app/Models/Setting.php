@@ -18,6 +18,13 @@ class Setting extends Model
     /** Geheimer Schlüssel des Kalender-Feeds; leer = Feed aus. */
     public const CALENDAR_FEED_TOKEN = 'calendar_feed_token';
 
+    /** Daysheet: Standard-Empfänger (mit Komma getrennt), Betreff und Text der Mail */
+    public const DAYSHEET_TO = 'daysheet_to';
+
+    public const DAYSHEET_SUBJECT = 'daysheet_subject';
+
+    public const DAYSHEET_TEXT = 'daysheet_text';
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';

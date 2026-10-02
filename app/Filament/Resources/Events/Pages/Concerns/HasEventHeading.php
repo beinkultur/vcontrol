@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Events\Pages\Concerns;
 
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Resources\ExternEvents\ExternEventResource;
 use App\Support\EventDisplay;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
@@ -38,6 +39,16 @@ trait HasEventHeading
             ->color('gray')
             ->visible(fn (): bool => AuditLogResource::canViewAny())
             ->url(fn (): string => AuditLogResource::getUrl('index', ['filters' => ['event' => ['value' => $this->getRecord()->getKey()]]]));
+    }
+
+    /** So sehen beteiligte Freelancer und Gewerke dieses Event (Extern-Bereich, Daysheet). */
+    protected function externViewAction(): Action
+    {
+        return Action::make('externView')
+            ->label('Ansicht Extern')
+            ->icon(Heroicon::OutlinedEye)
+            ->color('gray')
+            ->url(fn (): string => ExternEventResource::getUrl('view', ['record' => $this->getRecord()]), shouldOpenInNewTab: true);
     }
 
     protected function stagePlanAction(): Action

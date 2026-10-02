@@ -1,0 +1,205 @@
+/*
+ * Event-Infos für Externe (resources/views/extern/sheet.blade.php): im
+ * Extern-Bereich des Panels und auf der Daysheet-Seite. Eigenständig, ohne
+ * Filament-Variablen – die Daysheet-Seite lädt nur diese Datei. Druck: A4 hoch.
+ */
+
+.vc-sheet {
+    --sheet-fg: #111827;
+    --sheet-muted: #6b7280;
+    --sheet-border: #e5e7eb;
+    --sheet-card: #ffffff;
+    --sheet-accent: #2563eb;
+    --sheet-alert-bg: #fef2f2;
+    --sheet-alert-fg: #b91c1c;
+    color: var(--sheet-fg);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    display: grid;
+    gap: 1rem;
+}
+
+.dark .vc-sheet {
+    --sheet-fg: #f3f4f6;
+    --sheet-muted: #9ca3af;
+    --sheet-border: rgba(255, 255, 255, 0.1);
+    --sheet-card: #18181b;
+    --sheet-accent: #60a5fa;
+    --sheet-alert-bg: rgba(220, 38, 38, 0.15);
+    --sheet-alert-fg: #fca5a5;
+}
+
+.vc-sheet__head h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.vc-sheet__head p {
+    margin: 0.2rem 0 0;
+    color: var(--sheet-muted);
+}
+
+.vc-sheet__alert {
+    margin: 0;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.5rem;
+    background: var(--sheet-alert-bg);
+    color: var(--sheet-alert-fg);
+    font-weight: 600;
+}
+
+.vc-sheet__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+}
+
+.vc-sheet section {
+    background: var(--sheet-card);
+    border: 1px solid var(--sheet-border);
+    border-radius: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    min-width: 0;
+}
+
+.vc-sheet h2 {
+    margin: 0 0 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--sheet-muted);
+}
+
+.vc-sheet h3 {
+    margin: 0.6rem 0 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.vc-sheet dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 1rem;
+    margin: 0;
+}
+
+.vc-sheet dt {
+    color: var(--sheet-muted);
+}
+
+.vc-sheet dd {
+    margin: 0;
+    font-weight: 500;
+}
+
+.vc-sheet__muted,
+.vc-sheet__empty {
+    color: var(--sheet-muted);
+}
+
+.vc-sheet__empty {
+    margin: 0;
+    font-style: italic;
+}
+
+.vc-sheet__table-wrap {
+    overflow-x: auto;
+}
+
+.vc-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vc-sheet th,
+.vc-sheet td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.35rem 0.6rem 0.35rem 0;
+    border-bottom: 1px solid var(--sheet-border);
+}
+
+.vc-sheet th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--sheet-muted);
+}
+
+.vc-sheet__files {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.vc-sheet__files li {
+    padding: 0.2rem 0;
+}
+
+.vc-sheet__files a {
+    color: var(--sheet-accent);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.vc-sheet__files a:hover {
+    text-decoration: underline;
+}
+
+.vc-sheet__note + .vc-sheet__note {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--sheet-border);
+}
+
+.vc-sheet__note p {
+    margin: 0.2rem 0 0;
+    white-space: pre-line;
+}
+
+.vc-sheet__stage-notes {
+    margin: 0.6rem 0 0;
+    font-style: italic;
+    white-space: pre-line;
+}
+
+/* Bühnenplan: weißer Grund, auch im dunklen Modus (wie gedruckt) */
+.vc-sheet__plan {
+    margin-top: 0.8rem;
+    padding: 0.5rem;
+    background: #fff;
+    border: 1px solid var(--sheet-border);
+    border-radius: 0.5rem;
+}
+
+.vc-sheet__plan svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+@media print {
+    .vc-sheet {
+        font-size: 10pt;
+        gap: 4mm;
+    }
+
+    .vc-sheet section {
+        break-inside: avoid;
+        border-color: #d1d5db;
+        padding: 3mm 4mm;
+    }
+
+    .vc-sheet__plan {
+        break-inside: avoid;
+    }
+
+    .vc-sheet__plan svg {
+        max-height: 140mm;
+    }
+
+    .vc-sheet__files a {
+        color: inherit;
+    }
+}

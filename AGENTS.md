@@ -110,6 +110,11 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   `GrantsOnlyOwnRights` die neuen Stufen.
 - Passwort ändert jeder selbst unter Profil (`App\Filament\Pages\Auth\EditProfile`,
   nur das Passwort); „Angemeldet bleiben“ gilt 30 Tage (`config/auth.php`).
+- **Externe (Recht „Events (extern)“) sind im selben Panel.** Sie sehen nur
+  „Meine Events“ (`ExternEventResource` mit eigenem Modell `ExternEvent` und
+  `ExternEventPolicy`) – alles andere sperren Policies und `canAccess()`. Jede
+  neue Seite braucht deshalb eine echte Rechteprüfung, nie „true“. Was Externe
+  und Daysheets von einem Event zeigen, steht nur in `App\Support\ExternSheet`.
 - Das Audit zeigt jedem nur Einträge aus Bereichen, die er auch sonst lesen darf
   (`AuditPresenter::SUBJECT_AREAS`) – neue Tabellen dort eintragen, sonst sehen
   sie nur Admins.

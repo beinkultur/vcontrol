@@ -9,13 +9,19 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-/** Notizen eines Events, neueste zuerst. In der Detailansicht nur lesend. */
+/**
+ * Notizen eines Events, neueste zuerst. In der Detailansicht nur lesend.
+ * Beteiligte Externe lesen sie mit, außer „Für Externe verbergen“ ist an.
+ */
 class NotesRelationManager extends RelationManager
 {
     protected static string $relationship = 'notes';
@@ -41,6 +47,9 @@ class NotesRelationManager extends RelationManager
                     ->required()
                     ->rows(8)
                     ->dehydrateStateUsing(fn (?string $state): string => trim(str_replace(["\r\n", "\r"], "\n", (string) $state))),
+                Toggle::make('hidden_from_externals')
+                    ->label('Für Externe verbergen')
+                    ->helperText('Freelancer und Gewerke (Extern-Bereich, Daysheet) sehen diese Notiz dann nicht.'),
             ]);
     }
 
@@ -57,6 +66,14 @@ class NotesRelationManager extends RelationManager
                     ->description(fn (EventNote $record): string => $record->excerpt())
                     ->wrap()
                     ->searchable(['subject', 'body']),
+                IconColumn::make('hidden_from_externals')
+                    ->label('Extern')
+                    ->boolean()
+                    ->trueIcon(Heroicon::OutlinedEyeSlash)
+                    ->falseIcon(Heroicon::OutlinedEye)
+                    ->trueColor('danger')
+                    ->falseColor('gray')
+                    ->tooltip(fn (EventNote $record): string => $record->hidden_from_externals ? 'Für Externe verborgen' : 'Für Externe sichtbar'),
                 TextColumn::make('created_by_name')
                     ->label('Von')
                     ->description(fn (EventNote $record): ?string => filled($record->updated_by_name) && $record->updated_by_name !== $record->created_by_name

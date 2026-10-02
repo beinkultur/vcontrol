@@ -13,10 +13,12 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Closure;
@@ -74,6 +76,10 @@ class FilesRelationManager extends RelationManager
                     ->storeFileNamesIn('original_name')
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->columnSpanFull(),
+                Toggle::make('hidden_from_externals')
+                    ->label('Für Externe verbergen')
+                    ->helperText('Freelancer und Gewerke (Extern-Bereich, Daysheet) sehen diese Datei dann nicht – etwa einen Vertrag.')
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -98,6 +104,14 @@ class FilesRelationManager extends RelationManager
                     ->weight(FontWeight::Medium)
                     ->color('primary')
                     ->searchable(['title', 'original_name']),
+                IconColumn::make('hidden_from_externals')
+                    ->label('Extern')
+                    ->boolean()
+                    ->trueIcon(Heroicon::OutlinedEyeSlash)
+                    ->falseIcon(Heroicon::OutlinedEye)
+                    ->trueColor('danger')
+                    ->falseColor('gray')
+                    ->tooltip(fn (EventFile $record): string => $record->hidden_from_externals ? 'Für Externe verborgen' : 'Für Externe sichtbar'),
                 TextColumn::make('stand')
                     ->label('Stand')
                     ->state(fn (EventFile $record): string => ($record->uploaded_at?->format('d.m.Y H:i') ?? '–') . ' · v' . $record->version),
@@ -125,6 +139,7 @@ class FilesRelationManager extends RelationManager
                     ->using(fn (array $data): EventFile => $this->getOwnerRecord()->files()->create([
                         'tag_id' => $data['tag_id'],
                         'title' => self::title($data['title'] ?? null),
+                        'hidden_from_externals' => (bool) ($data['hidden_from_externals'] ?? false),
                         ...self::fileAttributes($data),
                         'version' => 1,
                     ])),
@@ -139,7 +154,11 @@ class FilesRelationManager extends RelationManager
                 EditAction::make()
                     ->iconButton()
                     ->using(function (EventFile $record, array $data): EventFile {
-                        $attributes = ['tag_id' => $data['tag_id'], 'title' => self::title($data['title'] ?? null)];
+                        $attributes = [
+                            'tag_id' => $data['tag_id'],
+                            'title' => self::title($data['title'] ?? null),
+                            'hidden_from_externals' => (bool) ($data['hidden_from_externals'] ?? false),
+                        ];
                         $oldPath = null;
                         if (filled($data['upload'] ?? null)) {
                             $oldPath = $record->path;

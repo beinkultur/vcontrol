@@ -65,11 +65,19 @@ class AccessTest extends TestCase
         $this->get('/veranstalter')->assertRedirect('/login');
     }
 
-    public function test_extern_kommt_nicht_in_den_arbeitsbereich(): void
+    public function test_extern_landet_in_meinen_events_und_sonst_nirgends(): void
     {
         $extern = $this->userWith($this->role('extern', ['events_extern' => 'read']));
 
-        $this->actingAs($extern)->get('/')->assertForbidden();
+        $this->actingAs($extern)->get('/')->assertRedirect('/extern/events');
+        $this->get('/extern/events')->assertOk();
+        foreach (['/events', '/events/create', '/buchhaltung', '/codes', '/audit', '/veranstalter', '/benutzer', '/halle', '/schaeden', '/bestellscheine'] as $path) {
+            $this->get($path)->assertForbidden();
+        }
+
+        // Kalender oder Schichten extern allein öffnen (noch) nichts
+        $nurKalender = $this->userWith($this->role('kalender_extern', ['kalender_extern' => 'read']));
+        $this->actingAs($nurKalender)->get('/')->assertForbidden();
     }
 
     public function test_inaktive_konten_kommen_nicht_hinein(): void

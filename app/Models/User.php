@@ -66,8 +66,10 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     public function canAccessPanel(Panel $panel): bool
     {
+        // Externe kommen ins selbe Panel; dort sehen sie nur „Meine Events“, alles
+        // andere sperren die Policies
         return $this->is_active && match ($panel->getId()) {
-            'app' => $this->access()->canUseApp(),
+            'app' => $this->access()->canUseApp() || $this->access()->canUseExtern(),
             default => false,
         };
     }

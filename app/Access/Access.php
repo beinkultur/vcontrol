@@ -68,6 +68,15 @@ final class Access
         return $this->canAnyIn(Area::GROUP_MODULE) || $this->canAnyIn(Area::GROUP_ADMIN);
     }
 
+    /**
+     * Extern-Bereich (Freelancer, Gewerke): „Meine Events“. Kalender und Schichten
+     * extern gibt es in Laravel noch nicht – sie allein öffnen nichts.
+     */
+    public function canUseExtern(): bool
+    {
+        return $this->can(Area::EventsExtern);
+    }
+
     public function calendarLevel(string $calendarKey): Level
     {
         if ($this->isSuper()) {

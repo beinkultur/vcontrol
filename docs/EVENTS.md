@@ -187,10 +187,35 @@ Bedienbar:
   Für den Go-live-Import aus AppSheet: Tabelle „Codes“ (`Codes.code`,
   `Codes.validFrom`, ein Code je Tag).
 
+- **Extern-Bereich „Meine Events“** (`/extern/events`, Recht „Events (extern)“,
+  02.10.2026) für Freelancer und Gewerke mit eigenem Konto: nur Events, an
+  denen das Konto beteiligt ist (`App\Support\Involvement` wie
+  UserInvolvement der PHP-Version: Konto im Personal; Mitarbeiter-Konto über den
+  verknüpften Mitarbeiter; Gewerke-Konto über das Gewerk im Personal oder in den
+  Gewerken). Nur lesend: Zeiten, Ansprechpartner (Projektleitung, House Rep.
+  früh/spät, Ansprechpartner vor Ort), Gewerke, Bühne mit Plan, Dateien,
+  Notizen – nichts aus Buchhaltung, Buchung, Gästen, Betrieb
+  (`App\Support\ExternSheet`). Dateien und Notizen sind sichtbar, bis jemand
+  „Für Externe verbergen“ anhakt. Externe kommen ins selbe Panel und sehen nur
+  „Meine Events“ und „Profil“; intern zeigt „Ansicht Extern“ im Event-Kopf, was
+  Externe sehen. Kalender und Schichten extern fehlen noch.
+- **Daysheet** (02.10.2026): „Daysheet“ im Event-Kopf bzw. Durchführung ›
+  Daysheets, nur mit Schreibrecht auf Events. Vorbelegt: „An“ mit dem
+  Standard-Empfänger der Halle, BCC mit den E-Mail-Adressen der beteiligten
+  Gewerke, Betreff und Text aus Verwaltung › Halle (Platzhalter {event},
+  {datum}, {halle}, {link}, {gueltig_bis}) – alles vor dem Versand änderbar.
+  Die Empfänger bekommen einen Link ohne Konto, gültig ab Versand bis 23:59 Uhr
+  am Tag nach der Veranstaltung (mehrtägig: nach dem letzten Tag; Vorgabe vom
+  02.10.2026), jederzeit sperrbar; die Seite lässt sich drucken oder als PDF
+  speichern. Gespeichert wird nur der Hash des Schlüssels. Inhalt vorläufig wie
+  der Extern-Bereich, wird noch festgelegt – an einer Stelle
+  (`App\Support\ExternSheet`). Versand über `MAIL_MAILER` der Halle; solange
+  dort `log` steht, landen die Mails nur im Laravel-Log.
+
 Noch nicht: Leistungsgruppen
 bearbeiten, Datei-Bibliothek (übergreifende Dateien verknüpfen),
-Kalender, Anfragen und
-Freitermin, Extern-Portal, Sortierung
+Kalender (auch extern), Anfragen und
+Freitermin, Sortierung
 „Finanz-Warnung zuerst“.
 
 - **Leistungen:** Die PHP-Version legt je Event alle 19 Leistungen an

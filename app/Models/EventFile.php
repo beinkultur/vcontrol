@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
  * „local“, also nicht öffentlich – heruntergeladen wird über eine Route mit
  * Rechteprüfung (EventFileController).
  */
-#[Fillable(['tag_id', 'event_id', 'title', 'path', 'original_name', 'mime_type', 'size', 'version', 'uploaded_at', 'is_shared'])]
+#[Fillable(['tag_id', 'event_id', 'title', 'path', 'original_name', 'mime_type', 'size', 'version', 'uploaded_at', 'is_shared', 'hidden_from_externals'])]
 class EventFile extends Model
 {
     public const DISK = 'local';
@@ -78,6 +78,7 @@ class EventFile extends Model
             'version' => 'integer',
             'uploaded_at' => 'datetime',
             'is_shared' => 'boolean',
+            'hidden_from_externals' => 'boolean',
         ];
     }
 
