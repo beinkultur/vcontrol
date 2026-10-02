@@ -209,8 +209,10 @@ Bedienbar:
   02.10.2026), jederzeit sperrbar; die Seite lässt sich drucken oder als PDF
   speichern. Gespeichert wird nur der Hash des Schlüssels. Inhalt vorläufig wie
   der Extern-Bereich, wird noch festgelegt – an einer Stelle
-  (`App\Support\ExternSheet`). Versand über `MAIL_MAILER` der Halle; solange
-  dort `log` steht, landen die Mails nur im Laravel-Log. Status: in der
+  (`App\Support\ExternSheet`). Versand per SMTP über all-inkl von
+  no-reply@vcontrol.eu mit dem Namen der Halle (`App\Support\MailIdentity`);
+  Antworten gehen an die Antwortadresse unter Verwaltung › Halle › E-Mail, ohne
+  sie an den Eventmanager, der verschickt hat. Gilt auch für Schadensmeldungen. Status: in der
   Event-Liste Spalte „DS“ mit grünem Haken, sobald ein Daysheet verschickt ist
   (gesperrte Links zählen nicht), im Dashboard (Karte Durchführung) „Daysheet
   versendet am …“ bzw. bei kommenden Events „noch nicht versendet“.

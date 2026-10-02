@@ -18,6 +18,9 @@ class Setting extends Model
     /** Geheimer Schlüssel des Kalender-Feeds; leer = Feed aus. */
     public const CALENDAR_FEED_TOKEN = 'calendar_feed_token';
 
+    /** Antwortadresse für Mails der Halle (Absender ist no-reply@… aus der Server-Konfiguration) */
+    public const MAIL_REPLY_TO = 'mail_reply_to';
+
     /** Daysheet: Standard-Empfänger (mit Komma getrennt), Betreff und Text der Mail */
     public const DAYSHEET_TO = 'daysheet_to';
 

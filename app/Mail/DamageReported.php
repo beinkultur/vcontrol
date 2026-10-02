@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Damage;
+use App\Support\MailIdentity;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -16,7 +17,13 @@ class DamageReported extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Neue Schadensmeldung' . ($this->damage->event ? ': ' . $this->damage->event->title : ''));
+        $replyTo = MailIdentity::replyTo();
+
+        return new Envelope(
+            from: MailIdentity::from(),
+            replyTo: $replyTo !== null ? [$replyTo] : [],
+            subject: 'Neue Schadensmeldung' . ($this->damage->event ? ': ' . $this->damage->event->title : ''),
+        );
     }
 
     public function content(): Content

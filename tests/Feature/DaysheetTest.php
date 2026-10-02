@@ -8,8 +8,10 @@ use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Filament\Resources\Events\RelationManagers\DaysheetsRelationManager;
+use App\Mail\DamageReported;
 use App\Mail\DaysheetMail;
 use App\Models\AuditLog;
+use App\Models\Damage;
 use App\Models\Daysheet;
 use App\Models\Event;
 use App\Models\EventFile;
@@ -234,12 +236,37 @@ class DaysheetTest extends TestCase
         $this->get('/events/' . $this->event->id . '/edit')->assertSee('Daysheet noch nicht versendet');
     }
 
+    public function test_absender_ist_die_halle_antworten_an_die_adresse_aus_der_verwaltung(): void
+    {
+        $planer = $this->userWith($this->role('eventmanager', ['events' => 'edit']));
+        $this->actingAs($planer);
+
+        // Ohne Antwortadresse der Halle: Antworten an den, der verschickt hat
+        Daysheets::send($this->event, ['buero@halle.de'], [], 'X', '{link}', $planer);
+        $envelope = Mail::sent(DaysheetMail::class)->last()->envelope();
+        $this->assertSame('Inselpark Arena', $envelope->from->name);
+        $this->assertSame(config('mail.from.address'), $envelope->from->address);
+        $this->assertSame($planer->email, $envelope->replyTo[0]->address);
+
+        // Mit Antwortadresse: Daysheets und Schadensmeldungen antworten dorthin
+        Setting::put(Setting::MAIL_REPLY_TO, 'buero@halle.de');
+        Daysheets::send($this->event, ['buero@halle.de'], [], 'X', '{link}', $planer);
+        $this->assertSame('buero@halle.de', Mail::sent(DaysheetMail::class)->last()->envelope()->replyTo[0]->address);
+
+        $damage = new Damage();
+        $damage->setRelation('event', $this->event);
+        $damageEnvelope = (new DamageReported($damage, 'https://example.org'))->envelope();
+        $this->assertSame('buero@halle.de', $damageEnvelope->replyTo[0]->address);
+        $this->assertSame('Inselpark Arena', $damageEnvelope->from->name);
+    }
+
     public function test_standards_in_der_verwaltung(): void
     {
         $this->actingAs($this->admin());
 
         Livewire::test(ManageVenue::class)
             ->fillForm([
+                'mail_reply_to' => 'Buero@Halle.de',
                 'daysheet_to' => ['Buero@Halle.de'],
                 'daysheet_subject' => 'DS {event}',
                 'daysheet_text' => "Hallo,\r\n{link}",
@@ -247,6 +274,7 @@ class DaysheetTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
+        $this->assertSame('buero@halle.de', Setting::lookup(Setting::MAIL_REPLY_TO));
         $this->assertSame('buero@halle.de', Setting::lookup(Setting::DAYSHEET_TO));
         $this->assertSame('DS {event}', Setting::lookup(Setting::DAYSHEET_SUBJECT));
         $this->assertSame("Hallo,\n{link}", Setting::lookup(Setting::DAYSHEET_TEXT));
