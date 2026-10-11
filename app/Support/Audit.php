@@ -19,8 +19,8 @@ use Throwable;
  * ändern, löschen – mit den Werten vorher und nachher. Schreibzugriffe ohne
  * Eloquent (Pivot-Tabellen, zusammengesetzte Schlüssel) melden sich über record().
  *
- * Passwörter, der Schlüssel des Kalender-Feeds und der Hash eines Daysheet-Links
- * erscheinen nur als „***“, Unterschriften als „[Unterschrift]“.
+ * Passwörter, die Schlüssel von Kalender-Feed und Sicherungs-Cronjob und der Hash
+ * eines Daysheet-Links erscheinen nur als „***“, Unterschriften als „[Unterschrift]“.
  */
 final class Audit
 {
@@ -157,7 +157,7 @@ final class Audit
                 $values[$key] = '[Unterschrift]';
             }
         }
-        if ($model instanceof Setting && $model->getAttribute('key') === Setting::CALENDAR_FEED_TOKEN && array_key_exists('value', $values)) {
+        if ($model instanceof Setting && in_array($model->getAttribute('key'), [Setting::CALENDAR_FEED_TOKEN, Setting::BACKUP_CRON_KEY], true) && array_key_exists('value', $values)) {
             $values['value'] = filled($values['value']) ? '***' : null;
         }
 

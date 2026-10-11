@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BackupCronController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\DamagePhotoController;
 use App\Http\Controllers\DaysheetController;
@@ -7,7 +8,10 @@ use App\Http\Controllers\EventFileController;
 use App\Http\Controllers\GuestListPrintController;
 use App\Http\Controllers\StagePlanController;
 use Filament\Facades\Filament;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 // Die Oberfläche liefert das Filament-Panel „app“ direkt unter / aus
 // (App\Providers\Filament\AppPanelProvider). Hierher gehören nur Routen
@@ -40,3 +44,11 @@ Route::middleware('throttle:60,1')->group(function (): void {
 // statt hinter dem Panel-Login (siehe CalendarFeedController). Gedrosselt je IP,
 // damit niemand den Schlüssel durchprobiert.
 Route::get('/kalender/events.ics', CalendarFeedController::class)->middleware('throttle:30,1')->name('calendar.feed');
+
+// Nächtliche Sicherung: ruft der KAS-Cronjob mit Schlüssel auf (App\Support\Backups).
+// Ohne Sitzung – sonst stünde jede Nacht eine Zeile in `sessions`; damit auch
+// ohne CSRF-Schutz, der für sein Cookie die Sitzung braucht (nur GET, kein Formular).
+Route::get('/cron/sicherung', BackupCronController::class)
+    ->middleware('throttle:10,1')
+    ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class])
+    ->name('backup.cron');

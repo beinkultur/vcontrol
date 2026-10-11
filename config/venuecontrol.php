@@ -37,4 +37,16 @@ return [
 
     'legacy_baseline' => env('VC_LEGACY_BASELINE'),
 
+    /*
+    | Nächtliche Sicherung (App\Support\Backups): Link einer Datei-Ablage
+    | („nur Hochladen“, mit Passwort) in der Nextcloud des Betreibers, etwa
+    | https://nx.bein.ws/s/…. Der Webspace kann dort nur abliefern, nichts lesen
+    | oder löschen. Ohne beide Werte ist die Sicherung aus.
+    */
+
+    'backup' => [
+        'share_url' => env('VC_BACKUP_SHARE_URL'),
+        'share_password' => env('VC_BACKUP_SHARE_PASSWORD'),
+    ],
+
 ];

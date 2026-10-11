@@ -39,6 +39,15 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 - Filament-Code gegen `vendor/filament` auf dem Server prüfen, nicht aus dem
   Gedächtnis von Version 3 schreiben: Version 5 hat andere Namespaces
   (`Filament\Schemas\…`, `Filament\Actions\…`).
+- Sicherung (`App\Support\Backups`): jede Nacht die Datenbank (`DatabaseDump`,
+  reines PHP – im Web-PHP ist `proc_open` gesperrt), sonntags dazu
+  `storage/app/private` als ZIP, per HTTP PUT in eine Nextcloud-Datei-Ablage
+  (`VC_BACKUP_SHARE_URL`, `VC_BACKUP_SHARE_PASSWORD`; nur Hochladen – VenueControl
+  kann dort nichts lesen oder löschen). Auslöser ist ein KAS-Cronjob auf
+  `/cron/sicherung?key=…` (Adresse unter Verwaltung › System), von Hand
+  `php artisan vc:backup [--dateien]`. Fehler gehen per Mail an die System-Admins,
+  dazu ein Hinweis oben im Panel. Einspielen: `gunzip -c ….sql.gz | mysql …`, das
+  ZIP nach `storage/app/private`.
 
 ## Filament-5-Fallen (hier schon einmal passiert)
 

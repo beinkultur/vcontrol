@@ -5,6 +5,8 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Models\Setting;
+use App\Models\User;
+use App\Support\Backups;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -19,6 +21,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
@@ -65,6 +68,13 @@ class AppPanelProvider extends PanelProvider
                     @filemtime(public_path($file)) ?: 0,
                 ))
                 ->implode(''))
+            // Sicherung ausgeblieben oder gescheitert: Hinweis für System-Admins oben auf jeder Seite
+            ->renderHook(PanelsRenderHook::CONTENT_START, function (): string {
+                $user = Auth::user();
+                $warning = $user instanceof User && $user->access()->isSystemAdmin() ? Backups::warning() : null;
+
+                return $warning === null ? '' : view('filament.system.backup-warning', ['warning' => $warning])->render();
+            })
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             // Kein Dashboard: / führt zum ersten Menüpunkt, den der Benutzer sehen darf –

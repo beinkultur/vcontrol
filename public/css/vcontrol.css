@@ -1047,3 +1047,35 @@ a.vc-card:hover {
 .dark .vc-ok {
     color: var(--success-400);
 }
+
+/* Sicherung: Hinweis für System-Admins oben auf jeder Seite, Fehler in der Liste auf der Seite System */
+.vc-backup-warning {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--danger-300);
+    border-radius: 0.5rem;
+    background: var(--danger-50);
+    color: var(--danger-800);
+    font-size: 0.875rem;
+}
+
+.vc-backup-warning a {
+    margin-left: 0.5rem;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.dark .vc-backup-warning {
+    border-color: var(--danger-700);
+    background: rgb(127 29 29 / 0.25);
+    color: var(--danger-200);
+}
+
+.vc-backup-failed {
+    color: var(--danger-600);
+    font-weight: 600;
+}
+
+.dark .vc-backup-failed {
+    color: var(--danger-400);
+}

@@ -5,16 +5,20 @@ namespace App\Filament\Pages;
 use App\Access\Area;
 use App\Access\Modules;
 use App\Filament\Concerns\BoxedPage;
+use App\Models\BackupRun;
 use App\Models\User;
+use App\Support\Backups;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +27,8 @@ use UnitEnum;
 
 /**
  * Einstellungen des Betreibers, nur für System-Admins: welche Module diese
- * Halle hat. Alles, was die Halle selbst einstellt, steht unter Verwaltung › Halle.
+ * Halle hat und die nächtliche Sicherung (App\Support\Backups). Alles, was die
+ * Halle selbst einstellt, steht unter Verwaltung › Halle.
  *
  * @property-read Schema $form
  */
@@ -104,7 +109,78 @@ class ManageSystem extends Page
                                 ->keyBindings(['mod+s']),
                         ]),
                     ]),
+                Section::make('Sicherung')
+                    ->description('Jede Nacht die Datenbank, sonntags dazu die Dateien (Event-Dateien, Schadensfotos), hochgeladen in eine Datei-Ablage deiner Nextcloud. '
+                        . 'Scheitert ein nächtlicher Lauf, bekommen die System-Admins eine Mail. Alte Sicherungen löscht VenueControl nicht – das geht nur in der Nextcloud.')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('backup_target')
+                            ->label('Ziel')
+                            ->state(fn (): string => Backups::targetLabel()),
+                        TextEntry::make('backup_last')
+                            ->label('Letzte gelungene Sicherung')
+                            ->state(fn (): array => array_map(function (string $kind): string {
+                                $run = Backups::lastOk($kind);
+                                $label = $kind === BackupRun::FILES ? 'Dateien' : 'Datenbank';
+
+                                return $label . ': ' . ($run === null ? 'noch keine' : $run->started_at?->format('d.m.Y H:i') . ' Uhr, ' . $run->sizeLabel());
+                            }, [BackupRun::DATABASE, BackupRun::FILES]))
+                            ->listWithLineBreaks(),
+                        TextEntry::make('backup_cron')
+                            ->label('Adresse für den KAS-Cronjob (täglich, z. B. 03:30)')
+                            ->state(fn (): string => Backups::cronUrl() ?? 'noch keine – „Adresse erzeugen“')
+                            ->copyable(fn (): bool => Backups::cronUrl() !== null)
+                            ->copyMessage('Adresse kopiert')
+                            ->helperText('Wer die Adresse kennt, kann eine Sicherung auslösen, aber nichts lesen. E-Mail-Ausgabe im KAS frei lassen – Fehler meldet VenueControl selbst.')
+                            ->columnSpanFull(),
+                        Actions::make([
+                            Action::make('backupNow')
+                                ->label('Jetzt sichern')
+                                ->icon(Heroicon::OutlinedCloudArrowUp)
+                                ->requiresConfirmation()
+                                ->modalDescription('Sichert Datenbank und Dateien sofort und lädt beides in die Nextcloud.')
+                                ->action(fn () => $this->backupNow()),
+                            Action::make('newCronKey')
+                                ->label(fn (): string => Backups::cronUrl() === null ? 'Adresse erzeugen' : 'Neue Adresse erzeugen')
+                                ->color('gray')
+                                ->requiresConfirmation(fn (): bool => Backups::cronUrl() !== null)
+                                ->modalDescription('Die bisherige Adresse funktioniert danach nicht mehr – im KAS-Cronjob die neue eintragen.')
+                                ->action(function (): void {
+                                    abort_unless(static::canAccess(), 403);
+                                    Backups::newCronKey();
+                                    Notification::make()->success()->title('Adresse erzeugt')->body('Jetzt im KAS einen täglichen Cronjob mit dieser Adresse anlegen.')->send();
+                                }),
+                        ])->key('backupActions')->columnSpanFull(),
+                        View::make('filament.system.backup-runs')
+                            ->viewData(fn (): array => ['runs' => BackupRun::query()->latest('started_at')->latest('id')->limit(10)->get()])
+                            ->columnSpanFull(),
+                    ]),
             ]);
+    }
+
+    private function backupNow(): void
+    {
+        abort_unless(static::canAccess(), 403);
+
+        $runs = Backups::run('manuell', withFiles: true);
+        if ($runs === null) {
+            Notification::make()->warning()->title('Es läuft gerade schon eine Sicherung.')->send();
+
+            return;
+        }
+
+        $failed = $runs->firstWhere('status', BackupRun::FAILED);
+        if ($failed !== null) {
+            Notification::make()->danger()->title('Sicherung fehlgeschlagen')->body($failed->kindLabel() . ': ' . $failed->error)->persistent()->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->success()
+            ->title('Gesichert')
+            ->body($runs->map(fn (BackupRun $run): string => $run->kindLabel() . ': ' . $run->sizeLabel())->implode(', '))
+            ->send();
     }
 
     public function save(): void
