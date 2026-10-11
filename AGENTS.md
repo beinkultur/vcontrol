@@ -51,8 +51,13 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 - Überwachung durch das Cockpit (ops.bein.ws, eigenes Projekt): Es ruft
   `/_ops/status` mit dem Header `X-Ops-Token` (`OPS_STATUS_TOKEN` in der .env)
   ab – Version aus der Datei `REVISION`, die `scripts/deploy.sh` schreibt,
-  Datenbankgröße, offene Migrationen, Stand der Sicherung – und prüft täglich
-  Pakete (`composer audit`), .env, Header und offene Pfade.
+  Datenbankgröße, offene Migrationen, Stand der Sicherung, dazu Befunde und
+  Zahlen aus `App\Support\SecurityStatus` (neue Admins, Rechteänderungen,
+  ungenutzte Konten, Upload-Reste, offener Import) – und prüft täglich Pakete
+  (`composer audit`), .env, Header und offene Pfade. Hohe Befunde mailt das
+  Cockpit sofort; dieselbe Liste steht unter Verwaltung › System › Sicherheit.
+  Die letzte Anmeldung je Konto (`users.last_login_at`) setzt ein Listener auf
+  `Login`, ohne Audit-Eintrag.
 
 ## Filament-5-Fallen (hier schon einmal passiert)
 

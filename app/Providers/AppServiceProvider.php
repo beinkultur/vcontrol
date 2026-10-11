@@ -8,6 +8,7 @@ use App\Models\Trade;
 use App\Models\User;
 use App\Support\Audit;
 use App\Support\StageSettings;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event as Events;
@@ -39,6 +40,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             });
         }
+
+        // Letzte Anmeldung (auch über „Angemeldet bleiben“) für die Sicherheitsprüfung –
+        // ohne Eintrag im Änderungsprotokoll, sonst stünde jede Anmeldung darin
+        Events::listen(Login::class, function (Login $event): void {
+            if ($event->user instanceof User) {
+                $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
+            }
+        });
 
         // Kurznamen statt Klassennamen in polymorphen Spalten – dieselben Werte
         // wie assignee_type in der PHP-Version

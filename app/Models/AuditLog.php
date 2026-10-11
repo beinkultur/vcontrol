@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Ein Eintrag im Änderungsprotokoll (App\Support\Audit), unveränderlich.
- * IP-Adresse und Browser zeigt nur Admins die Detailansicht; versteckt, damit
+ * IP-Adresse und Browser zeigt nur System-Admins die Detailansicht; versteckt, damit
  * sie nicht über attributesToArray() in den Livewire-Zustand anderer geraten.
  */
 #[Fillable(['user_id', 'user_name', 'subject', 'subject_key', 'subject_label', 'event_id', 'action', 'old_values', 'new_values', 'ip_address', 'user_agent'])]

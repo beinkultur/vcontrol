@@ -8,6 +8,7 @@ use App\Filament\Concerns\BoxedPage;
 use App\Models\BackupRun;
 use App\Models\User;
 use App\Support\Backups;
+use App\Support\SecurityStatus;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -108,6 +109,22 @@ class ManageSystem extends Page
                                 ->submit('save')
                                 ->keyBindings(['mod+s']),
                         ]),
+                    ]),
+                Section::make('Sicherheit')
+                    ->description('Was das Cockpit (ops.bein.ws) täglich aus VenueControl übernimmt; Hohes kommt dort sofort per Mail, alles andere montags im Wochenbericht.')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('security_findings')
+                            ->label('Befunde')
+                            ->state(fn (): array => array_map(
+                                fn (array $finding): string => (['high' => 'Hoch', 'medium' => 'Mittel', 'low' => 'Gering'][$finding['severity']] ?? $finding['severity']).': '.$finding['title'],
+                                SecurityStatus::findings(),
+                            ) ?: ['keine'])
+                            ->listWithLineBreaks(),
+                        TextEntry::make('security_facts')
+                            ->label('Stand')
+                            ->state(fn (): array => SecurityStatus::facts())
+                            ->listWithLineBreaks(),
                     ]),
                 Section::make('Sicherung')
                     ->description('Jede Nacht die Datenbank, sonntags dazu die Dateien (Event-Dateien, Schadensfotos), hochgeladen in eine Datei-Ablage deiner Nextcloud. '

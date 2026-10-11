@@ -37,6 +37,12 @@ class UsersTable
                     ->label('Aktiv')
                     ->boolean()
                     ->alignCenter(),
+                TextColumn::make('last_login_at')
+                    ->label('Zuletzt angemeldet')
+                    ->dateTime('d.m.Y H:i')
+                    ->placeholder('–')
+                    ->sortable()
+                    ->toggleable(),
             ])
             ->defaultSort('last_name')
             ->filters([

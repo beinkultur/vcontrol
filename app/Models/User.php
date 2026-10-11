@@ -36,6 +36,7 @@ class User extends Authenticatable implements FilamentUser, HasName
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'last_login_at' => 'datetime',
             'account_type' => AccountType::class,
             'calendar_permissions' => 'array',
         ];

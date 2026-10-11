@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BackupRun;
 use App\Support\Backups;
+use App\Support\SecurityStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -12,9 +13,10 @@ use Throwable;
 
 /**
  * Statusauskunft für das Cockpit (ops.bein.ws, Vertrag in dessen
- * docs/ops-status-snippet.md), dazu der Stand der nächtlichen Sicherung für
- * den Wochenbericht. Ohne oder mit falschem Token 404 – für Unbefugte gibt es
- * die Route nicht. Keine Seiteneffekte, keine Geheimnisse in der Antwort.
+ * docs/ops-status-snippet.md), dazu der Stand der nächtlichen Sicherung und
+ * die Sicherheitslage der App (SecurityStatus) für Prüfung und Wochenbericht.
+ * Ohne oder mit falschem Token 404 – für Unbefugte gibt es die Route nicht.
+ * Keine Seiteneffekte, keine Geheimnisse in der Antwort.
  */
 class OpsStatusController extends Controller
 {
@@ -40,6 +42,11 @@ class OpsStatusController extends Controller
                 'database_ok_at' => Backups::lastOk(BackupRun::DATABASE)?->started_at?->format('d.m.Y H:i'),
                 'files_ok_at' => Backups::lastOk(BackupRun::FILES)?->started_at?->format('d.m.Y H:i'),
                 'warning' => Backups::warning(),
+            ],
+            // Befunde aus der App selbst; das Cockpit übernimmt sie in seine tägliche Prüfung
+            'security' => [
+                'findings' => SecurityStatus::findings(),
+                'facts' => SecurityStatus::facts(),
             ],
         ], 200, ['Cache-Control' => 'no-store', 'X-Robots-Tag' => 'noindex, nofollow']);
     }
