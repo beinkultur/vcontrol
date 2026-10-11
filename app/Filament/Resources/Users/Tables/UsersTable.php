@@ -10,6 +10,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class UsersTable
 {
@@ -42,7 +44,7 @@ class UsersTable
                     ->label('Aktiv'),
                 SelectFilter::make('roles')
                     ->label('Rolle')
-                    ->relationship('roles', 'name'),
+                    ->relationship('roles', 'name', fn (Builder $query): Builder => $query->visibleTo(Auth::user() instanceof User ? Auth::user() : null)),
             ])
             ->recordActions([
                 EditAction::make(),

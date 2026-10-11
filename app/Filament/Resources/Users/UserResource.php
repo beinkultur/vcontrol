@@ -13,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 class UserResource extends Resource
@@ -32,6 +34,14 @@ class UserResource extends Resource
     protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'email';
+
+    /** System-Admin-Konten sehen nur System-Admins – auch nicht über die Adresse eines Datensatzes. */
+    public static function getEloquentQuery(): Builder
+    {
+        $viewer = Auth::user();
+
+        return parent::getEloquentQuery()->visibleTo($viewer instanceof User ? $viewer : null);
+    }
 
     public static function form(Schema $schema): Schema
     {

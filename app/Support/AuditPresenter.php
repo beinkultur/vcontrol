@@ -212,7 +212,7 @@ final class AuditPresenter
         // Codes, Benutzer, Rollen, Stammdaten
         'code' => 'Code', 'valid_from' => 'Gültig ab', 'valid_on' => 'Gültig am', 'email_verified_at' => 'E-Mail bestätigt',
         'password' => 'Passwort', 'account_type' => 'Kontotyp', 'calendar_permissions' => 'Kalender-Rechte', 'slug' => 'Kürzel',
-        'is_super' => 'Admin', 'permissions' => 'Rechte', 'customer_no' => 'Kundennummer', 'logo_path' => 'Logo', 'initials' => 'Kürzel',
+        'is_super' => 'Admin', 'is_system_admin' => 'System-Admin', 'permissions' => 'Rechte', 'customer_no' => 'Kundennummer', 'logo_path' => 'Logo', 'initials' => 'Kürzel',
         'positions' => 'Positionen', 'categories' => 'Leistungsbereiche', 'field_key' => 'Feld', 'value' => 'Wert',
         'parent_value' => 'Übergeordnet', 'price' => 'Preis', 'key' => 'Schlüssel', 'color' => 'Farbe', 'freitermin_status' => 'Freitermin-Status',
     ];
@@ -229,7 +229,7 @@ final class AuditPresenter
 
     /** Felder mit ja/nein */
     private const BOOLEANS = ['closed', 'accounting_closed', 'power_ant', 'house_rig_early', 'briefing_complete', 'sold_out_award', 'house_delay',
-        'stair_third', 'split_setup_teardown', 'is_active', 'is_archived', 'is_system', 'is_super', 'is_shared', 'is_settled', 'is_fixed',
+        'stair_third', 'split_setup_teardown', 'is_active', 'is_archived', 'is_system', 'is_super', 'is_system_admin', 'is_shared', 'is_settled', 'is_fixed',
         'is_received', 'hidden_from_externals'];
 
     /** Fremdschlüssel → [Modell, Spalte(n) für den Namen] */

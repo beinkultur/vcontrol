@@ -28,6 +28,12 @@ class Setting extends Model
 
     public const DAYSHEET_TEXT = 'daysheet_text';
 
+    /** Empfänger neuer Schadensmeldungen (mit Komma getrennt); leer: Rolle „hausmeister“ */
+    public const DAMAGE_NOTIFY = 'damage_notify';
+
+    /** Abgeschaltete Bereiche (mit Komma getrennt), nur der System-Admin ändert sie – siehe App\Access\Modules */
+    public const DISABLED_AREAS = 'disabled_areas';
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';

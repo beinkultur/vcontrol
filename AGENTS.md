@@ -95,7 +95,19 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
 
 - Bereiche und Stufen: `App\Access\Area`, `App\Access\Level`; was ein Benutzer darf:
   `$user->access()`. Mehrere Rollen addieren sich, je Bereich gilt die höchste
-  Stufe. Abgeschaltete Module (`VC_DISABLED_AREAS`) sind auch für Admins zu.
+  Stufe. Abgeschaltete Module sind für alle zu, auch für (System-)Admins.
+  Geschaltet werden sie unter Verwaltung › System (`App\Access\Modules`,
+  Setting `disabled_areas`); bis dort zum ersten Mal gespeichert wird, gilt
+  `VC_DISABLED_AREAS`. Benutzer, Rollen & Rechte und Halle bleiben immer an.
+- **Zwei Admin-Stufen:** Admin (`roles.is_super`) ist der Admin der Halle – alle
+  Bereiche, Kalender, Benutzer und Verwaltung › Halle. System-Admin
+  (`roles.is_system_admin`, nur der Betreiber) hat zusätzlich: Module schalten,
+  Rollen & Rechte ändern (alle anderen sehen Rollen nur an, `ViewRole`),
+  IP-Adresse und Browser im Audit, System-Admin-Konten. System-Admins und ihre
+  Rolle sieht nur, wer selbst System-Admin ist (Scope `visibleTo()` an `User` und
+  `Role`, auch im Audit). Den ersten System-Admin einer Halle macht
+  `php artisan vc:system-admin <E-Mail>`; danach vergeben ihn nur System-Admins.
+  Hallen-Einstellungen gehören auf die Seite Halle, nicht in die `.env`.
 - Jede Filament-Resource braucht eine Policy, am einfachsten als Unterklasse von
   `App\Policies\AreaPolicy`. Das Panel läuft mit `strictAuthorization()` – eine
   fehlende Policy-Methode ist ein Fehler, keine Freigabe.
@@ -103,11 +115,11 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   `php artisan vc:check-access` laufen lassen: vergleicht je Rolle mit den
   Sollwerten der PHP-Version.
 - Strenger als die PHP-Version: Admin-Konten und die Admin-Rolle ändern nur
-  Admins; niemand löscht sich selbst; der letzte aktive Admin bleibt Admin.
+  Admins, System-Admin-Konten nur System-Admins; niemand löscht sich selbst; der
+  letzte aktive Admin bleibt Admin, der letzte System-Admin System-Admin.
   Allgemein: Niemand vergibt mehr Rechte, als er selbst hat (`Access::covers()`) –
-  Rollen und Konten mit mehr Rechten ändert nur, wer diese Rechte hat
-  (RolePolicy, UserPolicy), und beim Speichern prüfen `AccountSafety` bzw.
-  `GrantsOnlyOwnRights` die neuen Stufen.
+  Konten mit mehr Rechten ändert nur, wer diese Rechte hat (UserPolicy), und beim
+  Speichern prüft `AccountSafety` die neuen Rollen und Kalender-Rechte.
 - Passwort ändert jeder selbst unter Profil (`App\Filament\Pages\Auth\EditProfile`,
   nur das Passwort); „Angemeldet bleiben“ gilt 30 Tage (`config/auth.php`).
 - **Externe (Recht „Events (extern)“) sind im selben Panel.** Sie sehen nur

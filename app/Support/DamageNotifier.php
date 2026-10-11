@@ -6,6 +6,7 @@ use App\Filament\Resources\Damages\DamageResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Mail\DamageReported;
 use App\Models\Damage;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -13,8 +14,9 @@ use Throwable;
 
 /**
  * Wie DamageNotifier der PHP-Version: neue Schäden gehen per Mail an die
- * eingestellten Empfänger (VC_DAMAGE_NOTIFY), sonst an alle aktiven Benutzer
- * mit der Rolle „hausmeister“. Ein Mailfehler hält das Speichern nicht auf.
+ * Empfänger aus Verwaltung › Halle (Setting::DAMAGE_NOTIFY), sonst an alle
+ * aktiven Benutzer mit der Rolle „hausmeister“. Ein Mailfehler hält das
+ * Speichern nicht auf.
  */
 final class DamageNotifier
 {
@@ -36,7 +38,7 @@ final class DamageNotifier
     /** @return list<string> */
     public static function recipients(): array
     {
-        $configured = array_values(array_filter(array_map('trim', explode(',', (string) config('venuecontrol.damage_notify')))));
+        $configured = Daysheets::emails(explode(',', (string) Setting::lookup(Setting::DAMAGE_NOTIFY)));
         if ($configured !== []) {
             return $configured;
         }

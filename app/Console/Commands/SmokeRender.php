@@ -14,10 +14,11 @@ use Illuminate\Http\Request;
 use Throwable;
 
 /**
- * Rendert als Admin jede Seite des Panels mit den echten Daten: Listen, Anlegen
- * und je Resource einige Datensätze in Ansicht und Bearbeitung. Findet Fehler,
- * die erst mit Altwerten aus dem Import auftreten und in den Tests (leere
- * SQLite-Datenbank) nicht vorkommen. Liest nur, schreibt nichts.
+ * Rendert als System-Admin (sonst als Admin) jede Seite des Panels mit den
+ * echten Daten: Listen, Anlegen und je Resource einige Datensätze in Ansicht
+ * und Bearbeitung. Findet Fehler, die erst mit Altwerten aus dem Import
+ * auftreten und in den Tests (leere SQLite-Datenbank) nicht vorkommen. Liest
+ * nur, schreibt nichts.
  */
 class SmokeRender extends Command
 {
@@ -34,10 +35,9 @@ class SmokeRender extends Command
 
         $panel = Filament::getPanel('app');
         Filament::setCurrentPanel($panel);
-        $admin = User::query()
-            ->where('is_active', true)
-            ->whereHas('roles', fn ($query) => $query->where('is_super', true))
-            ->first();
+        $admins = User::query()->where('is_active', true);
+        $admin = (clone $admins)->whereHas('roles', fn ($query) => $query->where('is_system_admin', true))->first()
+            ?? $admins->whereHas('roles', fn ($query) => $query->where('is_super', true))->first();
         if ($admin === null) {
             $this->error('Kein aktiver Admin – erst `php artisan vc:import` ausführen.');
 

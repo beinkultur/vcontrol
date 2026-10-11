@@ -42,15 +42,17 @@ class RoleForm
                             ->default(100),
                         TextEntry::make('super_hint')
                             ->hiddenLabel()
-                            ->state('Vollzugriff auf alle Bereiche und Kalender – die Rechte-Matrix gilt für diese Rolle nicht.')
-                            ->visible(fn (?Role $record): bool => (bool) $record?->is_super)
+                            ->state(fn (?Role $record): string => $record?->is_system_admin
+                                ? 'Betreiber von VenueControl: alles wie Admin, dazu Module (Verwaltung › System), Rollen & Rechte und die System-Admin-Konten. Die Rechte-Matrix gilt für diese Rolle nicht.'
+                                : 'Admin der Halle: Vollzugriff auf alle Bereiche und Kalender – die Rechte-Matrix gilt für diese Rolle nicht. Module, Rollen & Rechte und System-Admins bleiben dem System-Admin.')
+                            ->visible(fn (?Role $record): bool => (bool) $record?->is_super || (bool) $record?->is_system_admin)
                             ->columnSpanFull(),
                     ]),
                 ...self::areaSections(),
                 Section::make('Kalender')
                     ->description('Welche Kalender-Ebenen die Rolle sieht und bearbeiten darf.')
                     ->columns(2)
-                    ->hidden(fn (?Role $record): bool => (bool) $record?->is_super)
+                    ->hidden(fn (?Role $record): bool => (bool) $record?->is_super || (bool) $record?->is_system_admin)
                     ->schema(fn (): array => AccessFields::calendars('calendar_permissions')),
             ]);
     }
@@ -62,12 +64,12 @@ class RoleForm
         foreach (Area::groups() as $group) {
             $sections[] = Section::make('Rechte: ' . $group)
                 ->columns(2)
-                ->hidden(fn (?Role $record): bool => (bool) $record?->is_super)
+                ->hidden(fn (?Role $record): bool => (bool) $record?->is_super || (bool) $record?->is_system_admin)
                 ->schema(array_map(
                     fn (Area $area) => AccessFields::level(
                         'permissions.' . $area->value,
                         $area->label() . ($area->isDisabled() ? ' (Modul abgeschaltet)' : ''),
-                    ),
+                    )->helperText($area === Area::AdminRollen ? 'Rollen ansehen; ändern kann sie nur der System-Admin.' : null),
                     Area::inGroup($group),
                 ));
         }

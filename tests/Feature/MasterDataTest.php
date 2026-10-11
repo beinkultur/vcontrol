@@ -6,6 +6,7 @@ use App\Enums\OptionField;
 use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Calendars\Pages\ManageCalendars;
 use App\Filament\Resources\Employees\Pages\ManageEmployees;
+use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\FieldOptions\Pages\ManageFieldOptions;
 use App\Filament\Resources\InventoryCategories\Pages\ManageInventoryCategories;
 use App\Filament\Resources\InventoryItems\Pages\ManageInventoryItems;
@@ -13,13 +14,17 @@ use App\Filament\Resources\Rooms\Pages\ManageRooms;
 use App\Filament\Resources\Trades\Pages\ManageTrades;
 use App\Models\Calendar;
 use App\Models\Employee;
+use App\Models\Event;
 use App\Models\FieldOption;
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\Room;
 use App\Models\Setting;
 use App\Models\Trade;
+use App\Models\User;
+use App\Support\DamageNotifier;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -133,6 +138,50 @@ class MasterDataTest extends TestCase
             ->assertHasNoTableActionErrors();
 
         $this->assertSame(['VL', 'VfV'], $employee->fresh()->positions);
+    }
+
+    public function test_mitarbeiter_archivieren_und_unbenutzte_loeschen(): void
+    {
+        $frei = Employee::create(['last_name' => 'Frei']);
+        $imEinsatz = Employee::create(['first_name' => 'Anna', 'last_name' => 'Einsatz']);
+        $mitKonto = Employee::create(['last_name' => 'Konto']);
+        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
+        $event->assignments()->create(['role' => 'pl', 'assignee_type' => 'employee', 'assignee_id' => $imEinsatz->id]);
+        User::factory()->create(['employee_id' => $mitKonto->id]);
+
+        Livewire::test(ManageEmployees::class)
+            ->assertTableActionVisible('delete', $frei)
+            ->assertTableActionHidden('delete', $imEinsatz)
+            ->assertTableActionHidden('delete', $mitKonto)
+            ->callTableAction('delete', $frei)
+            ->callTableAction('archive', $imEinsatz);
+
+        $this->assertModelMissing($frei);
+        $this->assertTrue($imEinsatz->fresh()->is_archived);
+        Livewire::test(ManageEmployees::class)
+            ->assertCanNotSeeTableRecords([$imEinsatz])
+            ->set('activeTab', 'archiv')
+            ->assertCanSeeTableRecords([$imEinsatz])
+            ->callTableAction('archive', $imEinsatz);
+        $this->assertFalse($imEinsatz->fresh()->is_archived);
+
+        // Archiviert nicht mehr wählbar – am Event bleibt er stehen
+        $imEinsatz->update(['is_archived' => true]);
+        $mitarbeiter = fn (Select $field): array => $field->getOptions()['Mitarbeiter'] ?? [];
+        Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
+            ->assertFormFieldExists('role_house_rep_1', fn (Select $field): bool => !array_key_exists('employee:' . $imEinsatz->id, $mitarbeiter($field)))
+            ->assertFormFieldExists('role_pl', fn (Select $field): bool => array_key_exists('employee:' . $imEinsatz->id, $mitarbeiter($field)));
+    }
+
+    public function test_schadensmeldungen_an_aus_der_halle(): void
+    {
+        Livewire::test(ManageVenue::class)
+            ->fillForm(['venue_name' => 'Inselpark Arena', 'damage_notify' => ['Haus@Example.org', 'technik@example.org']])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('haus@example.org,technik@example.org', Setting::lookup(Setting::DAMAGE_NOTIFY));
+        $this->assertSame(['haus@example.org', 'technik@example.org'], DamageNotifier::recipients());
     }
 
     public function test_inventar_kategorie_mit_artikeln_bleibt(): void

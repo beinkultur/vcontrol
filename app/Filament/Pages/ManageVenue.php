@@ -81,6 +81,7 @@ class ManageVenue extends Page
             'stage_label' => $stage->label,
             'stage_boundary' => $stage->boundary,
             'mail_reply_to' => Setting::lookup(Setting::MAIL_REPLY_TO),
+            'damage_notify' => Daysheets::emails(explode(',', (string) Setting::lookup(Setting::DAMAGE_NOTIFY))),
             'daysheet_to' => Daysheets::emails(explode(',', (string) Setting::lookup(Setting::DAYSHEET_TO))),
             'daysheet_subject' => Setting::lookup(Setting::DAYSHEET_SUBJECT) ?: Daysheets::DEFAULT_SUBJECT,
             'daysheet_text' => Setting::lookup(Setting::DAYSHEET_TEXT) ?: Daysheets::DEFAULT_TEXT,
@@ -207,6 +208,13 @@ class ManageVenue extends Page
                             ->maxLength(191)
                             ->placeholder('z. B. buero@…')
                             ->helperText('Antworten auf Daysheets und Schadensmeldungen gehen hierhin. Leer: Antworten auf ein Daysheet gehen an den, der es verschickt hat.'),
+                        TagsInput::make('damage_notify')
+                            ->label('Schadensmeldungen an')
+                            ->placeholder('E-Mail-Adresse und Enter')
+                            ->helperText('Wer neue Schäden per Mail bekommt. Leer: alle aktiven Benutzer mit der Rolle „Hausmeister“.')
+                            ->splitKeys(['Tab', ',', ' ', ';'])
+                            ->nestedRecursiveRules(['email'])
+                            ->columnSpanFull(),
                     ]),
                 Section::make('Daysheet')
                     ->description('Vorbelegung für „Daysheet versenden“ am Event. Der Eventmanager kann alles vor dem Versand ändern; die beteiligten Gewerke kommen automatisch ins BCC.')
@@ -309,6 +317,8 @@ class ManageVenue extends Page
 
         $replyTo = mb_strtolower(trim((string) ($data['mail_reply_to'] ?? '')));
         Setting::put(Setting::MAIL_REPLY_TO, $replyTo !== '' ? $replyTo : null);
+        $damageNotify = implode(',', Daysheets::emails((array) ($data['damage_notify'] ?? [])));
+        Setting::put(Setting::DAMAGE_NOTIFY, $damageNotify !== '' ? $damageNotify : null);
         Setting::put(Setting::DAYSHEET_TO, implode(',', Daysheets::emails((array) ($data['daysheet_to'] ?? []))));
         Setting::put(Setting::DAYSHEET_SUBJECT, trim((string) $data['daysheet_subject']));
         Setting::put(Setting::DAYSHEET_TEXT, trim(str_replace(["\r\n", "\r"], "\n", (string) $data['daysheet_text'])));

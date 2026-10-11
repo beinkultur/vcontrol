@@ -61,7 +61,8 @@ class CheckAccess extends Command
 
         foreach (self::PAGES as $legacyPage => $path) {
             foreach ($roles as $role) {
-                $expected = $baseline[$role->slug . '|' . $legacyPage] ?? null;
+                // Den System-Admin gibt es nur hier – er erreicht mindestens, was der Admin erreicht
+                $expected = $baseline[($role->is_system_admin ? 'admin' : $role->slug) . '|' . $legacyPage] ?? null;
                 $actual = $this->status($kernel, $path, $this->userWithOnly($role));
                 $ok = $expected !== null && (($expected === 200) === ($actual === 200));
                 $mismatches += $ok ? 0 : 1;
@@ -96,7 +97,7 @@ class CheckAccess extends Command
         $base = User::query()->where('is_active', true)
             ->whereHas('roles', fn ($query) => $query->whereKey($role->getKey()))
             ->first()
-            ?? User::query()->whereHas('roles', fn ($query) => $query->where('is_super', true))->firstOrFail();
+            ?? User::query()->whereHas('roles', fn ($query) => $query->where('is_super', true)->orWhere('is_system_admin', true))->firstOrFail();
 
         $user = User::query()->findOrFail($base->getKey());
         $user->setRelation('roles', new Collection([$role]));

@@ -10,6 +10,7 @@ use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -51,7 +52,7 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->access ??= new Access($this);
     }
 
-    /** Einziger aktiver Benutzer mit einer Super-Rolle. */
+    /** Einziger aktiver Benutzer mit Vollzugriff (Admin oder System-Admin). */
     public function isLastSuper(): bool
     {
         if (!$this->access()->isSuper()) {
@@ -60,8 +61,32 @@ class User extends Authenticatable implements FilamentUser, HasName
 
         return self::query()
             ->where('is_active', true)
-            ->whereHas('roles', fn ($query) => $query->where('is_super', true))
+            ->whereHas('roles', fn (Builder $query) => $query->where(fn (Builder $roles) => $roles->where('is_super', true)->orWhere('is_system_admin', true)))
             ->count() <= 1;
+    }
+
+    /** Einziger aktiver System-Admin. */
+    public function isLastSystemAdmin(): bool
+    {
+        if (!$this->access()->isSystemAdmin()) {
+            return false;
+        }
+
+        return self::query()
+            ->where('is_active', true)
+            ->whereHas('roles', fn (Builder $query) => $query->where('is_system_admin', true))
+            ->count() <= 1;
+    }
+
+    /**
+     * System-Admins sieht nur, wer selbst einer ist – in der Benutzerliste, in
+     * Filtern und Auswahllisten. Was sie geändert haben, steht weiter im Audit.
+     */
+    public function scopeVisibleTo(Builder $query, ?self $viewer): void
+    {
+        if (!($viewer?->access()->isSystemAdmin() ?? false)) {
+            $query->whereDoesntHave('roles', fn (Builder $roles) => $roles->where('is_system_admin', true));
+        }
     }
 
     public function canAccessPanel(Panel $panel): bool

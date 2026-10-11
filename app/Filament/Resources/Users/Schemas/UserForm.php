@@ -57,13 +57,14 @@ class UserForm
                             ->relationship(
                                 name: 'roles',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query): Builder => $query->orderBy('sort_order'),
+                                // Die System-Admin-Rolle nur für System-Admins (AccountSafety prüft es beim Speichern)
+                                modifyQueryUsing: fn (Builder $query): Builder => $query->visibleTo(self::actor())->orderBy('sort_order'),
                             )
                             ->required()
                             ->columns(3)
                             ->columnSpanFull()
                             ->disableOptionWhen(fn (int|string $value): bool => !self::actorIsSuper() && self::isSuperRole($value))
-                            ->helperText('Mehrere Rollen addieren sich. Die Admin-Rolle vergeben nur Admins.'),
+                            ->helperText('Mehrere Rollen addieren sich. Die Admin-Rolle vergeben nur Admins. Was eine Rolle darf, steht unter Rollen & Rechte.'),
                         Select::make('account_type')
                             ->label('Kontotyp')
                             ->options(AccountType::class)
@@ -84,15 +85,20 @@ class UserForm
             ]);
     }
 
-    private static function actorIsSuper(): bool
+    private static function actor(): ?User
     {
         $actor = Auth::user();
 
-        return $actor instanceof User && $actor->access()->isSuper();
+        return $actor instanceof User ? $actor : null;
+    }
+
+    private static function actorIsSuper(): bool
+    {
+        return self::actor()?->access()->isSuper() ?? false;
     }
 
     private static function isSuperRole(int|string $roleId): bool
     {
-        return Role::query()->whereKey($roleId)->where('is_super', true)->exists();
+        return Role::query()->whereKey($roleId)->where(fn (Builder $query) => $query->where('is_super', true)->orWhere('is_system_admin', true))->exists();
     }
 }

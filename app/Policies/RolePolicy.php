@@ -7,6 +7,11 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Rollen & Rechte ändert nur der System-Admin. Admins der Halle und alle mit
+ * dem Recht „Rollen & Rechte“ sehen die Rollen nur an und weisen sie unter
+ * Benutzer zu; die System-Admin-Rolle sehen nur System-Admins.
+ */
 class RolePolicy extends AreaPolicy
 {
     protected function area(): Area
@@ -14,20 +19,21 @@ class RolePolicy extends AreaPolicy
         return Area::AdminRollen;
     }
 
-    /**
-     * Die Admin-Rolle ändern nur Admins, andere Rollen nur, wer deren Rechte
-     * selbst hat – wie bei Konten (UserPolicy). Was beim Speichern neu dazukommt,
-     * prüfen CreateRole und EditRole.
-     */
+    public function view(User $user, Model $record): bool
+    {
+        return $record instanceof Role
+            && parent::view($user, $record)
+            && (!$record->is_system_admin || $user->access()->isSystemAdmin());
+    }
+
+    public function create(User $user): bool
+    {
+        return parent::create($user) && $user->access()->isSystemAdmin();
+    }
+
     public function update(User $user, Model $record): bool
     {
-        if (!parent::update($user, $record) || !$record instanceof Role) {
-            return false;
-        }
-
-        return $record->is_super
-            ? $user->access()->isSuper()
-            : $user->access()->covers($record->permissions ?? [], $record->calendar_permissions ?? []);
+        return $record instanceof Role && $this->create($user);
     }
 
     /** Systemrollen und Rollen, die noch Benutzer haben, bleiben stehen. */

@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Rollen am Event als Auswahlfelder. Wert ist „typ:id“ – typ wie in der
@@ -74,18 +75,20 @@ final class AssignmentFields
 
     /**
      * Gruppierte Auswahl; die aktuelle Zuordnung bleibt wählbar, auch wenn der
-     * Mitarbeiter inzwischen fehlt, das Gewerk archiviert oder der Benutzer inaktiv ist.
+     * Mitarbeiter inzwischen fehlt oder archiviert, das Gewerk archiviert oder der
+     * Benutzer inaktiv ist. System-Admins stehen nur für System-Admins zur Wahl.
      *
      * @return array<string, array<string, string>>
      */
     private static function options(mixed $current): array
     {
+        $viewer = Auth::user();
         $options = [
-            'Mitarbeiter' => Employee::query()->orderBy('last_name')->get()
+            'Mitarbeiter' => Employee::query()->where('is_archived', false)->orderBy('last_name')->get()
                 ->mapWithKeys(fn (Employee $e): array => ['employee:' . $e->id => $e->fullName()])->all(),
             'Gewerke' => Trade::query()->where('is_archived', false)->orderBy('name')->get()
                 ->mapWithKeys(fn (Trade $t): array => ['trade:' . $t->id => $t->displayName()])->all(),
-            'Benutzer' => User::query()->where('is_active', true)->orderBy('last_name')->get()
+            'Benutzer' => User::query()->where('is_active', true)->visibleTo($viewer instanceof User ? $viewer : null)->orderBy('last_name')->get()
                 ->mapWithKeys(fn (User $u): array => ['user:' . $u->id => $u->getFilamentName()])->all(),
         ];
 

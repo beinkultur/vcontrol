@@ -9,6 +9,7 @@ use App\Filament\Resources\Events\RelationManagers\DamagesRelationManager;
 use App\Mail\DamageReported;
 use App\Models\Damage;
 use App\Models\Event;
+use App\Models\Setting;
 use Filament\Facades\Filament;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
@@ -66,7 +67,7 @@ class DamagesTest extends TestCase
 
     public function test_feste_empfaenger_statt_hausmeister(): void
     {
-        config(['venuecontrol.damage_notify' => 'technik@example.org, haus@example.org']);
+        Setting::put(Setting::DAMAGE_NOTIFY, 'technik@example.org,haus@example.org');
         $this->userWith($this->role('hausmeister', ['events' => 'read']));
         $this->actingAs($this->admin());
 

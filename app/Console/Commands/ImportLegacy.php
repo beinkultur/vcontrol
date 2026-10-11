@@ -5,9 +5,11 @@ namespace App\Console\Commands;
 use App\Models\Damage;
 use App\Models\EventFile;
 use App\Support\Audit;
+use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
 use Illuminate\Database\Connection;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -737,6 +739,8 @@ class ImportLegacy extends Command
             'description' => $r->description,
             'is_system' => (bool) $r->is_system,
             'is_super' => (bool) $r->is_super,
+            // Die PHP-Version kennt keinen System-Admin – auch nicht bei gleicher ID
+            'is_system_admin' => false,
             'sort_order' => (int) $r->sort_order,
             'permissions' => json_encode((object) ($permissions[$r->id] ?? [])),
             'calendar_permissions' => json_encode((object) ($calendars[$r->id] ?? [])),
@@ -744,7 +748,8 @@ class ImportLegacy extends Command
             'updated_at' => $r->updated_at,
         ])->all();
 
-        $this->sync('roles', $rows);
+        // Die System-Admin-Rolle gibt es nur hier; sie bleibt stehen
+        $this->sync('roles', $rows, keep: fn (Builder $query) => $query->where('is_system_admin', false));
     }
 
     /**
@@ -793,7 +798,8 @@ class ImportLegacy extends Command
             }
             $pairs[] = ['role_id' => $roleIds[$assignment->role], 'user_id' => $assignment->user_id];
         }
-        DB::table('role_user')->delete();
+        // System-Admins behalten ihre Rolle (es gibt sie nur hier)
+        DB::table('role_user')->whereNotIn('role_id', DB::table('roles')->where('is_system_admin', true)->select('id'))->delete();
         DB::table('role_user')->insert($pairs);
         $this->line(sprintf('  %-20s %4d übernommen', 'role_user', count($pairs)));
     }
@@ -852,7 +858,8 @@ class ImportLegacy extends Command
      *
      * @param  list<array<string, mixed>>  $rows
      */
-    private function sync(string $table, array $rows, string $key = 'id', bool $upsert = true): void
+    /** @param  (Closure(Builder): mixed)|null  $keep  grenzt ein, was entfernt werden darf */
+    private function sync(string $table, array $rows, string $key = 'id', bool $upsert = true, ?Closure $keep = null): void
     {
         if ($upsert) {
             foreach (array_chunk($rows, 500) as $chunk) {
@@ -860,7 +867,7 @@ class ImportLegacy extends Command
             }
         }
         $keys = array_column($rows, $key);
-        $removed = DB::table($table)->whereNotIn($key, $keys === [] ? ['__keiner__'] : $keys)->delete();
+        $removed = DB::table($table)->whereNotIn($key, $keys === [] ? ['__keiner__'] : $keys)->when($keep !== null, $keep)->delete();
 
         if ($upsert) {
             $this->line(sprintf('  %-20s %4d übernommen%s', $table, count($rows), $removed > 0 ? ", {$removed} entfernt" : ''));

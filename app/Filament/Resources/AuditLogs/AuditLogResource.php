@@ -7,6 +7,7 @@ use App\Filament\Resources\AuditLogs\Pages\ListAuditLogs;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\AuditLog;
 use App\Models\Event;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\AuditPresenter;
 use BackedEnum;
@@ -31,8 +32,9 @@ use UnitEnum;
  *
  * Jeder sieht nur Einträge aus Bereichen, die er auch sonst lesen darf
  * (AuditPresenter::visibleSubjects) – gefiltert in der Abfrage, damit Liste,
- * Detaildialog, „Verlauf“ und Filter gleichermaßen geschützt sind. IP-Adresse
- * und Browser nur für Admins.
+ * Detaildialog, „Verlauf“ und Filter gleichermaßen geschützt sind. Einträge
+ * über System-Admin-Konten und ihre Rolle sowie IP-Adresse und Browser sehen
+ * nur System-Admins; was ein System-Admin geändert hat, sehen alle.
  */
 class AuditLogResource extends Resource
 {
@@ -60,15 +62,47 @@ class AuditLogResource extends Resource
             return $query->whereRaw('1 = 0');
         }
         $subjects = AuditPresenter::visibleSubjects($user);
+        if ($subjects !== null) {
+            $query->whereIn('subject', $subjects);
+        }
 
-        return $subjects === null ? $query : $query->whereIn('subject', $subjects);
+        return $user->access()->isSystemAdmin() ? $query : self::withoutSystemAdmins($query);
     }
 
-    private static function isAdmin(): bool
+    /** Ohne Einträge über System-Admin-Konten (auch ihre Rollen-Zuordnungen) und die System-Admin-Rolle. */
+    private static function withoutSystemAdmins(Builder $query): Builder
+    {
+        $users = User::query()->whereHas('roles', fn (Builder $roles) => $roles->where('is_system_admin', true))
+            ->pluck('id')->map(fn (mixed $id): string => (string) $id)->all();
+        $roles = Role::query()->where('is_system_admin', true)
+            ->pluck('id')->map(fn (mixed $id): string => (string) $id)->all();
+        if ($users === [] && $roles === []) {
+            return $query;
+        }
+
+        // Schlüssel: Konto und Rolle die ID, Rollen-Zuordnung „Benutzer:Rolle“ (Audit::key)
+        return $query->where(fn (Builder $entries) => $entries
+            ->whereNotIn('subject', ['users', 'roles', 'role_user'])
+            ->orWhereNull('subject_key')
+            ->orWhere(fn (Builder $entry) => $entry->where('subject', 'users')->whereNotIn('subject_key', $users === [] ? ['–'] : $users))
+            ->orWhere(fn (Builder $entry) => $entry->where('subject', 'roles')->whereNotIn('subject_key', $roles === [] ? ['–'] : $roles))
+            ->orWhere(function (Builder $entry) use ($users, $roles): void {
+                $entry->where('subject', 'role_user');
+                foreach ($users as $id) {
+                    $entry->where('subject_key', 'not like', $id . ':%');
+                }
+                foreach ($roles as $id) {
+                    $entry->where('subject_key', 'not like', '%:' . $id);
+                }
+            }));
+    }
+
+    /** IP-Adresse und Browser im Detaildialog – nur für System-Admins. */
+    public static function showsTechnicalDetails(): bool
     {
         $user = Auth::user();
 
-        return $user instanceof User && $user->access()->isSuper();
+        return $user instanceof User && $user->access()->isSystemAdmin();
     }
 
     public static function infolist(Schema $schema): Schema
@@ -89,10 +123,10 @@ class AuditLogResource extends Resource
                     ->columnSpanFull(),
                 TextEntry::make('ip_address')->label('IP-Adresse')->placeholder('–')
                     ->state(fn (AuditLog $record): ?string => $record->getAttribute('ip_address'))
-                    ->visible(fn (): bool => self::isAdmin()),
+                    ->visible(fn (): bool => self::showsTechnicalDetails()),
                 TextEntry::make('user_agent')->label('Browser')->placeholder('–')->columnSpan(2)
                     ->state(fn (AuditLog $record): ?string => $record->getAttribute('user_agent'))
-                    ->visible(fn (): bool => self::isAdmin()),
+                    ->visible(fn (): bool => self::showsTechnicalDetails()),
             ]);
     }
 
@@ -136,7 +170,8 @@ class AuditLogResource extends Resource
                     ->options(AuditPresenter::ACTIONS),
                 SelectFilter::make('user_id')
                     ->label('Benutzer')
-                    ->options(fn (): array => User::query()->whereIn('id', static::getEloquentQuery()->select('user_id')->distinct())
+                    ->options(fn (): array => User::query()->visibleTo(Auth::user() instanceof User ? Auth::user() : null)
+                        ->whereIn('id', static::getEloquentQuery()->select('user_id')->distinct())
                         ->orderBy('last_name')->get()->mapWithKeys(fn (User $user): array => [$user->id => $user->getFilamentName()])->all())
                     ->searchable(),
                 Filter::make('period')

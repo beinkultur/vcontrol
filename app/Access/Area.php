@@ -77,12 +77,19 @@ enum Area: string
     }
 
     /**
-     * Abgeschaltete Module (config venuecontrol.disabled_areas) sind für alle
-     * gesperrt, auch für Admins. Gespeicherte Rechte bleiben erhalten.
+     * Abgeschaltete Module (Verwaltung › System, siehe Modules) sind für alle
+     * gesperrt, auch für Admins und System-Admins. Gespeicherte Rechte bleiben
+     * erhalten.
      */
     public function isDisabled(): bool
     {
-        return in_array($this->value, (array) config('venuecontrol.disabled_areas', []), true);
+        return Modules::current()->isDisabled($this);
+    }
+
+    /** Benutzer, Rollen & Rechte und die Halle bleiben immer an – ohne sie ließe sich nichts mehr einrichten. */
+    public function isSwitchable(): bool
+    {
+        return !in_array($this, [self::AdminBenutzer, self::AdminRollen, self::AdminStammdaten], true);
     }
 
     /** @return list<self> */

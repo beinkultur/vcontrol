@@ -110,9 +110,9 @@ Bedienbar:
 - **Durchführung › Schäden** wie in der PHP-Version: Zeitpunkt, Beschreibung,
   bis 20 Fotos (je 15 MB), „behoben“ setzen Event-Operationen oder die
   Buchhaltung; nicht löschbar. Übersicht unter Protokolle › Schäden, dort auch
-  allgemeine Schäden ohne Event. Neue Schäden gehen per Mail an
-  `VC_DAMAGE_NOTIFY` (Komma-Liste), sonst an alle aktiven Benutzer mit der Rolle
-  „hausmeister“. Fotos liegen nicht öffentlich, Auslieferung über
+  allgemeine Schäden ohne Event. Neue Schäden gehen per Mail an die
+  Empfänger unter Verwaltung › Halle › E-Mail, sonst an alle aktiven Benutzer
+  mit der Rolle „hausmeister“. Fotos liegen nicht öffentlich, Auslieferung über
   `/schaeden/{id}/foto/{n}` mit Rechteprüfung; `vc:import` übernimmt die
   Schäden samt Fotos (50 Schäden, 1 Foto, bytegleich geprüft).
 - **Event-Operationen in der Ansicht:** Übergabe, Bestellscheine, Checklisten

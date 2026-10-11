@@ -49,10 +49,17 @@ abstract class TestCase extends BaseTestCase
         return $user->fresh();
     }
 
+    /** Admin der Halle: Vollzugriff auf alle Bereiche, aber nicht System-Admin. */
     protected function admin(): User
     {
-        $role = Role::query()->where('is_super', true)->first() ?? $this->role('admin', super: true);
+        $role = Role::query()->where('is_super', true)->where('is_system_admin', false)->first() ?? $this->role('admin', super: true);
 
         return $this->userWith($role);
+    }
+
+    /** Betreiber: alles wie Admin, dazu Module, Rollen & Rechte und System-Admin-Konten. */
+    protected function systemAdmin(): User
+    {
+        return $this->userWith(Role::systemAdmin());
     }
 }

@@ -8,7 +8,10 @@ use App\Models\User;
 
 /**
  * Was ein Benutzer darf. Mehrere Rollen addieren sich: je Bereich zählt die
- * höchste Stufe. Die Super-Rolle darf alles – außer in abgeschalteten Modulen.
+ * höchste Stufe. Die Super-Rolle (Admin der Halle) darf alles – außer in
+ * abgeschalteten Modulen. Darüber steht der System-Admin (Betreiber): Er hat
+ * alle Rechte eines Admins und schaltet zusätzlich Module, ändert Rollen &
+ * Rechte und verwaltet die System-Admin-Konten, die sonst niemand sieht.
  * Kalender-Rechte kommen aus den Rollen und zusätzlich vom Benutzer selbst.
  */
 final class Access
@@ -23,9 +26,15 @@ final class Access
     {
     }
 
+    /** Vollzugriff: Admin der Halle oder System-Admin. */
     public function isSuper(): bool
     {
-        return $this->user->roles->contains(fn (Role $role): bool => (bool) $role->is_super);
+        return $this->user->roles->contains(fn (Role $role): bool => $role->is_super || $role->is_system_admin);
+    }
+
+    public function isSystemAdmin(): bool
+    {
+        return $this->user->roles->contains(fn (Role $role): bool => (bool) $role->is_system_admin);
     }
 
     public function level(Area $area): Level
@@ -62,10 +71,14 @@ final class Access
         return false;
     }
 
-    /** Zugang zum internen Arbeitsbereich – alles außer den Extern-Ansichten. */
+    /**
+     * Zugang zum internen Arbeitsbereich – alles außer den Extern-Ansichten. Der
+     * System-Admin kommt immer hinein, auch wenn alle Module aus sind: Er schaltet
+     * sie unter System wieder an.
+     */
     public function canUseApp(): bool
     {
-        return $this->canAnyIn(Area::GROUP_MODULE) || $this->canAnyIn(Area::GROUP_ADMIN);
+        return $this->canAnyIn(Area::GROUP_MODULE) || $this->canAnyIn(Area::GROUP_ADMIN) || $this->isSystemAdmin();
     }
 
     /**
@@ -121,10 +134,16 @@ final class Access
         return true;
     }
 
-    /** Hat dieser Benutzer höchstens die eigenen Rechte? Admins nur gegenüber Admins. */
+    /**
+     * Hat dieser Benutzer höchstens die eigenen Rechte? Admins nur gegenüber
+     * Admins, System-Admins nur gegenüber System-Admins.
+     */
     public function coversUser(User $other): bool
     {
         $theirs = $other->access();
+        if ($theirs->isSystemAdmin()) {
+            return $this->isSystemAdmin();
+        }
         if ($theirs->isSuper()) {
             return $this->isSuper();
         }

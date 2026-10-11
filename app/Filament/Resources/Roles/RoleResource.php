@@ -5,16 +5,25 @@ namespace App\Filament\Resources\Roles;
 use App\Filament\Resources\Roles\Pages\CreateRole;
 use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
+use App\Filament\Resources\Roles\Pages\ViewRole;
 use App\Filament\Resources\Roles\Schemas\RoleForm;
 use App\Filament\Resources\Roles\Tables\RolesTable;
 use App\Models\Role;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
+/**
+ * Rollen & Rechte: ändern nur System-Admins (RolePolicy). Alle anderen mit dem
+ * Recht „Rollen & Rechte“, also auch die Admins der Halle, sehen die Rechte
+ * einer Rolle nur an.
+ */
 class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
@@ -33,6 +42,14 @@ class RoleResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    /** Die System-Admin-Rolle sehen nur System-Admins – auch nicht über die Adresse. */
+    public static function getEloquentQuery(): Builder
+    {
+        $viewer = Auth::user();
+
+        return parent::getEloquentQuery()->visibleTo($viewer instanceof User ? $viewer : null);
+    }
+
     public static function form(Schema $schema): Schema
     {
         return RoleForm::configure($schema);
@@ -48,6 +65,7 @@ class RoleResource extends Resource
         return [
             'index' => ListRoles::route('/'),
             'create' => CreateRole::route('/create'),
+            'view' => ViewRole::route('/{record}'),
             'edit' => EditRole::route('/{record}/edit'),
         ];
     }

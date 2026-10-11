@@ -7,9 +7,12 @@ use App\Filament\Resources\Employees\Pages\ManageEmployees;
 use App\Models\Employee;
 use App\Models\FieldOption;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -17,7 +20,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use UnitEnum;
 
-/** Mitarbeiter werden nicht gelöscht – Benutzer und Events verweisen darauf. */
+/**
+ * Mitarbeiter werden archiviert (dann nicht mehr wählbar); löschen nur, solange
+ * kein Event und kein Benutzerkonto auf sie verweist (EmployeePolicy).
+ */
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
@@ -66,6 +72,9 @@ class EmployeeResource extends Resource
                     ->options(fn (?Employee $record): array => self::positionOptions($record))
                     ->columns(3)
                     ->columnSpanFull(),
+                Toggle::make('is_archived')
+                    ->label('Archiviert')
+                    ->helperText('Archivierte Mitarbeiter stehen nicht mehr zur Auswahl; an bisherigen Events bleiben sie stehen.'),
             ]);
     }
 
@@ -110,6 +119,14 @@ class EmployeeResource extends Resource
             ->paginated(false)
             ->recordActions([
                 EditAction::make(),
+                Action::make('archive')
+                    ->label(fn (Employee $record): string => $record->is_archived ? 'Wiederherstellen' : 'Archivieren')
+                    ->icon(fn (Employee $record): Heroicon => $record->is_archived ? Heroicon::OutlinedArrowUturnLeft : Heroicon::OutlinedArchiveBox)
+                    ->color('gray')
+                    ->authorize('update')
+                    ->action(fn (Employee $record) => $record->update(['is_archived' => !$record->is_archived])),
+                // Nur, solange nichts auf den Mitarbeiter verweist, siehe EmployeePolicy
+                DeleteAction::make(),
             ]);
     }
 
