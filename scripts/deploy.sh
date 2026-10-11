@@ -47,6 +47,7 @@ EXCLUDES=(
     --exclude database/database.sqlite
     --exclude public/css/filament/ --exclude public/js/filament/ --exclude public/fonts/filament/
     --exclude .phpunit.result.cache --exclude .phpunit.cache/
+    --exclude REVISION
 )
 
 ssh "$HOST" "test -f ${DIR}/artisan" || { echo "Keine Laravel-Installation unter ${DIR}" >&2; exit 1; }
@@ -87,6 +88,10 @@ if [ "$count" -gt "$MAX_DELETE" ]; then
 fi
 
 rsync -rlpt --itemize-changes "${EXCLUDES[@]}" ./ "${HOST}:${DIR}/" | grep -v '^\.d' || true
+
+# Welcher Commit läuft: für die Statusroute /_ops/status (Cockpit), der Server ist kein Git-Repo
+dirty=$(git status --porcelain | grep -q . && echo 1 || echo 0)
+printf '%s %s\n' "$(git rev-parse --short HEAD)" "$dirty" | ssh "$HOST" "cat > ${DIR}/REVISION"
 
 if [ -n "$doomed" ]; then
     # Erst die Dateien, dann leere Ordner von innen nach außen

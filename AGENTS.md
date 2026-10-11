@@ -48,6 +48,11 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   `php artisan vc:backup [--dateien]`. Fehler gehen per Mail an die System-Admins,
   dazu ein Hinweis oben im Panel. Einspielen: `gunzip -c ….sql.gz | mysql …`, das
   ZIP nach `storage/app/private`.
+- Überwachung durch das Cockpit (ops.bein.ws, eigenes Projekt): Es ruft
+  `/_ops/status` mit dem Header `X-Ops-Token` (`OPS_STATUS_TOKEN` in der .env)
+  ab – Version aus der Datei `REVISION`, die `scripts/deploy.sh` schreibt,
+  Datenbankgröße, offene Migrationen, Stand der Sicherung – und prüft täglich
+  Pakete (`composer audit`), .env, Header und offene Pfade.
 
 ## Filament-5-Fallen (hier schon einmal passiert)
 

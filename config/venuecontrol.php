@@ -49,4 +49,12 @@ return [
         'share_password' => env('VC_BACKUP_SHARE_PASSWORD'),
     ],
 
+    /*
+    | Statusroute /_ops/status für das Cockpit (ops.bein.ws): Version,
+    | Datenbankgröße, offene Migrationen, Stand der Sicherung. Ohne Token gibt
+    | es die Route nicht (404).
+    */
+
+    'ops_status_token' => env('OPS_STATUS_TOKEN'),
+
 ];

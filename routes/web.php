@@ -6,6 +6,7 @@ use App\Http\Controllers\DamagePhotoController;
 use App\Http\Controllers\DaysheetController;
 use App\Http\Controllers\EventFileController;
 use App\Http\Controllers\GuestListPrintController;
+use App\Http\Controllers\OpsStatusController;
 use App\Http\Controllers\StagePlanController;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -44,6 +45,12 @@ Route::middleware('throttle:60,1')->group(function (): void {
 // statt hinter dem Panel-Login (siehe CalendarFeedController). Gedrosselt je IP,
 // damit niemand den Schlüssel durchprobiert.
 Route::get('/kalender/events.ics', CalendarFeedController::class)->middleware('throttle:30,1')->name('calendar.feed');
+
+// Statusauskunft für das Cockpit (ops.bein.ws), nur mit Token im Header X-Ops-Token
+Route::get('/_ops/status', OpsStatusController::class)
+    ->middleware('throttle:30,1')
+    ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class])
+    ->name('ops.status');
 
 // Nächtliche Sicherung: ruft der KAS-Cronjob mit Schlüssel auf (App\Support\Backups).
 // Ohne Sitzung – sonst stünde jede Nacht eine Zeile in `sessions`; damit auch
