@@ -15,27 +15,29 @@ return [
     ))),
 
     /*
-    | config/config.php der PHP-Version (vc.bein.ws). Aus ihr liest
-    | `php artisan vc:import` die Zugangsdaten der Quelldatenbank, damit
-    | das Passwort nicht ein zweites Mal in dieser .env stehen muss.
+    | config/config.php der PHP-Version (vc.bein.ws), Quelle von `php artisan
+    | vc:import`. Die PHP-Version ist seit 12.10.2026 gelöscht (Archiv in der
+    | Nextcloud, Code auf GitHub beinkultur/VenueControl) – vc:import hat damit
+    | keine Quelle mehr und ist gesperrt.
     */
 
     'legacy_config' => env('VC_LEGACY_CONFIG'),
 
     /*
-    | Sperrt `php artisan vc:import`. Ab dem Go-live setzen: Dann kommen die
-    | Daten aus AppSheet, ein Import aus der PHP-Version würde alles in Laravel
-    | Eingegebene überschreiben (auch Passwörter und gesperrte Konten).
+    | Sperrt `php artisan vc:import`. Die Daten kommen zum Go-live aus
+    | AppSheet; ein Import würde alles in Laravel Eingegebene überschreiben
+    | (auch Passwörter und gesperrte Konten).
     */
 
-    'import_locked' => (bool) env('VC_IMPORT_LOCKED', false),
+    'import_locked' => (bool) env('VC_IMPORT_LOCKED', true),
 
     /*
-    | Sollwerte des Smoke-Tests der PHP-Version (Statuscode je Rolle und Seite).
-    | Standard: scripts/smoke_baseline.json neben der legacy_config.
+    | Sollwerte für `php artisan vc:check-access`: Statuscode je Rolle und Seite
+    | aus dem Smoke-Test der PHP-Version, beim Löschen der PHP-Version ins Repo
+    | übernommen.
     */
 
-    'legacy_baseline' => env('VC_LEGACY_BASELINE'),
+    'legacy_baseline' => env('VC_LEGACY_BASELINE', base_path('scripts/php-smoke-baseline.json')),
 
     /*
     | Nächtliche Sicherung (App\Support\Backups): Link einer Datei-Ablage

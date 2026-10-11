@@ -4,10 +4,11 @@ Laravel-Neubau von VenueControl, der Veranstaltungsverwaltung für Hallen. Eine
 Installation pro Halle mit eigener Subdomain und eigener Datenbank. Die erste ist
 https://ipa.vcontrol.eu für die Inselpark Arena.
 
-Die bestehende PHP-Version ohne Framework läuft parallel unter https://vc.bein.ws
-(Repo `/Users/niggo/Nextcloud/_nb/VARIOUS/VenueControl`) und ist fachlich die Vorlage.
-Ihre Datei `scripts/smoke_baseline.json` hält für jede Rolle und Seite den Statuscode
-fest — die Rechte-Matrix, die diese Version erreichen muss.
+Fachliche Vorlage war die PHP-Version ohne Framework (vc.bein.ws). Sie ist seit
+12.10.2026 gelöscht – Code auf GitHub `beinkultur/VenueControl`, ein Archiv mit
+Dateien und Datenbank in der Nextcloud. Ihre Sollwerte je Rolle und Seite liegen
+als `scripts/php-smoke-baseline.json` hier im Repo – die Rechte-Matrix, die diese
+Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
 
 ## Arbeitsweise
 
@@ -29,13 +30,10 @@ fest — die Rechte-Matrix, die diese Version erreichen muss.
   `->query()->update()/delete()`, Pivot ohne eigenes Modell), muss `Audit::record()`
   aufrufen – sonst fehlt die Änderung im Audit. Neue Tabellen in
   `AuditPresenter::SUBJECTS`, neue Felder in `FIELDS` eintragen.
-- Für die Entwicklung kommen die Daten aus der PHP-Version: `php artisan vc:import --force`
-  (in Produktion nur mit `--force`), beliebig oft wiederholbar – überschreibt aber
-  alles, was hier eingegeben wurde. Vorher in der Tabelle `sessions` nachsehen, ob
-  seit dem letzten Import jemand gearbeitet hat (Zeilen mit IP 127.0.0.1 und
-  Browser „Symfony“ stammen von Prüfbefehlen), und dann erst fragen. Zum Go-live
-  wird Laravel nicht aus der PHP-Version, sondern direkt aus dem AppSheet-Export
-  befüllt (docs/EVENTS.md); dann `VC_IMPORT_LOCKED=true` setzen.
+- `php artisan vc:import` (Daten aus der PHP-Version) hat seit dem Löschen der
+  PHP-Version keine Quelle mehr und ist gesperrt (`VC_IMPORT_LOCKED`, Standard
+  true). Die Daten in ipa.vcontrol.eu stammen aus dem letzten Import (Demodaten);
+  zum Go-live wird Laravel direkt aus dem AppSheet-Export befüllt (docs/EVENTS.md).
 - Filament-Code gegen `vendor/filament` auf dem Server prüfen, nicht aus dem
   Gedächtnis von Version 3 schreiben: Version 5 hat andere Namespaces
   (`Filament\Schemas\…`, `Filament\Actions\…`).

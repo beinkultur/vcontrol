@@ -12,7 +12,8 @@ use Illuminate\Http\Request;
 /**
  * Paritätstest für die Rechte: Jede Rolle muss hier dieselben Seiten sehen wie
  * in der PHP-Version. Vergleichsbasis sind die Sollwerte ihres Smoke-Tests
- * (scripts/smoke_baseline.json: Statuscode je Rolle und Seite). Verglichen wird
+ * (scripts/php-smoke-baseline.json, beim Löschen der PHP-Version am 12.10.2026
+ * übernommen: Statuscode je Rolle und Seite). Verglichen wird
  * „erreichbar oder nicht“ – die PHP-Version antwortet auf verbotene Seiten teils
  * mit Umleitung, teils mit 403.
  */
@@ -127,10 +128,9 @@ class CheckAccess extends Command
     /** @return array<string, int>|null */
     private function baseline(): ?array
     {
-        $path = (string) (config('venuecontrol.legacy_baseline')
-            ?: dirname((string) config('venuecontrol.legacy_config'), 2) . '/scripts/smoke_baseline.json');
+        $path = (string) config('venuecontrol.legacy_baseline');
         if (!is_file($path)) {
-            $this->error('Sollwerte der PHP-Version nicht gefunden: ' . $path);
+            $this->error('Sollwerte nicht gefunden: ' . $path);
 
             return null;
         }
