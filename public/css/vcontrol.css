@@ -1043,11 +1043,25 @@ a.vc-card:hover {
     text-decoration-color: rgb(239 68 68 / 0.5);
 }
 
-/* Kopfzeile: Logo und Hallenname (AppPanelProvider::brandLogo), in einer Zeile;
-   Menüpunkte etwas enger, damit Events bis Verwaltung auch bei 1280 px in eine
-   Zeile passen */
+/* Kopfzeile: 50 statt Filaments 64 px hoch (Vorbild Lexware: 40 px), Logo und
+   Hallenname (AppPanelProvider::brandLogo), alles in einer Zeile. Die Variable
+   nutzt Filament auch für Seitenleiste und Abstände; ohne den Außenabstand der
+   Menüzeile (lg:my-2) passen Logo, Menüpunkte, Suche und Avatar in ihrer
+   Standardgröße hinein. Bricht die Menüzeile um, wird die Kopfzeile zweizeilig
+   und oben und unten ungleich – deshalb wird sie mit abnehmender Breite
+   schrittweise schmaler (Stufen unten, geprüft bei 1024, 1100, 1200, 1280 und
+   1440 px). */
+.fi-body {
+    --topbar-height: 3.125rem;
+}
+
 .fi-logo {
     white-space: nowrap;
+}
+
+.fi-topbar-nav-groups {
+    margin-block: 0;
+    column-gap: 0.5rem;
 }
 
 .vc-brand {
@@ -1063,25 +1077,19 @@ a.vc-card:hover {
     width: auto;
 }
 
+/* Lange Hallennamen nicht über die Menüzeile hinaus */
+.fi-topbar .vc-brand__name {
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Das Logo ist schwarz – im Dunkelmodus weiß */
 .dark .vc-brand__logo {
     filter: invert(1);
 }
 
-/* Kopfzeile 50 statt Filaments 64 px hoch (Vorbild Lexware: 40 px). Die
-   Variable nutzt Filament auch für Seitenleiste und Abstände. Ohne den
-   Außenabstand der Menüzeile (lg:my-2) passen Logo, Menüpunkte, Suche und
-   Avatar in ihrer Standardgröße hinein. */
-.fi-body {
-    --topbar-height: 3.125rem;
-}
-
-.fi-topbar-nav-groups {
-    margin-block: 0;
-}
-
-/* 1024–1439 px: Menüpunkte enger, damit Events bis Verwaltung neben Logo,
-   Hallenname und Suche in eine Zeile passen (bei 1280 px sonst zwei Zeilen) */
+/* 1024–1439 px: Menüpunkte enger */
 @media (min-width: 64rem) and (max-width: 89.999rem) {
     .fi-topbar-start {
         margin-inline-end: 0.75rem;
@@ -1097,8 +1105,22 @@ a.vc-card:hover {
     }
 }
 
-.fi-topbar-nav-groups {
-    column-gap: 0.5rem;
+/* 1024–1279 px: Menüpunkte ohne Symbole, Suche schmaler */
+@media (min-width: 64rem) and (max-width: 79.999rem) {
+    .fi-topbar-item-btn > .fi-topbar-item-icon {
+        display: none;
+    }
+
+    .fi-topbar .fi-global-search-field {
+        width: 10rem;
+    }
+}
+
+/* 1024–1199 px: nur das Logo, ohne Hallennamen */
+@media (min-width: 64rem) and (max-width: 74.999rem) {
+    .fi-topbar-start .vc-brand__name {
+        display: none;
+    }
 }
 
 /* Erledigt-Haken im Dashboard (z. B. Daysheet versendet), wie die Spalte „DS“ der Event-Liste */
