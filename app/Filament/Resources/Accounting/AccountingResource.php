@@ -103,6 +103,7 @@ class AccountingResource extends Resource
                     ->toggleable(),
                 TextColumn::make('finance.accounting_status')
                     ->label('FIBU-Status')
+                    ->visibleFrom('sm')
                     ->badge()
                     ->wrap(),
                 TextColumn::make('finance.rent')

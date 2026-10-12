@@ -1068,6 +1068,23 @@ a.vc-card:hover {
     filter: invert(1);
 }
 
+/* 1024–1439 px: Menüpunkte enger, damit Events bis Verwaltung neben Logo,
+   Hallenname und Suche in eine Zeile passen (bei 1280 px sonst zwei Zeilen) */
+@media (min-width: 64rem) and (max-width: 89.999rem) {
+    .fi-topbar-start {
+        margin-inline-end: 0.75rem;
+    }
+
+    .fi-topbar-nav-groups {
+        margin-inline: 0.5rem;
+        column-gap: 0.25rem;
+    }
+
+    .fi-topbar-item-btn {
+        padding-inline: 0.5rem;
+    }
+}
+
 .fi-topbar-nav-groups {
     column-gap: 0.5rem;
 }
@@ -1230,5 +1247,64 @@ a.vc-card:hover {
     .fi-resource-events.fi-resource-list-records-page .fi-ta-cell-title .fi-ta-text,
     .fi-resource-events.fi-resource-list-records-page .fi-ta-cell-title .fi-ta-text-item {
         white-space: normal;
+    }
+}
+
+/* Handy: Tabellen ohne seitliches Wischen – engere Zellen, Text darf umbrechen
+   (in Spalten mit ->wrap() auch mitten in langen Wörtern), Zeilenaktionen nur
+   als Symbol (die Beschriftung bleibt für Screenreader), bei mehr als zwei
+   untereinander */
+@media (max-width: 39.999rem) {
+    .fi-ta-table > tbody {
+        white-space: normal;
+    }
+
+    .fi-ta-text:not(.fi-inline),
+    .fi-ta-icon:not(.fi-inline),
+    .fi-ta-color:not(.fi-inline),
+    .fi-ta-image:not(.fi-inline) {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .fi-ta-header-cell {
+        padding-inline: 0.5rem;
+    }
+
+    .fi-ta-table .fi-ta-text.fi-wrapped {
+        overflow-wrap: anywhere;
+    }
+
+    .fi-ta-table .fi-ta-text:not(.fi-wrapped) .fi-badge {
+        white-space: nowrap;
+    }
+
+    .fi-ta-table .fi-ta-text.fi-ta-text-has-badges ul,
+    .fi-ta-table ul.fi-ta-text.fi-ta-text-has-badges {
+        flex-wrap: wrap;
+        row-gap: 0.25rem;
+    }
+
+    .fi-ta-table .fi-ta-cell:has(.fi-ta-actions) {
+        padding: 0.375rem 0.5rem 0.375rem 0.25rem;
+    }
+
+    .fi-ta-table .fi-ta-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.125rem;
+        max-width: 4.25rem;
+    }
+
+    .fi-ta-table .fi-ta-actions .fi-link {
+        padding: 0.375rem;
+    }
+
+    .fi-ta-table .fi-ta-actions .fi-link .fi-link-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
     }
 }
