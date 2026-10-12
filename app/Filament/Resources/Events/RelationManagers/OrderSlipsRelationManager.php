@@ -139,7 +139,7 @@ class OrderSlipsRelationManager extends RelationManager
             ->defaultSort('ordered_at', 'desc')
             ->columns([
                 TextColumn::make('ordered_at')->label('Datum')->dateTime('d.m.Y H:i')->sortable(),
-                TextColumn::make('ordered_from')->label('Bestellt von')->searchable(),
+                TextColumn::make('ordered_from')->label('Bestellt von')->wrap()->searchable(),
                 TextColumn::make('created_by_name')->label('Bei wem')->placeholder('–'),
                 TextColumn::make('items_count')
                     ->label('Positionen')

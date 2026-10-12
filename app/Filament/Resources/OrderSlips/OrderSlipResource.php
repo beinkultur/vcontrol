@@ -59,11 +59,13 @@ class OrderSlipResource extends Resource
             ->defaultSort('ordered_at', 'desc')
             ->columns([
                 TextColumn::make('ordered_at')->label('Datum')->dateTime('d.m.Y H:i')->sortable(),
+                // Lange Einträge brechen um – sonst wird die Liste breiter als der Bildschirm
                 TextColumn::make('event.title')
                     ->label('Event')
                     ->description(fn (OrderSlip $record): ?string => $record->event?->starts_at?->format('d.m.Y'))
+                    ->wrap()
                     ->searchable(),
-                TextColumn::make('ordered_from')->label('Bestellt von')->searchable(),
+                TextColumn::make('ordered_from')->label('Bestellt von')->wrap()->searchable(),
                 TextColumn::make('created_by_name')->label('Bei wem')->placeholder('–'),
                 TextColumn::make('items_count')
                     ->label('Positionen')

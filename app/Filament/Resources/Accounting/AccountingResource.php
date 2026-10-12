@@ -85,9 +85,11 @@ class AccountingResource extends Resource
                         ? 'Finanz-Warnung: Event in höchstens 14 Tagen, Vertrag nicht zurück oder 2. Rate nicht gezahlt'
                         : null)
                     ->sortable(),
+                // Lange Einträge brechen um – sonst wird die Liste breiter als der Bildschirm
                 TextColumn::make('title')
                     ->label('Titel')
                     ->description(fn (Event $record): ?string => $record->promoter?->name)
+                    ->wrap()
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('va_id')
@@ -99,7 +101,8 @@ class AccountingResource extends Resource
                     ->toggleable(),
                 TextColumn::make('finance.accounting_status')
                     ->label('FIBU-Status')
-                    ->badge(),
+                    ->badge()
+                    ->wrap(),
                 TextColumn::make('finance.rent')
                     ->label('Miete')
                     ->money('EUR', locale: 'de')
@@ -122,6 +125,7 @@ class AccountingResource extends Resource
                     ->label('Rechnungen')
                     ->badge()
                     ->color('gray')
+                    ->wrap()
                     ->toggleable(),
                 IconColumn::make('finance.accounting_closed')
                     ->label('Abgeschl.')

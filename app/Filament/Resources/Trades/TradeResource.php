@@ -90,13 +90,16 @@ class TradeResource extends Resource
                     ->label('Kurzname')
                     ->searchable()
                     ->sortable(),
+                // Lange Einträge brechen um – sonst wird die Liste breiter als der Bildschirm
                 TextColumn::make('name')
                     ->label('Name')
+                    ->wrap()
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('categories')
                     ->label('Leistungsbereiche')
-                    ->badge(),
+                    ->badge()
+                    ->wrap(),
                 TextColumn::make('city')
                     ->label('Ort')
                     ->searchable()

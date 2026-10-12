@@ -21,12 +21,15 @@ class PromotersTable
                     ->fontFamily(FontFamily::Mono)
                     ->searchable()
                     ->sortable(),
+                // Lange Einträge brechen um – sonst wird die Liste breiter als der Bildschirm
                 TextColumn::make('short_name')
                     ->label('Kürzel')
+                    ->wrap()
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('name')
                     ->label('Name')
+                    ->wrap()
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('city')
