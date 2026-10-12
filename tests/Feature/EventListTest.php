@@ -112,7 +112,8 @@ class EventListTest extends TestCase
             ->assertSeeHtml('vc-mini-progress__fill vc-fill--buchung')
             ->assertSeeHtml('vc-mini-progress__fill vc-fill--planung')
             ->assertSeeHtml('vc-mini-progress__fill vc-fill--durchfuehrung')
-            ->assertSee('% · Durchführung');
+            ->assertSee('% · Durchführung')
+            ->assertDontSeeHtml('vc-mini-progress__pct');
     }
 
     public function test_klick_oeffnet_den_workspace(): void

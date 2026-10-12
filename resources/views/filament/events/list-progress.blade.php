@@ -1,4 +1,4 @@
-{{-- Event-Liste, Spalte „Fortschritt“: Buchung, Planung, Durchführung in den Farben des Farbschemas (vcontrol.css: .vc-fill--*) --}}
+{{-- Event-Liste, Spalte „Fortschritt“: Buchung, Planung, Durchführung als Balken in den Farben des Farbschemas (vcontrol.css: .vc-fill--*), die Prozente nur im Tooltip --}}
 @php
     $progress = \App\Support\EventProgress::phases($getRecord());
     $phases = ['buchung' => ['B', 'Buchung'], 'planung' => ['P', 'Planung'], 'durchfuehrung' => ['D', 'Durchführung']];
@@ -7,6 +7,5 @@
     @foreach ($phases as $key => [$letter])
         <span class="vc-mini-progress__label">{{ $letter }}</span>
         <span class="vc-mini-progress__track"><span class="vc-mini-progress__fill vc-fill--{{ $key }}" style="width: {{ $progress[$key] }}%"></span></span>
-        <span class="vc-mini-progress__pct">{{ $progress[$key] }}</span>
     @endforeach
 </div>
