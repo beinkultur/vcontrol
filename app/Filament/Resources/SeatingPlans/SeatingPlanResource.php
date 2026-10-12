@@ -23,9 +23,10 @@ use Filament\Tables\Table;
 use UnitEnum;
 
 /**
- * Standard-Saalpläne der Halle: PDF, Name und die Bereiche, die der Plan nutzt.
- * Events wählen einen davon unter Buchung › Daten und übernehmen dabei die
- * Bereiche (App\Filament\Support\SeatingPlanFields). Rechte: SeatingPlanPolicy.
+ * Standard-Saalpläne der Halle: PDF, Name, die Bereiche, die der Plan nutzt,
+ * und seine Bestuhlung. Events wählen einen davon unter Buchung › Daten und
+ * übernehmen dabei Bereiche und Bestuhlung (App\Filament\Support\SeatingPlanFields).
+ * Rechte: SeatingPlanPolicy.
  */
 class SeatingPlanResource extends Resource
 {
@@ -70,6 +71,10 @@ class SeatingPlanResource extends Resource
                     ->helperText('Werden übernommen, wenn ein Event diesen Saalplan wählt.')
                     ->options(fn (?SeatingPlan $record): array => OptionChoices::for(OptionField::Areas, $record?->areas))
                     ->columns(2),
+                CheckboxList::make('seating')
+                    ->label('Bestuhlung')
+                    ->helperText('Wird ebenso übernommen.')
+                    ->options(fn (?SeatingPlan $record): array => OptionChoices::for(OptionField::Seating, $record?->seating)),
                 Toggle::make('is_active')
                     ->label('Aktiv')
                     ->helperText('Inaktive Saalpläne stehen bei Events nicht mehr zur Auswahl; Events, die ihn nutzen, behalten ihn.')
@@ -92,6 +97,12 @@ class SeatingPlanResource extends Resource
                     ->color('gray')
                     ->wrap()
                     ->visibleFrom('md'),
+                TextColumn::make('seating')
+                    ->label('Bestuhlung')
+                    ->badge()
+                    ->color('gray')
+                    ->wrap()
+                    ->visibleFrom('lg'),
                 TextColumn::make('events_count')
                     ->label('Events')
                     ->counts('events')

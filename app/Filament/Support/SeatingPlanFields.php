@@ -22,9 +22,9 @@ use Illuminate\Support\Facades\Storage;
  * Daten, Abschnitt „Halle & Publikum“, für die Buchhaltung auch über „Saalplan
  * ändern“ in der Leseansicht).
  *
- * Wer einen Standard-Saalplan wählt, bekommt dessen Bereiche ins Feld
- * „Bereiche“ (areas) – danach lassen sie sich anpassen, etwa wenn eine Tribüne
- * gesperrt ist. Gespeicherte Dateien zeigt das Upload-Feld mit der Adresse
+ * Wer einen Standard-Saalplan wählt, bekommt dessen Bereiche und Bestuhlung
+ * in die Felder „Bereiche“ (areas) und „Bestuhlung“ (seating) – danach lassen
+ * sie sich anpassen, etwa wenn eine Tribüne gesperrt ist. Gespeicherte Dateien zeigt das Upload-Feld mit der Adresse
  * über die Rechteprüfung (SeatingPlanController), nicht mit einer öffentlichen.
  */
 final class SeatingPlanFields
@@ -89,9 +89,10 @@ final class SeatingPlanFields
                     $plan = filled($state) ? SeatingPlan::query()->find($state) : null;
                     if ($plan !== null) {
                         $set('areas', array_values(array_map('strval', (array) $plan->areas)));
+                        $set('seating', array_values(array_map('strval', (array) $plan->seating)));
                     }
                 })
-                ->helperText('Die Bereiche des Plans werden übernommen und lassen sich danach anpassen.')
+                ->helperText('Bereiche und Bestuhlung des Plans werden übernommen und lassen sich danach anpassen.')
                 ->suffixAction(Action::make('openSeatingPlan')
                     ->icon(Heroicon::OutlinedArrowTopRightOnSquare)
                     ->tooltip('PDF öffnen')

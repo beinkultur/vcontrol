@@ -127,10 +127,16 @@
                 <span class="vc-sheet__muted">· PDF</span>
             </p>
         @endif
-        @if ($sheet['areas'] !== [])
+        @if ($sheet['areas'] !== [] || $sheet['seating'] !== [])
             <dl>
-                <dt>Bereiche</dt>
-                <dd>{{ implode(', ', $sheet['areas']) }}</dd>
+                @if ($sheet['areas'] !== [])
+                    <dt>Bereiche</dt>
+                    <dd>{{ implode(', ', $sheet['areas']) }}</dd>
+                @endif
+                @if ($sheet['seating'] !== [])
+                    <dt>Bestuhlung</dt>
+                    <dd>{{ implode(', ', $sheet['seating']) }}</dd>
+                @endif
             </dl>
         @endif
     </section>

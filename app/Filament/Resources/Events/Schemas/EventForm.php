@@ -367,8 +367,8 @@ class EventForm
 
     /**
      * Leseansicht (ViewEvent): Wer Events nur lesen, aber die Buchhaltung
-     * bearbeiten darf, ändert hier Saalplan und Bereiche – dieselben Felder wie
-     * beim Bearbeiten (SeatingPlanFields).
+     * bearbeiten darf, ändert hier Saalplan, Bereiche und Bestuhlung – dieselben
+     * Felder wie beim Bearbeiten (SeatingPlanFields).
      */
     private static function changeSeatingPlan(): Action
     {
@@ -383,6 +383,7 @@ class EventForm
                 'seating_plan_path' => $record->seating_plan_path,
                 'seating_plan_original_name' => $record->seating_plan_original_name,
                 'areas' => $record->areas ?? [],
+                'seating' => $record->seating ?? [],
             ])
             ->schema(fn (): array => [
                 ...SeatingPlanFields::forEvent(),
@@ -390,6 +391,9 @@ class EventForm
                     ->label('Bereiche')
                     ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Areas, $record?->areas))
                     ->columns(2),
+                CheckboxList::make('seating')
+                    ->label('Bestuhlung')
+                    ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Seating, $record?->seating)),
             ])
             ->action(function (array $data, Event $record, Component $livewire): void {
                 abort_unless(SeatingPlanFields::canChange(), 403);
@@ -400,9 +404,10 @@ class EventForm
                     'seating_plan_path' => $first($data['seating_plan_path'] ?? null),
                     'seating_plan_original_name' => $first($data['seating_plan_original_name'] ?? null),
                     'areas' => array_values(array_map('strval', (array) ($data['areas'] ?? []))),
+                    'seating' => array_values(array_map('strval', (array) ($data['seating'] ?? []))),
                 ]);
                 if ($livewire instanceof ViewEvent) {
-                    $livewire->refreshFormData(['seating_plan_id', 'seating_plan_path', 'seating_plan_original_name', 'areas']);
+                    $livewire->refreshFormData(['seating_plan_id', 'seating_plan_path', 'seating_plan_original_name', 'areas', 'seating']);
                 }
                 Notification::make()->success()->title('Saalplan gespeichert')->send();
             });

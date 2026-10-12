@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Standard-Saalplan der Halle: ein PDF mit Namen und den Bereichen, die der Plan
- * nutzt (Werte der Feldoption „Bereiche“). Ein Event wählt einen davon oder
- * lädt einen eigenen hoch (Event::seatingPlan…); die Bereiche übernimmt es
- * beim Auswählen und passt sie bei Bedarf an. Die Datei liegt nicht öffentlich
+ * Standard-Saalplan der Halle: ein PDF mit Namen, den Bereichen, die der Plan
+ * nutzt, und seiner Bestuhlung (Werte der Feldoptionen „Bereiche“ und
+ * „Bestuhlung“). Ein Event wählt einen davon oder lädt einen eigenen hoch
+ * (Event::seatingPlan…); Bereiche und Bestuhlung übernimmt es beim Auswählen
+ * und passt sie bei Bedarf an. Die Datei liegt nicht öffentlich
  * (Disk wie EventFile), ausgeliefert wird über SeatingPlanController.
  */
-#[Fillable(['name', 'path', 'original_name', 'areas', 'is_active'])]
+#[Fillable(['name', 'path', 'original_name', 'areas', 'seating', 'is_active'])]
 class SeatingPlan extends Model
 {
     public const DISK = EventFile::DISK;
@@ -51,6 +52,7 @@ class SeatingPlan extends Model
     {
         return [
             'areas' => 'array',
+            'seating' => 'array',
             'is_active' => 'boolean',
             'size' => 'integer',
         ];

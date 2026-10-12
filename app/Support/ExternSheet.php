@@ -20,7 +20,8 @@ use Closure;
  *
  * Bewusst nicht dabei: Buchhaltung, Buchung (PAX, interne Notizen), Gäste,
  * Betrieb, WLAN. Dateien und Notizen ohne die „für Externe verborgenen“. Der
- * Saalplan (eigener oder Standard) und die genutzten Bereiche gehören dazu.
+ * Saalplan (eigener oder Standard) mit den genutzten Bereichen und der
+ * Bestuhlung gehört dazu.
  */
 final class ExternSheet
 {
@@ -37,7 +38,7 @@ final class ExternSheet
      *     stage: array{summary: string, rows: array<string, string>, notes: ?string, svg: string}|null,
      *     files: array<string, list<array{name: string, stand: string, size: string, url: string}>>,
      *     notes: list<array{subject: string, body: string, date: ?string, author: ?string}>,
-     *     seating_plan: array{name: string, url: string}|null, areas: list<string>}
+     *     seating_plan: array{name: string, url: string}|null, areas: list<string>, seating: list<string>}
      */
     public static function make(Event $event, Closure $fileUrl, ?Closure $seatingPlanUrl = null): array
     {
@@ -61,6 +62,7 @@ final class ExternSheet
                 'url' => $seatingPlanUrl($event),
             ] : null,
             'areas' => array_values(array_filter(array_map('strval', (array) $event->areas))),
+            'seating' => array_values(array_filter(array_map('strval', (array) $event->seating))),
         ];
     }
 

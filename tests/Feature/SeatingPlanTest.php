@@ -32,15 +32,19 @@ class SeatingPlanTest extends TestCase
         foreach (['Innenraum', 'Oberrang A-D', 'Unterrang A-C'] as $area) {
             FieldOption::create(['field_key' => 'areas', 'value' => $area]);
         }
+        foreach (['unbestuhlt (nur Innenraum)', 'teilbestuhlt', 'bestuhlt'] as $seating) {
+            FieldOption::create(['field_key' => 'seating', 'value' => $seating]);
+        }
     }
 
-    /** @param  list<string>  $areas */
-    private function plan(string $name = 'Konzert bestuhlt', array $areas = ['Innenraum', 'Unterrang A-C'], string $content = '%PDF-1.4 Saalplan'): SeatingPlan
+    /** @param  list<string>  $areas  @param  list<string>  $seating */
+    private function plan(string $name = 'Konzert bestuhlt', array $areas = ['Innenraum', 'Unterrang A-C'], string $content = '%PDF-1.4 Saalplan', array $seating = ['bestuhlt']): SeatingPlan
     {
         $file = str($name)->slug() . '.pdf';
         Storage::disk(SeatingPlan::DISK)->put(SeatingPlan::DIRECTORY . '/' . $file, $content);
 
-        return SeatingPlan::create(['name' => $name, 'path' => SeatingPlan::DIRECTORY . '/' . $file, 'original_name' => $file, 'areas' => $areas]);
+        return SeatingPlan::create(['name' => $name, 'path' => SeatingPlan::DIRECTORY . '/' . $file, 'original_name' => $file,
+            'areas' => $areas, 'seating' => $seating]);
     }
 
     public function test_admin_legt_standard_saalplaene_an(): void
@@ -52,12 +56,14 @@ class SeatingPlanTest extends TestCase
                 'name' => 'Konzert bestuhlt',
                 'path' => UploadedFile::fake()->createWithContent('Konzert.pdf', '%PDF-1.4 Saalplan'),
                 'areas' => ['Innenraum', 'Oberrang A-D'],
+                'seating' => ['bestuhlt'],
             ])
             ->assertHasNoActionErrors();
 
         $plan = SeatingPlan::query()->sole();
         $this->assertSame('Konzert.pdf', $plan->original_name);
         $this->assertSame(['Innenraum', 'Oberrang A-D'], $plan->areas);
+        $this->assertSame(['bestuhlt'], $plan->seating);
         $this->assertTrue($plan->isPdf());
         Storage::disk(SeatingPlan::DISK)->assertExists($plan->path);
 
@@ -72,24 +78,25 @@ class SeatingPlanTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_event_waehlt_standard_saalplan_und_passt_die_bereiche_an(): void
+    public function test_event_waehlt_standard_saalplan_und_passt_bereiche_und_bestuhlung_an(): void
     {
         $plan = $this->plan();
-        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek(), 'areas' => ['Oberrang A-D']]);
+        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek(), 'areas' => ['Oberrang A-D'], 'seating' => ['unbestuhlt (nur Innenraum)']]);
         $this->actingAs($this->userWith($this->role('eventmanager', ['events' => 'edit'])));
 
         Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
             ->assertSchemaStateSet(['seating_plan_source' => 'standard'])
             ->fillForm(['seating_plan_id' => $plan->id])
-            ->assertSchemaStateSet(['areas' => ['Innenraum', 'Unterrang A-C']])
-            // Tribüne zunächst gesperrt
-            ->fillForm(['areas' => ['Innenraum']])
+            ->assertSchemaStateSet(['areas' => ['Innenraum', 'Unterrang A-C'], 'seating' => ['bestuhlt']])
+            // Tribüne zunächst gesperrt, Innenraum nur teilweise bestuhlt
+            ->fillForm(['areas' => ['Innenraum'], 'seating' => ['teilbestuhlt']])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $event->refresh();
         $this->assertSame($plan->id, $event->seating_plan_id);
         $this->assertSame(['Innenraum'], $event->areas);
+        $this->assertSame(['teilbestuhlt'], $event->seating);
         $this->assertSame('Konzert bestuhlt', $event->seatingPlanLabel());
     }
 
@@ -153,11 +160,12 @@ class SeatingPlanTest extends TestCase
         Mail::fake();
         $plan = $this->plan();
         $event = Event::create(['title' => 'Konzert Nord', 'status' => 'bestätigt', 'starts_at' => now()->addDays(3),
-            'seating_plan_id' => $plan->id, 'areas' => ['Innenraum']]);
+            'seating_plan_id' => $plan->id, 'areas' => ['Innenraum'], 'seating' => ['bestuhlt']]);
 
         $sheet = ExternSheet::make($event, fn (): string => '');
         $this->assertSame(['name' => 'Konzert bestuhlt', 'url' => route('events.seating-plan', $event)], $sheet['seating_plan']);
         $this->assertSame(['Innenraum'], $sheet['areas']);
+        $this->assertSame(['bestuhlt'], $sheet['seating']);
 
         // Externe, die am Event beteiligt sind – sonst nicht
         $freelancer = $this->userWith($this->role('extern', ['events_extern' => 'read']));
@@ -199,12 +207,13 @@ class SeatingPlanTest extends TestCase
         $this->actingAs($this->userWith($this->role('buchhaltung', ['events' => 'read', 'buchhaltung' => 'edit'])));
         Livewire::test(ViewEvent::class, ['record' => $event->getRouteKey()])
             ->assertActionVisible($action)
-            ->callAction($action, data: ['seating_plan_id' => $plan->id, 'areas' => ['Innenraum']])
+            ->callAction($action, data: ['seating_plan_id' => $plan->id, 'areas' => ['Innenraum'], 'seating' => ['teilbestuhlt']])
             ->assertHasNoActionErrors();
 
         $event->refresh();
         $this->assertSame($plan->id, $event->seating_plan_id);
         $this->assertSame(['Innenraum'], $event->areas);
+        $this->assertSame(['teilbestuhlt'], $event->seating);
 
         // Nur lesen ohne Buchhaltung: kein Knopf
         $this->actingAs($this->userWith($this->role('catering', ['events' => 'read'])));
