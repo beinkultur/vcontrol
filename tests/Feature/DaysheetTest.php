@@ -105,6 +105,23 @@ class DaysheetTest extends TestCase
             && preg_match('#https?://[^\s]+/daysheet/[A-Za-z0-9]{48}#', $mail->text) === 1
             && str_contains($mail->text, 'Gültig bis 10.10.2026, 23:59 Uhr.')
             && $mail->replyToAddress === $planer->email);
+
+        // HTML wie Laravels Mails: Text, an der Stelle des Links die Schaltfläche, Link zum Kopieren
+        $mail = Mail::sent(DaysheetMail::class)->last();
+        $mail->assertSeeInOrderInHtml(['Hallo,', 'hier:', 'Daysheet öffnen', 'Gültig bis 10.10.2026, 23:59 Uhr.', $mail->link, 'erstellt mit VenueControl'], false)
+            ->assertSeeInText($mail->link)
+            ->assertDontSeeInText('Daysheet öffnen');
+    }
+
+    public function test_text_aus_dem_dialog_wird_im_html_nicht_umgedeutet(): void
+    {
+        $mail = new DaysheetMail('Daysheet', "Bühne <b>fett</b> & *nicht kursiv*\n# keine Überschrift\n\nhttps://example.org/daysheet/abc", link: 'https://example.org/daysheet/abc');
+
+        $mail->assertSeeInHtml('Bühne &lt;b&gt;fett&lt;/b&gt; &amp; *nicht kursiv*<br>', false)
+            ->assertSeeInHtml('# keine Überschrift', false)
+            ->assertDontSeeInHtml('<b>fett</b>', false)
+            ->assertDontSeeInHtml('<em>', false)
+            ->assertSeeInText('Bühne <b>fett</b> & *nicht kursiv*');
     }
 
     public function test_gueltig_bis_zum_ende_des_tages_nach_der_veranstaltung(): void

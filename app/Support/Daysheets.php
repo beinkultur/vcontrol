@@ -157,6 +157,7 @@ final class Daysheets
                 text: self::fill($body, $event, $link, $validUntil),
                 replyToAddress: $sender?->email,
                 replyToName: $sender?->getFilamentName(),
+                link: $link,
             ));
 
             return $daysheet;
