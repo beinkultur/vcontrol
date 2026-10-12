@@ -23,6 +23,12 @@
  * Event-Liste: schmale Zeilen, Monatszeilen, Hervorhebungen
  * ------------------------------------------------------------------ */
 
+/* Alle Event-Zeilen 36 px hoch, der Inhalt mittig (Zellen: vertical-align
+   middle); mit umgebrochenem Titel auf dem Handy dürfen sie höher werden */
+.fi-resource-events.fi-resource-list-records-page .fi-ta-row:not(.fi-ta-group-header-row) {
+    height: 2.25rem;
+}
+
 /* Auch die Symbol-Spalte „DS“: mit Filaments 16 px oben und unten war jede
    Zeile mit Haken 49 statt 33 px hoch */
 .fi-resource-events.fi-resource-list-records-page .fi-ta-text:not(.fi-inline),
