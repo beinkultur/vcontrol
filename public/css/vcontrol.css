@@ -23,7 +23,10 @@
  * Event-Liste: schmale Zeilen, Monatszeilen, Hervorhebungen
  * ------------------------------------------------------------------ */
 
-.fi-resource-events.fi-resource-list-records-page .fi-ta-text:not(.fi-inline) {
+/* Auch die Symbol-Spalte „DS“: mit Filaments 16 px oben und unten war jede
+   Zeile mit Haken 49 statt 33 px hoch */
+.fi-resource-events.fi-resource-list-records-page .fi-ta-text:not(.fi-inline),
+.fi-resource-events.fi-resource-list-records-page .fi-ta-icon:not(.fi-inline) {
     padding-block: 0.3rem;
     padding-inline: 0.4rem;
 }
