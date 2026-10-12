@@ -57,7 +57,7 @@ final class AssignmentFields
     {
         return Select::make('role_' . $role->value)
             ->label($role->getLabel())
-            ->options(fn (?Event $record): array => self::options($record?->assignments->firstWhere('role', $role)))
+            ->options(fn (?Event $record): array => self::options($record?->assignments->firstWhere('role', $role), $role))
             ->searchable()
             ->afterStateHydrated(function (Select $component, ?Event $record) use ($role): void {
                 $assignment = $record?->assignments->firstWhere('role', $role);
@@ -77,18 +77,27 @@ final class AssignmentFields
      * Gruppierte Auswahl; die aktuelle Zuordnung bleibt wählbar, auch wenn der
      * Mitarbeiter inzwischen fehlt oder archiviert, das Gewerk archiviert oder der
      * Benutzer inaktiv ist. System-Admins stehen nur für System-Admins zur Wahl.
+     * Je Rolle nur die Typen aus AssignmentRole::assigneeTypes(), mit
+     * Voraussetzung (qualification(), etwa VfV) nur passende Mitarbeiter
+     * (Position) und Gewerke (Leistungsbereich).
      *
      * @return array<string, array<string, string>>
      */
-    private static function options(mixed $current): array
+    private static function options(mixed $current, AssignmentRole $role): array
     {
         $viewer = Auth::user();
+        $types = $role->assigneeTypes();
+        $qualification = $role->qualification();
+        $qualifies = fn (mixed $values): bool => $qualification === null
+            || collect((array) $values)->contains(fn (mixed $value): bool => mb_strtolower(trim((string) $value)) === mb_strtolower($qualification));
         $options = [
-            'Mitarbeiter' => Employee::query()->where('is_archived', false)->orderBy('last_name')->get()
+            'Mitarbeiter' => !in_array('employee', $types, true) ? [] : Employee::query()->where('is_archived', false)->orderBy('last_name')->get()
+                ->filter(fn (Employee $e): bool => $qualifies($e->positions))
                 ->mapWithKeys(fn (Employee $e): array => ['employee:' . $e->id => $e->fullName()])->all(),
-            'Gewerke' => Trade::query()->where('is_archived', false)->orderBy('name')->get()
+            'Gewerke' => !in_array('trade', $types, true) ? [] : Trade::query()->where('is_archived', false)->orderBy('name')->get()
+                ->filter(fn (Trade $t): bool => $qualifies($t->categories))
                 ->mapWithKeys(fn (Trade $t): array => ['trade:' . $t->id => $t->displayName()])->all(),
-            'Benutzer' => User::query()->where('is_active', true)->visibleTo($viewer instanceof User ? $viewer : null)->orderBy('last_name')->get()
+            'Benutzer' => !in_array('user', $types, true) ? [] : User::query()->where('is_active', true)->visibleTo($viewer instanceof User ? $viewer : null)->orderBy('last_name')->get()
                 ->mapWithKeys(fn (User $u): array => ['user:' . $u->id => $u->getFilamentName()])->all(),
         ];
 
@@ -97,7 +106,7 @@ final class AssignmentFields
             $options[$group][$current->assignee_type . ':' . $current->assignee_id] ??= $current->assigneeName();
         }
 
-        return $options;
+        return array_filter($options);
     }
 
     private static function save(Event $event, AssignmentRole $role, ?string $state, mixed $startsAt, mixed $endsAt): void

@@ -27,4 +27,33 @@ enum AssignmentRole: string implements HasLabel
             self::SafetyLate => 'VfV spät',
         };
     }
+
+    /**
+     * Wer die Rolle übernehmen kann, als Typen der Morph-Map (Vorgaben vom
+     * 12.10.2026): Auf-/Abschließen und House Rep. nur Mitarbeiter, VfV
+     * Mitarbeiter und Gewerke, die Projektleitung alle.
+     *
+     * @return list<string>
+     */
+    public function assigneeTypes(): array
+    {
+        return match ($this) {
+            self::Unlock, self::Lock, self::HouseRepEarly, self::HouseRepLate => ['employee'],
+            self::SafetyEarly, self::SafetyLate => ['employee', 'trade'],
+            self::ProjectLead => ['employee', 'trade', 'user'],
+        };
+    }
+
+    /**
+     * Voraussetzung für die Rolle: Zur Wahl stehen dann nur Mitarbeiter mit
+     * dieser Position und Gewerke mit diesem Leistungsbereich (Vorgabe vom
+     * 12.10.2026). Null: keine.
+     */
+    public function qualification(): ?string
+    {
+        return match ($this) {
+            self::SafetyEarly, self::SafetyLate => 'VfV',
+            default => null,
+        };
+    }
 }

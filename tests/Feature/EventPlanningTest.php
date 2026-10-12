@@ -10,6 +10,7 @@ use App\Models\Event;
 use App\Models\Room;
 use App\Models\Trade;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -65,7 +66,7 @@ class EventPlanningTest extends TestCase
     public function test_rollen_vergeben_aendern_und_leeren(): void
     {
         $anna = Employee::create(['first_name' => 'Anna', 'last_name' => 'Leitung']);
-        $sidi = Trade::create(['name' => 'Sicherheitsdienst']);
+        $sidi = Trade::create(['name' => 'Sicherheitsdienst', 'categories' => ['Sicherheit', 'VfV']]);
 
         Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
             ->fillForm(['role_pl' => 'employee:' . $anna->id, 'role_safety_1' => 'trade:' . $sidi->id])
@@ -83,6 +84,38 @@ class EventPlanningTest extends TestCase
 
         $this->assertNull($this->event->assignments()->where('role', AssignmentRole::ProjectLead->value)->first());
         $this->assertNotNull($this->event->assignments()->where('role', AssignmentRole::SafetyEarly->value)->first());
+    }
+
+    public function test_vfv_nur_mit_position_oder_leistungsbereich_vfv(): void
+    {
+        $vfv = Employee::create(['first_name' => 'Vera', 'last_name' => 'Fach', 'positions' => ['VfV']]);
+        $vl = Employee::create(['first_name' => 'Volker', 'last_name' => 'Leitung', 'positions' => ['VL']]);
+        $sidi = Trade::create(['name' => 'Sicherheitsdienst', 'categories' => ['Sicherheit', 'vfv']]);
+        $catering = Trade::create(['name' => 'Catering Nord', 'categories' => ['Catering']]);
+        $kollege = $this->userWith($this->role('technik', ['events' => 'edit']));
+        // Schon eingetragen und ohne VfV: bleibt wählbar
+        $this->event->assignments()->create(['role' => AssignmentRole::SafetyLate, 'assignee_type' => 'user', 'assignee_id' => $kollege->id]);
+        $keys = fn (Select $field): array => array_keys(array_merge(...array_values($field->getOptions())));
+
+        Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
+            ->assertFormFieldExists('role_safety_1', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'trade:' . $sidi->id])
+            ->assertFormFieldExists('role_safety_2', fn (Select $field): bool => in_array('user:' . $kollege->id, $keys($field), true)
+                && !in_array('employee:' . $vl->id, $keys($field), true))
+            // Auf-/Abschließen und House Rep.: nur Mitarbeiter, alle Positionen
+            ->assertFormFieldExists('role_house_rep_1', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
+            ->assertFormFieldExists('role_house_rep_2', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
+            ->assertFormFieldExists('role_house_rep_3', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
+            ->assertFormFieldExists('role_house_rep_4', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
+            // Projektleitung weiter mit allen
+            ->assertFormFieldExists('role_pl', fn (Select $field): bool => in_array('employee:' . $vl->id, $keys($field), true)
+                && in_array('trade:' . $catering->id, $keys($field), true)
+                && in_array('user:' . $kollege->id, $keys($field), true))
+            // Nicht Angebotenes lässt sich nicht unterschieben
+            ->fillForm(['role_safety_1' => 'trade:' . $catering->id])
+            ->call('save')
+            ->assertHasFormErrors(['role_safety_1']);
+
+        $this->assertNull($this->event->assignments()->where('role', AssignmentRole::SafetyEarly->value)->first());
     }
 
     public function test_uhrzeiten_der_rollen(): void
