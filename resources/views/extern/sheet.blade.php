@@ -118,6 +118,24 @@
     </section>
 
     <section>
+        <h2>Saalplan</h2>
+        @if ($sheet['seating_plan'] === null)
+            <p class="vc-sheet__empty">Kein Saalplan.</p>
+        @else
+            <p class="vc-sheet__seating-plan">
+                <a href="{{ $sheet['seating_plan']['url'] }}" target="_blank" rel="noopener">{{ $sheet['seating_plan']['name'] }}</a>
+                <span class="vc-sheet__muted">· PDF</span>
+            </p>
+        @endif
+        @if ($sheet['areas'] !== [])
+            <dl>
+                <dt>Bereiche</dt>
+                <dd>{{ implode(', ', $sheet['areas']) }}</dd>
+            </dl>
+        @endif
+    </section>
+
+    <section>
         <h2>Bühne</h2>
         @if ($sheet['stage'] === null)
             <p class="vc-sheet__empty">Noch keine Bühne eingetragen.</p>

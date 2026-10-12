@@ -39,7 +39,11 @@ class DaysheetController extends Controller
 
         return response()
             ->view('daysheet', [
-                'sheet' => ExternSheet::make($daysheet->event, fn (EventFile $file): string => route('daysheet.file', [$token, $file])),
+                'sheet' => ExternSheet::make(
+                    $daysheet->event,
+                    fn (EventFile $file): string => route('daysheet.file', [$token, $file]),
+                    fn (): string => route('daysheet.seating-plan', $token),
+                ),
                 'validUntil' => $daysheet->expires_at,
                 'preview' => false,
                 'documentTitle' => self::documentTitle($daysheet->event),
@@ -54,6 +58,20 @@ class DaysheetController extends Controller
         abort_unless($daysheet !== null && $daysheet->isValid() && ExternSheet::showsFile($daysheet->event, $file), 404);
 
         $response = EventFileController::stream($file);
+        foreach (self::HEADERS as $name => $value) {
+            $response->headers->set($name, $value);
+        }
+
+        return $response;
+    }
+
+    /** Saalplan über den Daysheet-Link, solange der gilt */
+    public function seatingPlan(string $token): StreamedResponse
+    {
+        $daysheet = Daysheet::findByToken($token);
+        abort_unless($daysheet !== null && $daysheet->isValid() && $daysheet->event->hasSeatingPlan(), 404);
+
+        $response = SeatingPlanController::stream($daysheet->event);
         foreach (self::HEADERS as $name => $value) {
             $response->headers->set($name, $value);
         }

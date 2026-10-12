@@ -12,12 +12,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'va_nr', 'va_id', 'title', 'promoter_id', 'status', 'event_type1', 'event_type2',
     'starts_at', 'ends_at', 'pax_expected', 'pax', 'areas', 'seating', 'ticketing',
     'wlan', 'wlan_password', 'description', 'booking_notes', 'onsite_contact',
-    'closed',
+    'closed', 'seating_plan_id', 'seating_plan_path', 'seating_plan_original_name',
 ])]
 class Event extends Model
 {
@@ -45,6 +46,32 @@ class Event extends Model
                 $event->va_id = EventNumber::buildVaId(EventNumber::customerNoOf($event->promoter_id), $event->va_nr);
             }
         });
+
+        // Saalplan: entweder ein Standard-Saalplan oder ein eigener (PDF) – wer das
+        // eine wählt, löst das andere ab. Typ des eigenen am gespeicherten Inhalt.
+        static::saving(function (Event $event): void {
+            if ($event->isDirty('seating_plan_id') && $event->seating_plan_id !== null) {
+                $event->seating_plan_path = null;
+            }
+            if ($event->isDirty('seating_plan_path')) {
+                if (filled($event->seating_plan_path)) {
+                    $event->seating_plan_id = null;
+                    $event->seating_plan_mime_type = Storage::disk(SeatingPlan::DISK)->mimeType($event->seating_plan_path) ?: null;
+                } else {
+                    $event->seating_plan_path = null;
+                    $event->seating_plan_original_name = null;
+                    $event->seating_plan_mime_type = null;
+                }
+            }
+        });
+
+        // Ein abgelöster eigener Saalplan verschwindet von der Platte
+        static::updated(function (Event $event): void {
+            $old = $event->getOriginal('seating_plan_path');
+            if ($event->wasChanged('seating_plan_path') && filled($old)) {
+                Storage::disk(SeatingPlan::DISK)->delete($old);
+            }
+        });
     }
 
     /**
@@ -67,6 +94,32 @@ class Event extends Model
     public function promoter(): BelongsTo
     {
         return $this->belongsTo(Promoter::class);
+    }
+
+    /** Standard-Saalplan, falls kein eigener hochgeladen ist. @return BelongsTo<SeatingPlan, $this> */
+    public function seatingPlan(): BelongsTo
+    {
+        return $this->belongsTo(SeatingPlan::class);
+    }
+
+    public function hasCustomSeatingPlan(): bool
+    {
+        return filled($this->seating_plan_path);
+    }
+
+    public function hasSeatingPlan(): bool
+    {
+        return $this->hasCustomSeatingPlan() || $this->seatingPlan !== null;
+    }
+
+    /** „Konzert bestuhlt“ oder „Eigener Saalplan (plan.pdf)“; null ohne Saalplan */
+    public function seatingPlanLabel(): ?string
+    {
+        if ($this->hasCustomSeatingPlan()) {
+            return 'Eigener Saalplan' . (filled($this->seating_plan_original_name) ? ' (' . $this->seating_plan_original_name . ')' : '');
+        }
+
+        return $this->seatingPlan?->name;
     }
 
     /** @return HasOne<EventFinance, $this> */

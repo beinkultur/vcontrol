@@ -8,6 +8,7 @@ use App\Enums\AssignmentRole;
 use App\Enums\OptionField;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\DamagesRelationManager;
@@ -20,6 +21,7 @@ use App\Filament\Support\AssignmentFields;
 use App\Filament\Support\IncomingInvoiceFields;
 use App\Filament\Support\OptionChoices;
 use App\Filament\Support\RoomUsageFields;
+use App\Filament\Support\SeatingPlanFields;
 use App\Filament\Support\ServiceFields;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Event;
@@ -45,6 +47,7 @@ use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
@@ -322,6 +325,8 @@ class EventForm
                             ->label('Ticketing')
                             ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Ticketing, $record?->ticketing))
                             ->native(false),
+                        // Standard-Saalplan (übernimmt seine Bereiche) oder eigener PDF-Plan
+                        ...SeatingPlanFields::forEvent(),
                         CheckboxList::make('areas')
                             ->label('Bereiche')
                             ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Areas, $record?->areas))
@@ -329,6 +334,10 @@ class EventForm
                         CheckboxList::make('seating')
                             ->label('Bestuhlung')
                             ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Seating, $record?->seating)),
+                        Actions::make([self::changeSeatingPlan()])
+                            ->key('seatingPlanActions')
+                            ->visible(fn (Component $livewire): bool => $livewire instanceof ViewEvent && SeatingPlanFields::canChange())
+                            ->columnSpanFull(),
                     ]),
                 Section::make('Intern')
                     ->schema([
@@ -354,6 +363,49 @@ class EventForm
                     ]),
             ]),
         ];
+    }
+
+    /**
+     * Leseansicht (ViewEvent): Wer Events nur lesen, aber die Buchhaltung
+     * bearbeiten darf, ändert hier Saalplan und Bereiche – dieselben Felder wie
+     * beim Bearbeiten (SeatingPlanFields).
+     */
+    private static function changeSeatingPlan(): Action
+    {
+        return Action::make('changeSeatingPlan')
+            ->label('Saalplan ändern')
+            ->icon(Heroicon::OutlinedPencilSquare)
+            ->color('gray')
+            ->visible(fn (Component $livewire): bool => $livewire instanceof ViewEvent && SeatingPlanFields::canChange())
+            ->modalHeading('Saalplan ändern')
+            ->fillForm(fn (Event $record): array => [
+                'seating_plan_id' => $record->seating_plan_id,
+                'seating_plan_path' => $record->seating_plan_path,
+                'seating_plan_original_name' => $record->seating_plan_original_name,
+                'areas' => $record->areas ?? [],
+            ])
+            ->schema(fn (): array => [
+                ...SeatingPlanFields::forEvent(),
+                CheckboxList::make('areas')
+                    ->label('Bereiche')
+                    ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Areas, $record?->areas))
+                    ->columns(2),
+            ])
+            ->action(function (array $data, Event $record, Component $livewire): void {
+                abort_unless(SeatingPlanFields::canChange(), 403);
+                $first = fn (mixed $value): mixed => is_array($value) ? (reset($value) ?: null) : $value;
+
+                $record->update([
+                    'seating_plan_id' => $data['seating_plan_id'] ?? null,
+                    'seating_plan_path' => $first($data['seating_plan_path'] ?? null),
+                    'seating_plan_original_name' => $first($data['seating_plan_original_name'] ?? null),
+                    'areas' => array_values(array_map('strval', (array) ($data['areas'] ?? []))),
+                ]);
+                if ($livewire instanceof ViewEvent) {
+                    $livewire->refreshFormData(['seating_plan_id', 'seating_plan_path', 'seating_plan_original_name', 'areas']);
+                }
+                Notification::make()->success()->title('Saalplan gespeichert')->send();
+            });
     }
 
     /**

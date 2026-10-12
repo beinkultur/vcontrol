@@ -138,14 +138,20 @@
     padding: 0.2rem 0;
 }
 
-.vc-sheet__files a {
+.vc-sheet__files a,
+.vc-sheet__seating-plan a {
     color: var(--sheet-accent);
     font-weight: 500;
     text-decoration: none;
 }
 
-.vc-sheet__files a:hover {
+.vc-sheet__files a:hover,
+.vc-sheet__seating-plan a:hover {
     text-decoration: underline;
+}
+
+.vc-sheet__seating-plan {
+    margin: 0 0 0.4rem;
 }
 
 .vc-sheet__note + .vc-sheet__note {
@@ -234,7 +240,8 @@
         max-height: 140mm;
     }
 
-    .vc-sheet__files a {
+    .vc-sheet__files a,
+    .vc-sheet__seating-plan a {
         color: inherit;
     }
 }

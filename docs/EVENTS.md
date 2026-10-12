@@ -37,6 +37,7 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `event_service_groups` | `vc_event_trade_active`, `vc_event_trade_groups` | welche Leistungsgruppen aktiv sind |
 | `event_assignments` | `vc_event_role_assignments` | Rollen am Event (VL, VfV …) an Mitarbeiter, Gewerk oder Benutzer, mit Zeiten |
 | `event_incoming_invoices` | `vc_event_incoming_invoices` | die sechs erwarteten Eingangsrechnungen |
+| `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Halle: PDF, Name, genutzte Bereiche, aktiv |
 
 Später, mit seinem Modul: Ablaufplan (`vc_event_attachments`).
 
@@ -241,6 +242,17 @@ Freitermin, Sortierung
   Werte wie in der PHP-Version).
 - **Räume:** Ein Raum, den ein Event belegt, lässt sich nicht mehr löschen
   (Policy und Fremdschlüssel). Die PHP-Version löschte ihn samt Belegungen.
+- **Saalplan (neu, 12.10.2026):** Standard-Saalpläne pflegt, wer die Stammdaten
+  der Halle bearbeitet (Stammdaten › Saalpläne, `SeatingPlanPolicy`): PDF, Name,
+  genutzte Bereiche. Je Event unter Buchung › Daten („Halle & Publikum“)
+  entweder einer davon – seine Bereiche werden übernommen und lassen sich
+  anpassen – oder ein eigener PDF-Plan (`events.seating_plan_id` bzw.
+  `seating_plan_path`; das eine löst das andere ab, `Event::booted`). Wer Events
+  nur lesen, aber die Buchhaltung bearbeiten darf, ändert ihn in der
+  Leseansicht über „Saalplan ändern“. Externe Ansicht und Daysheet zeigen den
+  Saalplan mit den genutzten Bereichen; ausgeliefert wird über
+  `SeatingPlanController` (Rechte wie bei den Event-Dateien, Daysheet über den
+  Schlüssel), angezeigt nur, was am Inhalt als PDF erkannt ist.
 
 ## Offene Punkte
 

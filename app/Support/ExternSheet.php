@@ -19,7 +19,8 @@ use Closure;
  * festgelegt und dann hier angepasst.
  *
  * Bewusst nicht dabei: Buchhaltung, Buchung (PAX, interne Notizen), Gäste,
- * Betrieb, WLAN. Dateien und Notizen ohne die „für Externe verborgenen“.
+ * Betrieb, WLAN. Dateien und Notizen ohne die „für Externe verborgenen“. Der
+ * Saalplan (eigener oder Standard) und die genutzten Bereiche gehören dazu.
  */
 final class ExternSheet
 {
@@ -28,17 +29,20 @@ final class ExternSheet
 
     /**
      * @param  Closure(EventFile): string  $fileUrl  Download-Adresse je nach Zugang (Konto oder Daysheet-Link)
+     * @param  (Closure(Event): string)|null  $seatingPlanUrl  ebenso für den Saalplan; ohne: Route mit Konto
      * @return array{title: string, date: string, promoter: ?string, venue: string, cancelled: bool,
      *     times: list<array{label: string, value: string}>,
      *     contacts: list<array{label: string, name: string, time: ?string}>,
      *     services: list<array{label: string, responsible: ?string, provider: ?string, note: ?string}>,
      *     stage: array{summary: string, rows: array<string, string>, notes: ?string, svg: string}|null,
      *     files: array<string, list<array{name: string, stand: string, size: string, url: string}>>,
-     *     notes: list<array{subject: string, body: string, date: ?string, author: ?string}>}
+     *     notes: list<array{subject: string, body: string, date: ?string, author: ?string}>,
+     *     seating_plan: array{name: string, url: string}|null, areas: list<string>}
      */
-    public static function make(Event $event, Closure $fileUrl): array
+    public static function make(Event $event, Closure $fileUrl, ?Closure $seatingPlanUrl = null): array
     {
-        $event->loadMissing(['promoter', 'schedule', 'stage', 'services.trade', 'assignments.assignee']);
+        $event->loadMissing(['promoter', 'schedule', 'stage', 'services.trade', 'assignments.assignee', 'seatingPlan']);
+        $seatingPlanUrl ??= fn (Event $event): string => route('events.seating-plan', $event);
 
         return [
             'title' => (string) $event->title,
@@ -52,6 +56,11 @@ final class ExternSheet
             'stage' => self::stage($event),
             'files' => self::files($event, $fileUrl),
             'notes' => self::notes($event),
+            'seating_plan' => $event->hasSeatingPlan() ? [
+                'name' => $event->hasCustomSeatingPlan() ? ($event->seating_plan_original_name ?: 'Saalplan') : (string) $event->seatingPlan?->name,
+                'url' => $seatingPlanUrl($event),
+            ] : null,
+            'areas' => array_values(array_filter(array_map('strval', (array) $event->areas))),
         ];
     }
 
