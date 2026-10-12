@@ -23,7 +23,7 @@ final class ServiceFields
     /** @return list<Fieldset> */
     public static function all(): array
     {
-        return array_map(fn (ServiceCode $service): Fieldset => self::row($service), ServiceCode::cases());
+        return array_map(fn (ServiceCode $service): Fieldset => self::row($service), ServiceCode::active());
     }
 
     private static function row(ServiceCode $service): Fieldset

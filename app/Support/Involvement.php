@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\AccountType;
+use App\Enums\ServiceCode;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,7 +39,8 @@ final class Involvement
 
             if ($user->account_type === AccountType::TradeAccount && $user->trade_id !== null) {
                 $query->orWhereHas('assignments', $assigned('trade', (int) $user->trade_id))
-                    ->orWhereHas('services', fn (Builder $services): Builder => $services->where('trade_id', $user->trade_id));
+                    ->orWhereHas('services', fn (Builder $services): Builder => $services->where('trade_id', $user->trade_id)
+                        ->whereIn('service', ServiceCode::activeValues()));
             }
         });
     }

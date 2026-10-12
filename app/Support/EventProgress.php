@@ -54,7 +54,8 @@ final class EventProgress
     public static function filledServices(Event $event): int
     {
         return $event->services
-            ->filter(fn (EventService $s): bool => $s->trade_id !== null || filled($s->provider_label) || filled($s->note))
+            ->filter(fn (EventService $s): bool => !$s->service->isRetired()
+                && ($s->trade_id !== null || filled($s->provider_label) || filled($s->note)))
             ->count();
     }
 

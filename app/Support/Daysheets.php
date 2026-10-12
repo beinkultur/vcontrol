@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\ServiceCode;
 use App\Mail\DaysheetMail;
 use App\Models\Daysheet;
 use App\Models\Event;
@@ -54,7 +55,7 @@ final class Daysheets
      */
     public static function tradeEmails(Event $event): array
     {
-        $tradeIds = $event->services()->whereNotNull('trade_id')->pluck('trade_id')
+        $tradeIds = $event->services()->whereIn('service', ServiceCode::activeValues())->whereNotNull('trade_id')->pluck('trade_id')
             ->merge($event->assignments()->where('assignee_type', 'trade')->pluck('assignee_id'))
             ->unique();
 

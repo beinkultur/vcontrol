@@ -28,6 +28,31 @@ enum ServiceCode: string implements HasLabel
     case CrewCatering = 'crew_catering';
 
     /**
+     * Nicht mehr verwendet (Raucherbereich, 12.10.2026). Gespeicherte Zeilen
+     * bleiben lesbar, die Leistungen stehen aber nirgends mehr: weder im
+     * Formular noch für Externe, im Daysheet, im Fortschritt oder bei der
+     * Beteiligung von Gewerken.
+     */
+    public const RETIRED = [self::SmokingSetup, self::SmokingTeardown];
+
+    public function isRetired(): bool
+    {
+        return in_array($this, self::RETIRED, true);
+    }
+
+    /** Leistungen, die es noch gibt, in der festen Reihenfolge. @return list<self> */
+    public static function active(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $code): bool => !$code->isRetired()));
+    }
+
+    /** Dieselben als Werte, für Abfragen. @return list<string> */
+    public static function activeValues(): array
+    {
+        return array_map(fn (self $code): string => $code->value, self::active());
+    }
+
+    /**
      * Leistungsbereich der Gewerke, die dafür in Frage kommen (Trade::categories),
      * wie TRADE_SERVICE_CATEGORIES in der PHP-Version. Brandwache hat keinen –
      * dafür steht jedes Gewerk zur Wahl.

@@ -120,8 +120,8 @@ final class ExternSheet
         $order = array_flip(array_map(fn (ServiceCode $code): string => $code->value, ServiceCode::cases()));
 
         return $event->services
-            ->filter(fn (EventService $service): bool => $service->responsible !== null || $service->trade_id !== null
-                || filled($service->provider_label) || filled($service->note))
+            ->filter(fn (EventService $service): bool => !$service->service->isRetired()
+                && ($service->responsible !== null || $service->trade_id !== null || filled($service->provider_label) || filled($service->note)))
             ->sortBy(fn (EventService $service): int => $order[$service->service->value] ?? 999)
             ->map(fn (EventService $service): array => [
                 'label' => $service->service->getLabel(),

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\AccountType;
 use App\Enums\AssignmentRole;
 use App\Enums\ServiceCode;
+use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\ExternEvents\Pages\ListExternEvents;
 use App\Models\Employee;
 use App\Models\Event;
@@ -13,6 +14,8 @@ use App\Models\EventFileTag;
 use App\Models\ExternEvent;
 use App\Models\Trade;
 use App\Models\User;
+use App\Support\Daysheets;
+use App\Support\EventProgress;
 use App\Support\Involvement;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Storage;
@@ -128,6 +131,28 @@ class ExternPortalTest extends TestCase
         $this->get($this->rider->downloadUrl())->assertOk();
         $this->get($this->contract->downloadUrl())->assertForbidden();
         $this->get($this->otherFile->downloadUrl())->assertForbidden();
+    }
+
+    public function test_raucherbereich_ist_weg(): void
+    {
+        $trade = Trade::create(['name' => 'Raucher GmbH', 'email' => 'rauch@example.org']);
+        $gewerk = $this->userWith($this->role('extern_gewerk', ['events_extern' => 'read']));
+        $gewerk->update(['account_type' => AccountType::TradeAccount, 'trade_id' => $trade->id]);
+        // Altbestand: bleibt gespeichert, steht aber nirgends mehr (seit 12.10.2026)
+        $this->mine->services()->create(['service' => ServiceCode::SmokingSetup, 'trade_id' => $trade->id, 'note' => 'Zelt am Ausgang']);
+
+        $this->assertFalse(Involvement::involves($gewerk->fresh(), $this->mine));
+        $this->assertNotContains('rauch@example.org', Daysheets::tradeEmails($this->mine));
+        $this->assertSame(0, EventProgress::filledServices($this->mine->fresh()));
+
+        $this->actingAs($this->freelancer);
+        $this->get('/extern/events/' . $this->mine->id)->assertOk()->assertDontSee('Raucherbereich')->assertDontSee('Zelt am Ausgang');
+
+        $this->actingAs($this->admin());
+        Livewire::test(EditEvent::class, ['record' => $this->mine->getRouteKey()])
+            ->assertFormFieldDoesNotExist('service_smoking_setup_trade')
+            ->assertFormFieldDoesNotExist('service_smoking_teardown_trade')
+            ->assertFormFieldExists('service_vt_trade');
     }
 
     public function test_beteiligung_ueber_gewerk_und_mitarbeiter(): void
