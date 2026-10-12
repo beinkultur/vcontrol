@@ -99,15 +99,15 @@ final class DamageFields
         return array_values(array_filter([
             TextColumn::make('recorded_at')->label('Datum')->dateTime('d.m.Y H:i')->sortable(),
             $withEvent
-                ? TextColumn::make('event.title')->label('Event')->placeholder('allgemein')
+                ? TextColumn::make('event.title')->label('Event')->visibleFrom('md')->placeholder('allgemein')
                     ->description(fn (Damage $record): ?string => $record->event?->starts_at?->format('d.m.Y'))
                     ->url(fn (Damage $record): ?string => $record->event === null ? null
                         : EventResource::getUrl(EventResource::canEdit($record->event) ? 'edit' : 'view', ['record' => $record->event]) . '?phase=durchfuehrung&bereich=schaeden')
                     ->searchable()
                 : null,
-            TextColumn::make('recorder')->label('Aufgenommen durch')->state(fn (Damage $record): ?string => $record->recorderName())->placeholder('–'),
+            TextColumn::make('recorder')->label('Aufgenommen durch')->visibleFrom('md')->state(fn (Damage $record): ?string => $record->recorderName())->placeholder('–'),
             TextColumn::make('description')->label('Beschreibung')->limit(80)->wrap()->searchable(),
-            ImageColumn::make('photo_urls')->label('Fotos')->state(fn (Damage $record): array => $record->photoUrls())
+            ImageColumn::make('photo_urls')->label('Fotos')->visibleFrom('md')->state(fn (Damage $record): array => $record->photoUrls())
                 ->imageHeight(32)->stacked()->limit(3)->limitedRemainingText(),
             TextColumn::make('status')->label('Status')->state(fn (Damage $record): string => $record->is_fixed ? 'behoben' : 'offen')
                 ->badge()->color(fn (Damage $record): string => $record->is_fixed ? 'success' : 'danger'),

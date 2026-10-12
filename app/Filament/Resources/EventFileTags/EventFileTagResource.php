@@ -65,6 +65,7 @@ class EventFileTagResource extends Resource
                     ->alignCenter(),
                 IconColumn::make('is_archived')
                     ->label('Archiviert')
+                    ->visibleFrom('md')
                     ->boolean()
                     ->alignCenter(),
             ])

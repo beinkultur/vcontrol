@@ -4,14 +4,17 @@ namespace App\Filament\Pages;
 
 use App\Access\Area;
 use App\Access\Modules;
+use App\Enums\ColorScheme;
 use App\Filament\Concerns\BoxedPage;
 use App\Models\BackupRun;
+use App\Models\Setting;
 use App\Models\User;
 use App\Support\Backups;
 use App\Support\SecurityStatus;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Radio;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -23,13 +26,15 @@ use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use UnitEnum;
 
 /**
- * Einstellungen des Betreibers, nur für System-Admins: welche Module diese
- * Halle hat und die nächtliche Sicherung (App\Support\Backups). Alles, was die
- * Halle selbst einstellt, steht unter Verwaltung › Halle.
+ * Einstellungen des Betreibers, nur für System-Admins: Farbschema
+ * (App\Enums\ColorScheme), welche Module diese Halle hat und die nächtliche
+ * Sicherung (App\Support\Backups). Alles, was die Halle selbst einstellt, steht
+ * unter Verwaltung › Halle.
  *
  * @property-read Schema $form
  */
@@ -65,7 +70,7 @@ class ManageSystem extends Page
     public function mount(): void
     {
         $disabled = Modules::current()->disabled();
-        $state = [];
+        $state = ['color_scheme' => ColorScheme::current()->value];
         foreach (Area::groups() as $group) {
             $state[self::field($group)] = array_values(array_map(
                 fn (Area $area): string => $area->value,
@@ -80,6 +85,20 @@ class ManageSystem extends Page
         return $schema
             ->statePath('data')
             ->components([
+                Section::make('Farbschema')
+                    ->description('Gilt für alle Benutzer dieser Halle, auch auf der Anmeldeseite und der Daysheet-Seite.')
+                    ->schema([
+                        Radio::make('color_scheme')
+                            ->hiddenLabel()
+                            ->options(collect(ColorScheme::cases())->mapWithKeys(fn (ColorScheme $scheme): array => [$scheme->value => $scheme->getLabel()])->all())
+                            ->descriptions(collect(ColorScheme::cases())->mapWithKeys(fn (ColorScheme $scheme): array => [$scheme->value => new HtmlString(
+                                e($scheme->description()) . '<span class="vc-swatches">'
+                                . collect($scheme->swatches())->map(fn (string $color): string => '<span style="background:' . e($color) . '"></span>')->implode('')
+                                . '</span>',
+                            )])->all())
+                            ->in(array_column(ColorScheme::cases(), 'value'))
+                            ->required(),
+                    ]),
                 Section::make('Module')
                     ->description(fn (): string => 'Angehakt = an. Abgeschaltete Bereiche sind für alle gesperrt, auch für Admins und System-Admins; '
                         . 'vergebene Rechte bleiben erhalten und wirken wieder, sobald der Bereich an ist. Benutzer, Rollen & Rechte und Halle bleiben immer an.'
@@ -215,7 +234,16 @@ class ManageSystem extends Page
             fn (Area $area): bool => $area->isSwitchable() && !in_array($area->value, $enabled, true),
         )));
 
+        $scheme = ColorScheme::tryFrom((string) ($data['color_scheme'] ?? '')) ?? ColorScheme::VcBasic;
+        $schemeChanged = $scheme !== ColorScheme::current();
+        Setting::put(Setting::COLOR_SCHEME, $scheme->value);
+
         Notification::make()->success()->title('Gespeichert')->body('Die Navigation zeigt die Änderung nach dem nächsten Seitenwechsel.')->send();
+
+        // Die Farben stehen im Kopf der Seite – neu laden, damit das Schema sofort gilt
+        if ($schemeChanged) {
+            $this->redirect(static::getUrl());
+        }
     }
 
     /** @return list<Area> */

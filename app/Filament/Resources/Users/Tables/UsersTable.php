@@ -26,19 +26,23 @@ class UsersTable
                     ->sortable(),
                 TextColumn::make('email')
                     ->label('E-Mail')
+                    ->visibleFrom('lg')
                     ->searchable()
                     ->copyable(),
                 TextColumn::make('roles.name')
                     ->label('Rollen')
                     ->badge(),
                 TextColumn::make('account_type')
-                    ->label('Kontotyp'),
+                    ->label('Kontotyp')
+                    ->visibleFrom('md'),
                 IconColumn::make('is_active')
                     ->label('Aktiv')
+                    ->visibleFrom('md')
                     ->boolean()
                     ->alignCenter(),
                 TextColumn::make('last_login_at')
                     ->label('Zuletzt angemeldet')
+                    ->visibleFrom('lg')
                     ->dateTime('d.m.Y H:i')
                     ->placeholder('–')
                     ->sortable()

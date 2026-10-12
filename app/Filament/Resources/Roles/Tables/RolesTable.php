@@ -26,6 +26,7 @@ class RolesTable
                     ->sortable(),
                 TextColumn::make('slug')
                     ->label('Kennung')
+                    ->visibleFrom('lg')
                     ->fontFamily(FontFamily::Mono),
                 TextColumn::make('users_count')
                     ->label('Benutzer')
@@ -35,10 +36,12 @@ class RolesTable
                     ->sortable(),
                 IconColumn::make('is_super')
                     ->label('Vollzugriff')
+                    ->visibleFrom('md')
                     ->boolean()
                     ->alignCenter(),
                 IconColumn::make('is_system')
                     ->label('Systemrolle')
+                    ->visibleFrom('md')
                     ->boolean()
                     ->alignCenter(),
             ])

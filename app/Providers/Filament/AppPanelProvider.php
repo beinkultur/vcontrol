@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Enums\ColorScheme;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\RequestPasswordReset;
@@ -17,7 +18,6 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -54,15 +54,20 @@ class AppPanelProvider extends PanelProvider
             // Filament ab, statt die Aktion stillschweigend zu erlauben.
             ->strictAuthorization()
             // Mit dem Hallennamen – jede Halle hat ihre eigene Installation. In der
-            // Kopfzeile (und auf der Anmeldeseite) steht nur die Halle, „VenueControl“
-            // bleibt im Fenstertitel.
+            // Kopfzeile (und auf der Anmeldeseite) stehen das Logo und die Halle,
+            // „VenueControl“ bleibt im Fenstertitel. Auf dem Handy nur das Logo (vcontrol.css).
             ->brandName(fn (): string => collect([config('app.name'), Setting::lookup(Setting::VENUE_NAME)])
                 ->filter()
                 ->implode(' · '))
-            ->brandLogo(fn (): HtmlString => new HtmlString(e(Setting::lookup(Setting::VENUE_NAME) ?: config('app.name'))))
-            ->colors([
-                'primary' => Color::Blue,
-            ])
+            ->brandLogo(fn (): HtmlString => new HtmlString(sprintf(
+                '<span class="vc-brand"><img class="vc-brand__logo" src="%s" alt="VenueControl"><span class="vc-brand__name">%s</span></span>',
+                e(asset('images/logo.svg')),
+                e(Setting::lookup(Setting::VENUE_NAME) ?: config('app.name')),
+            )))
+            ->brandLogoHeight('2rem')
+            // Farbschema, das der System-Admin unter Verwaltung › System wählt
+            ->colors(fn (): array => ColorScheme::current()->colors())
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('partials.icons')->render())
             ->spa()
             // Wer ein Formular mit ungespeicherten Änderungen verlässt, wird gefragt –
             // auch beim Wechsel über die Navigation (SPA). Reiterwechsel im Event bleiben
@@ -71,13 +76,15 @@ class AppPanelProvider extends PanelProvider
             ->topNavigation()
             ->maxContentWidth(Width::Full)
             // Eigene Stile ohne Build-Schritt (Event-Liste, Workspace; sheet.css: Event-Infos
-            // für Externe, auch auf der Daysheet-Seite), Version = Änderungszeit
+            // für Externe, auch auf der Daysheet-Seite), Version = Änderungszeit; danach
+            // die eigenen Farben des Farbschemas (Phasen, Akzent)
             ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): string => collect(['css/vcontrol.css', 'css/sheet.css'])
                 ->map(fn (string $file): string => sprintf(
                     '<link rel="stylesheet" href="%s?v=%d">',
                     asset($file),
                     @filemtime(public_path($file)) ?: 0,
                 ))
+                ->push('<style>' . ColorScheme::current()->css() . '</style>')
                 ->implode(''))
             // Sicherung ausgeblieben oder gescheitert: Hinweis für System-Admins oben auf jeder Seite
             ->renderHook(PanelsRenderHook::CONTENT_START, function (): string {

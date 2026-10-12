@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Gästeliste – {{ $event->title }}</title>
+    @include('partials.icons')
     <style>
         body { font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: #111; margin: 0; background: #f3f4f6; }
         .toolbar { display: flex; gap: .75rem; justify-content: flex-end; padding: 1rem; }

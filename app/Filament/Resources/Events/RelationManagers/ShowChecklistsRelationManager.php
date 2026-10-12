@@ -127,8 +127,8 @@ class ShowChecklistsRelationManager extends RelationManager
             ->defaultSort('checked_at', 'desc')
             ->columns([
                 TextColumn::make('checked_at')->label('Zeitpunkt')->dateTime('d.m.Y H:i')->sortable(),
-                TextColumn::make('house_rep')->label('House-Rep.')->placeholder('–'),
-                TextColumn::make('promoter_rep')->label('Prom.-Rep.')->placeholder('–'),
+                TextColumn::make('house_rep')->label('House-Rep.')->visibleFrom('md')->placeholder('–'),
+                TextColumn::make('promoter_rep')->label('Prom.-Rep.')->visibleFrom('md')->placeholder('–'),
                 TextColumn::make('checked')
                     ->label('In Ordnung')
                     ->state(function (EventShowChecklist $record): string {
@@ -146,10 +146,11 @@ class ShowChecklistsRelationManager extends RelationManager
                     ->placeholder('–'),
                 IconColumn::make('signatures')
                     ->label('Unterschriften')
+                    ->visibleFrom('md')
                     ->state(fn (EventShowChecklist $record): bool => filled($record->house_rep_signature) && filled($record->promoter_rep_signature))
                     ->boolean()
                     ->alignCenter(),
-                TextColumn::make('created_by_name')->label('Erfasst von')->placeholder('–'),
+                TextColumn::make('created_by_name')->label('Erfasst von')->visibleFrom('lg')->placeholder('–'),
             ])
             ->paginated([25, 50, 'all'])
             ->emptyStateHeading('Noch keine Checkliste')

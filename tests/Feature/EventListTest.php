@@ -94,6 +94,18 @@ class EventListTest extends TestCase
             ->assertCanSeeTableRecords([$fraglich]);
     }
 
+    public function test_auf_dem_handy_datum_status_und_veranstaltung(): void
+    {
+        $table = Livewire::test(ListEvents::class)->instance()->getTable();
+
+        $onPhone = collect($table->getColumns())->filter(fn ($column): bool => $column->getVisibleFrom() === null)->keys()->all();
+        $this->assertSame(['starts_at', 'status', 'title'], $onPhone);
+        $this->assertSame('md', $table->getColumn('promoter_short')->getVisibleFrom());
+
+        // Filter zu zweit nebeneinander statt untereinander
+        $this->assertSame(['default' => 2, 'lg' => 4], $table->getFiltersFormColumns());
+    }
+
     public function test_klick_oeffnet_den_workspace(): void
     {
         $leser = $this->userWith($this->role('catering', ['events' => 'read']));

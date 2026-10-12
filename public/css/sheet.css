@@ -2,6 +2,7 @@
  * Event-Infos für Externe (resources/views/extern/sheet.blade.php): im
  * Extern-Bereich des Panels und auf der Daysheet-Seite. Eigenständig, ohne
  * Filament-Variablen – die Daysheet-Seite lädt nur diese Datei. Druck: A4 hoch.
+ * Akzent aus dem Farbschema (App\Enums\ColorScheme: --vc-accent, --vc-accent-dark).
  */
 
 .vc-sheet {
@@ -9,7 +10,7 @@
     --sheet-muted: #6b7280;
     --sheet-border: #e5e7eb;
     --sheet-card: #ffffff;
-    --sheet-accent: #2563eb;
+    --sheet-accent: var(--vc-accent, #2563eb);
     --sheet-alert-bg: #fef2f2;
     --sheet-alert-fg: #b91c1c;
     color: var(--sheet-fg);
@@ -24,7 +25,7 @@
     --sheet-muted: #9ca3af;
     --sheet-border: rgba(255, 255, 255, 0.1);
     --sheet-card: #18181b;
-    --sheet-accent: #60a5fa;
+    --sheet-accent: var(--vc-accent-dark, #60a5fa);
     --sheet-alert-bg: rgba(220, 38, 38, 0.15);
     --sheet-alert-fg: #fca5a5;
 }

@@ -6,16 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $documentTitle }}</title>
+    @include('partials.icons')
     <link rel="stylesheet" href="{{ asset('css/sheet.css') }}?v={{ @filemtime(public_path('css/sheet.css')) ?: 0 }}">
+    <style>{!! \App\Enums\ColorScheme::current()->css() !!}</style>
     <style>
         body { margin: 0; background: #f3f4f6; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: #111827; }
         .toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; max-width: 60rem; margin: 0 auto; padding: 1rem; }
         .toolbar span { color: #4b5563; }
         .toolbar strong { color: #b45309; }
-        .toolbar button { font: inherit; padding: .5rem 1rem; border-radius: .5rem; border: 1px solid #2563eb; background: #2563eb; color: #fff; cursor: pointer; }
+        .toolbar button { font: inherit; padding: .5rem 1rem; border-radius: .5rem; border: 1px solid var(--vc-accent, #2563eb); background: var(--vc-accent, #2563eb); color: #fff; cursor: pointer; }
         .page { max-width: 60rem; margin: 0 auto 2rem; padding: 0 1rem; }
         .footer { max-width: 60rem; margin: 0 auto 2rem; padding: 0 1rem; color: #6b7280; font-size: .8rem; }
         .footer a { color: inherit; }
+        .footer__logo { vertical-align: -2px; }
         @media print {
             @page { size: A4; margin: 12mm; }
             body { background: #fff; }
@@ -36,6 +39,6 @@
     <main class="page">
         @include('extern.sheet', ['sheet' => $sheet, 'showHead' => true])
     </main>
-    <p class="footer">{{ $venue }} · erstellt mit <a href="{{ config('venuecontrol.website') }}" target="_blank" rel="noopener">VenueControl</a></p>
+    <p class="footer">{{ $venue }} · erstellt mit <a href="{{ config('venuecontrol.website') }}" target="_blank" rel="noopener"><img src="{{ asset('images/logo.svg') }}" alt="" width="14" height="14" class="footer__logo"> VenueControl</a></p>
 </body>
 </html>

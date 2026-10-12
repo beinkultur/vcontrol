@@ -88,6 +88,7 @@ class TradeResource extends Resource
             ->columns([
                 TextColumn::make('short_name')
                     ->label('Kurzname')
+                    ->visibleFrom('md')
                     ->searchable()
                     ->sortable(),
                 // Lange Einträge brechen um – sonst wird die Liste breiter als der Bildschirm
@@ -98,10 +99,12 @@ class TradeResource extends Resource
                     ->sortable(),
                 TextColumn::make('categories')
                     ->label('Leistungsbereiche')
+                    ->visibleFrom('md')
                     ->badge()
                     ->wrap(),
                 TextColumn::make('city')
                     ->label('Ort')
+                    ->visibleFrom('md')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('phone')
@@ -109,6 +112,7 @@ class TradeResource extends Resource
                     ->toggleable(),
                 TextColumn::make('email')
                     ->label('E-Mail')
+                    ->visibleFrom('lg')
                     ->copyable()
                     ->toggleable(),
             ])

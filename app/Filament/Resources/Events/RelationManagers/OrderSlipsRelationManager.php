@@ -140,9 +140,10 @@ class OrderSlipsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('ordered_at')->label('Datum')->dateTime('d.m.Y H:i')->sortable(),
                 TextColumn::make('ordered_from')->label('Bestellt von')->wrap()->searchable(),
-                TextColumn::make('created_by_name')->label('Bei wem')->placeholder('–'),
+                TextColumn::make('created_by_name')->label('Bei wem')->visibleFrom('lg')->placeholder('–'),
                 TextColumn::make('items_count')
                     ->label('Positionen')
+                    ->visibleFrom('md')
                     ->state(fn (OrderSlip $record): int => $record->items->count())
                     ->alignEnd(),
                 TextColumn::make('total')
@@ -151,10 +152,11 @@ class OrderSlipsRelationManager extends RelationManager
                     ->alignEnd(),
                 IconColumn::make('signature')
                     ->label('Unterschr.')
+                    ->visibleFrom('md')
                     ->state(fn (OrderSlip $record): bool => filled($record->signature))
                     ->boolean()
                     ->alignCenter(),
-                IconColumn::make('is_settled')->label('Abgerechnet')->boolean()->alignCenter(),
+                IconColumn::make('is_settled')->label('Abgerechnet')->visibleFrom('md')->boolean()->alignCenter(),
             ])
             ->paginated([25, 50, 'all'])
             ->emptyStateHeading('Noch keine Bestellscheine')

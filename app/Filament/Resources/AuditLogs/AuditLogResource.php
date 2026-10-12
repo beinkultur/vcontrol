@@ -137,16 +137,17 @@ class AuditLogResource extends Resource
             ->defaultSort('id', 'desc')
             ->columns([
                 TextColumn::make('created_at')->label('Zeitpunkt')->dateTime('d.m.Y H:i')->sortable(),
-                TextColumn::make('user_name')->label('Benutzer')->placeholder('–')->searchable(),
+                TextColumn::make('user_name')->label('Benutzer')->visibleFrom('md')->placeholder('–')->searchable(),
                 TextColumn::make('event.title')
                     ->label('Event')
+                    ->visibleFrom('lg')
                     ->placeholder('–')
                     ->description(fn (AuditLog $record): ?string => $record->event?->starts_at?->format('d.m.Y'))
                     ->url(fn (AuditLog $record): ?string => $record->event === null ? null
                         : EventResource::getUrl(EventResource::canEdit($record->event) ? 'edit' : 'view', ['record' => $record->event])),
-                TextColumn::make('subject')->label('Bereich')->formatStateUsing(fn (string $state): string => AuditPresenter::subject($state)),
-                TextColumn::make('subject_label')->label('Datensatz')->placeholder('–')->limit(40)->searchable(),
-                TextColumn::make('action')->label('Aktion')->badge()
+                TextColumn::make('subject')->label('Bereich')->visibleFrom('lg')->formatStateUsing(fn (string $state): string => AuditPresenter::subject($state)),
+                TextColumn::make('subject_label')->label('Datensatz')->visibleFrom('lg')->placeholder('–')->limit(40)->searchable(),
+                TextColumn::make('action')->label('Aktion')->visibleFrom('md')->badge()
                     ->formatStateUsing(fn (string $state): string => AuditPresenter::action($state))
                     ->color(fn (string $state): string => AuditPresenter::actionColor($state)),
                 TextColumn::make('summary')

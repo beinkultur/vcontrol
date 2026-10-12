@@ -37,6 +37,9 @@ class Setting extends Model
     /** Geheimer Schlüssel in der Adresse, die der KAS-Cronjob für die nächtliche Sicherung aufruft */
     public const BACKUP_CRON_KEY = 'backup_cron_key';
 
+    /** Farbschema der Oberfläche (App\Enums\ColorScheme), nur der System-Admin ändert es */
+    public const COLOR_SCHEME = 'color_scheme';
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';

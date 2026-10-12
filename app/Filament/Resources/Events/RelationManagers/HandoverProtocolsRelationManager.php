@@ -118,9 +118,10 @@ class HandoverProtocolsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('handed_at')->label('Datum')->dateTime('d.m.Y H:i')->sortable(),
                 TextColumn::make('handed_to')->label('An wen')->searchable(),
-                TextColumn::make('created_by_name')->label('Von')->placeholder('–'),
+                TextColumn::make('created_by_name')->label('Von')->visibleFrom('lg')->placeholder('–'),
                 TextColumn::make('items_list')
                     ->label('Artikel')
+                    ->visibleFrom('md')
                     ->state(fn (HandoverProtocol $record): string => $record->items->pluck('item_name')->implode(', '))
                     ->limit(60)
                     ->tooltip(fn (HandoverProtocol $record): string => $record->items->pluck('item_name')->implode(', ')),
@@ -131,6 +132,7 @@ class HandoverProtocolsRelationManager extends RelationManager
                     ->color(fn (HandoverProtocol $record): string => $record->isOpen() ? 'warning' : 'success'),
                 IconColumn::make('signature')
                     ->label('Unterschr.')
+                    ->visibleFrom('md')
                     ->state(fn (HandoverProtocol $record): bool => filled($record->signature))
                     ->boolean()
                     ->alignCenter(),

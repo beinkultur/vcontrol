@@ -65,17 +65,18 @@ class OrderSlipResource extends Resource
                     ->description(fn (OrderSlip $record): ?string => $record->event?->starts_at?->format('d.m.Y'))
                     ->wrap()
                     ->searchable(),
-                TextColumn::make('ordered_from')->label('Bestellt von')->wrap()->searchable(),
-                TextColumn::make('created_by_name')->label('Bei wem')->placeholder('–'),
+                TextColumn::make('ordered_from')->label('Bestellt von')->visibleFrom('md')->wrap()->searchable(),
+                TextColumn::make('created_by_name')->label('Bei wem')->visibleFrom('lg')->placeholder('–'),
                 TextColumn::make('items_count')
                     ->label('Positionen')
+                    ->visibleFrom('md')
                     ->state(fn (OrderSlip $record): int => $record->items->count())
                     ->alignEnd(),
                 TextColumn::make('total')
                     ->label('Summe')
                     ->state(fn (OrderSlip $record): string => $record->items->isEmpty() ? '–' : OrderSlip::money($record->total()))
                     ->alignEnd(),
-                IconColumn::make('is_settled')->label('Abgerechnet')->boolean()->alignCenter(),
+                IconColumn::make('is_settled')->label('Abgerechnet')->visibleFrom('md')->boolean()->alignCenter(),
             ])
             ->filters([
                 TernaryFilter::make('is_settled')->label('Abgerechnet'),

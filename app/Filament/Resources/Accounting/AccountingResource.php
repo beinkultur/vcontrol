@@ -94,10 +94,12 @@ class AccountingResource extends Resource
                     ->sortable(),
                 TextColumn::make('va_id')
                     ->label('VA-ID')
+                    ->visibleFrom('lg')
                     ->fontFamily(FontFamily::Mono)
                     ->searchable(),
                 TextColumn::make('finance.contract_status')
                     ->label('Vertrag')
+                    ->visibleFrom('md')
                     ->toggleable(),
                 TextColumn::make('finance.accounting_status')
                     ->label('FIBU-Status')
@@ -105,10 +107,12 @@ class AccountingResource extends Resource
                     ->wrap(),
                 TextColumn::make('finance.rent')
                     ->label('Miete')
+                    ->visibleFrom('md')
                     ->money('EUR', locale: 'de')
                     ->alignEnd(),
                 TextColumn::make('operation.bus_power')
                     ->label('Bus-Strom')
+                    ->visibleFrom('lg')
                     ->tooltip('Anschlüsse, einzeln abzurechnen')
                     ->color(fn (?int $state): string => $state > 0 ? 'warning' : 'gray')
                     ->alignEnd()
@@ -116,6 +120,7 @@ class AccountingResource extends Resource
                 // Wie in der PHP-Version aus der gespeicherten Summe; leer zählt 0.
                 TextColumn::make('extra_podests')
                     ->label('Zus. Podeste')
+                    ->visibleFrom('lg')
                     ->state(fn (Event $record): int => StagePodests::billableExtra($record->stage?->podest_total))
                     ->color(fn (int $state): string => $state > 0 ? 'warning' : 'gray')
                     ->tooltip(fn (): string => 'zusätzlich zu berechnen, ' . StagePodests::includedInRent() . ' sind im Mietpreis enthalten')
@@ -123,16 +128,19 @@ class AccountingResource extends Resource
                     ->toggleable(),
                 TextColumn::make('finance.invoice_numbers')
                     ->label('Rechnungen')
+                    ->visibleFrom('lg')
                     ->badge()
                     ->color('gray')
                     ->wrap()
                     ->toggleable(),
                 IconColumn::make('finance.accounting_closed')
                     ->label('Abgeschl.')
+                    ->visibleFrom('md')
                     ->boolean()
                     ->alignCenter(),
                 TextColumn::make('incoming_invoices')
                     ->label('Eing.-Rg.')
+                    ->visibleFrom('md')
                     ->state(fn (Event $record): ?string => IncomingInvoices::summary($record))
                     ->color(fn (Event $record): string => IncomingInvoices::settled($record) ? 'success' : 'warning')
                     ->tooltip('eingegangen / erwartet')

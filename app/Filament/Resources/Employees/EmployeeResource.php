@@ -105,14 +105,17 @@ class EmployeeResource extends Resource
                     ->searchable(['first_name', 'last_name'])
                     ->sortable(),
                 TextColumn::make('initials')
-                    ->label('Kürzel'),
+                    ->label('Kürzel')
+                    ->visibleFrom('md'),
                 TextColumn::make('positions')
                     ->label('Positionen')
+                    ->visibleFrom('md')
                     ->badge(),
                 TextColumn::make('phone')
                     ->label('Telefon'),
                 TextColumn::make('email')
                     ->label('E-Mail')
+                    ->visibleFrom('lg')
                     ->copyable(),
             ])
             ->defaultSort('last_name')

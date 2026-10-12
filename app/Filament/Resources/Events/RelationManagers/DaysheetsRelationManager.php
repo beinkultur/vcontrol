@@ -35,6 +35,7 @@ class DaysheetsRelationManager extends RelationManager
                     ->dateTime('d.m.Y H:i'),
                 TextColumn::make('created_by_name')
                     ->label('Von')
+                    ->visibleFrom('md')
                     ->placeholder('–'),
                 TextColumn::make('recipients')
                     ->label('Empfänger')
@@ -42,9 +43,11 @@ class DaysheetsRelationManager extends RelationManager
                     ->wrap(),
                 TextColumn::make('expires_at')
                     ->label('Gültig bis')
+                    ->visibleFrom('md')
                     ->dateTime('d.m.Y H:i'),
                 TextColumn::make('status')
                     ->label('Link')
+                    ->visibleFrom('md')
                     ->state(fn (Daysheet $record): string => $record->statusLabel())
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {

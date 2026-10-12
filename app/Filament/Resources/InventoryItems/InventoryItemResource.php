@@ -72,6 +72,7 @@ class InventoryItemResource extends Resource
                     ->sortable(),
                 TextColumn::make('category.name')
                     ->label('Kategorie')
+                    ->visibleFrom('md')
                     ->sortable(),
                 IconColumn::make('is_active')
                     ->label('Aktiv')

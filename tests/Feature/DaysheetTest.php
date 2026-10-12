@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ColorScheme;
 use App\Enums\ServiceCode;
 use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Events\Pages\EditEvent;
@@ -195,6 +196,18 @@ class DaysheetTest extends TestCase
         $this->travelTo(Carbon::parse('2026-10-07 10:00'));
         $daysheet->update(['revoked_at' => now()]);
         $this->get('/daysheet/' . $token)->assertStatus(410)->assertSee('gesperrt');
+    }
+
+    public function test_daysheet_seite_im_farbschema_mit_logo(): void
+    {
+        Setting::put(Setting::COLOR_SCHEME, ColorScheme::LilaGruen->value);
+        [, $token] = $this->send();
+
+        $this->get('/daysheet/' . $token)
+            ->assertOk()
+            ->assertSee('--vc-accent:#660B64;', false)
+            ->assertSee('<link rel="apple-touch-icon"', false)
+            ->assertSee('erstellt mit <a href="https://www.vcontrol.eu" target="_blank" rel="noopener"><img src="' . asset('images/logo.svg') . '"', false);
     }
 
     public function test_dateien_ueber_den_link_ohne_verborgene(): void

@@ -74,11 +74,11 @@ class ArticleResource extends Resource
                 ->orderBy(ArticleCategory::query()->select('sort_order')->whereColumn('article_categories.id', 'articles.category_id'))
                 ->orderBy('name'))
             ->columns([
-                TextColumn::make('category.name')->label('Kategorie')->badge()->color('gray'),
+                TextColumn::make('category.name')->label('Kategorie')->visibleFrom('md')->badge()->color('gray'),
                 TextColumn::make('name')->label('Artikel')->searchable(),
-                TextColumn::make('unit')->label('Einheit')->placeholder('–'),
+                TextColumn::make('unit')->label('Einheit')->visibleFrom('md')->placeholder('–'),
                 TextColumn::make('price')->label('Preis')->money('EUR', locale: 'de')->alignEnd(),
-                IconColumn::make('is_active')->label('Aktiv')->boolean()->alignCenter(),
+                IconColumn::make('is_active')->label('Aktiv')->visibleFrom('md')->boolean()->alignCenter(),
             ])
             ->filters([
                 SelectFilter::make('category_id')->label('Kategorie')->relationship('category', 'name'),

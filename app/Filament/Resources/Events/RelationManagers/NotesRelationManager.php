@@ -68,6 +68,7 @@ class NotesRelationManager extends RelationManager
                     ->searchable(['subject', 'body']),
                 IconColumn::make('hidden_from_externals')
                     ->label('Extern')
+                    ->visibleFrom('md')
                     ->boolean()
                     ->trueIcon(Heroicon::OutlinedEyeSlash)
                     ->falseIcon(Heroicon::OutlinedEye)
@@ -76,6 +77,7 @@ class NotesRelationManager extends RelationManager
                     ->tooltip(fn (EventNote $record): string => $record->hidden_from_externals ? 'Für Externe verborgen' : 'Für Externe sichtbar'),
                 TextColumn::make('created_by_name')
                     ->label('Von')
+                    ->visibleFrom('md')
                     ->description(fn (EventNote $record): ?string => filled($record->updated_by_name) && $record->updated_by_name !== $record->created_by_name
                         ? 'geändert von ' . $record->updated_by_name
                         : null),

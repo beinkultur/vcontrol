@@ -91,13 +91,16 @@ class CalendarResource extends Resource
                     ->searchable(),
                 TextColumn::make('key')
                     ->label('Kennung')
+                    ->visibleFrom('md')
                     ->fontFamily(FontFamily::Mono),
                 TextColumn::make('freitermin_status')
                     ->label('Freitermin-Abfrage')
+                    ->visibleFrom('md')
                     ->formatStateUsing(fn (?string $state): string => self::FREITERMIN_OPTIONS[$state] ?? 'Zählt nicht')
                     ->placeholder('Zählt nicht'),
                 IconColumn::make('is_system')
                     ->label('System')
+                    ->visibleFrom('md')
                     ->boolean()
                     ->alignCenter(),
             ])

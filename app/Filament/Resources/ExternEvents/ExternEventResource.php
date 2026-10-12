@@ -97,6 +97,7 @@ class ExternEventResource extends Resource
                     ->searchable(),
                 TextColumn::make('promoter.name')
                     ->label('Veranstalter')
+                    ->visibleFrom('md')
                     ->placeholder('–'),
                 TextColumn::make('schedule.start_time')
                     ->label('Beginn')
@@ -104,6 +105,7 @@ class ExternEventResource extends Resource
                     ->placeholder('–'),
                 TextColumn::make('status')
                     ->label('Status')
+                    ->visibleFrom('md')
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => EventDisplay::statusLabel($state))
                     ->color(fn (?string $state): string => EventDisplay::statusKind($state) === 'cancelled' ? 'danger' : 'gray'),

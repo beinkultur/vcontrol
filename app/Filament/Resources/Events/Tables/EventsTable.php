@@ -27,6 +27,8 @@ use Illuminate\Support\HtmlString;
  * Die Event-Liste – Herzstück der App. Spalten, Reihenfolge und Filter wie in
  * der PHP-Version: nach Monaten gruppiert, voreingestellt offen und ab heute,
  * schmale Zeilen (Stil in public/css/vcontrol.css), ein Klick öffnet das Event.
+ * Auf dem Handy nur Datum, Status und Veranstaltung, ab Tablet (md) und Laptop
+ * (lg) nach und nach die übrigen Spalten.
  */
 class EventsTable
 {
@@ -64,6 +66,7 @@ class EventsTable
                 TextColumn::make('promoter_short')
                     ->label('Veranstalter')
                     ->state(fn (Event $record): ?string => EventDisplay::promoterShort($record))
+                    ->visibleFrom('md')
                     ->tooltip(fn (Event $record): ?string => $record->promoter?->name)
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
                         'promoter',
@@ -71,25 +74,30 @@ class EventsTable
                     )),
                 TextColumn::make('category')
                     ->label('VA-Kat.')
+                    ->visibleFrom('lg')
                     ->state(fn (Event $record): ?string => $record->event_type2 ?: $record->event_type1)
                     ->tooltip(fn (Event $record): ?string => collect([$record->event_type1, $record->event_type2])->filter()->implode(' / ') ?: null)
                     ->color('gray'),
                 TextColumn::make('project_lead')
                     ->label('PL')
+                    ->visibleFrom('lg')
                     ->state(fn (Event $record): ?string => EventDisplay::projectLeadShort($record))
                     ->tooltip(fn (Event $record): ?string => EventDisplay::projectLeadName($record)),
                 TextColumn::make('pax_expected')
                     ->label('PAX')
+                    ->visibleFrom('md')
                     ->numeric(thousandsSeparator: '.')
                     ->alignEnd(),
                 TextColumn::make('seated')
                     ->label('Best.')
+                    ->visibleFrom('lg')
                     ->state(fn (Event $record): ?string => EventDisplay::fullySeated($record) ? '🪑' : null)
                     ->tooltip(fn (Event $record): ?string => EventDisplay::fullySeated($record) ? 'Bestuhlt – Stühle extern anmieten' : null)
                     ->alignCenter(),
                 // Wie in der PHP-Version: gelb bei anderer Höhe als 1,4 m, rot bei mehr Podesten als im Bestand
                 TextColumn::make('stage_summary')
                     ->label('Bühne')
+                    ->visibleFrom('lg')
                     ->state(fn (Event $record): string => StagePodests::summary($record->stage)['text'])
                     ->badge(fn (Event $record): bool => StagePodests::summary($record->stage)['alert'])
                     ->color(fn (Event $record): string => match (true) {
@@ -101,6 +109,7 @@ class EventsTable
                 // Daysheet verschickt (Link nicht gesperrt): nur dann ein grüner Haken
                 IconColumn::make('daysheet_sent_at')
                     ->label(new HtmlString('<span title="Daysheet versendet">DS</span>'))
+                    ->visibleFrom('md')
                     ->icon(fn (?string $state): ?Heroicon => filled($state) ? Heroicon::CheckCircle : null)
                     ->color('success')
                     ->size(IconSize::Small)
@@ -110,11 +119,13 @@ class EventsTable
                     ->alignCenter(),
                 TextColumn::make('va_id')
                     ->label('VA-ID')
+                    ->visibleFrom('lg')
                     ->fontFamily(FontFamily::Mono)
                     ->color('gray')
                     ->searchable(),
                 ViewColumn::make('progress')
                     ->label('Fortschritt')
+                    ->visibleFrom('md')
                     ->view('filament.events.list-progress'),
             ])
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
@@ -177,7 +188,8 @@ class EventsTable
                     ->searchable()
                     ->preload(),
             ], layout: FiltersLayout::AboveContent)
-            ->filtersFormColumns(4)
+            // Handy: zwei Filter je Zeile statt vier untereinander
+            ->filtersFormColumns(['default' => 2, 'lg' => 4])
             ->deferFilters(false)
             ->hiddenFilterIndicators()
             ->paginated([50, 100, 'all'])

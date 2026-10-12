@@ -115,6 +115,18 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
 - Eigene Stile ohne Build-Schritt: `public/css/vcontrol.css`, eingebunden per
   Render-Hook im `AppPanelProvider`. Tailwind-Klassen in eigenen Blade-Dateien
   wirken nicht (Filament bringt nur die eigenen, fertig gebauten Klassen mit).
+- Farben nur über das Farbschema (`App\Enums\ColorScheme`, Setting `color_scheme`,
+  wählbar unter Verwaltung › System): Filament-Farben (`--primary-600` …) oder die
+  Variablen des Schemas (`--vc-buchung`, `--vc-planung`, `--vc-durchfuehrung`,
+  `--vc-accent`), keine neuen festen Hex-Werte für Markenfarben. Ein neues Schema
+  ist ein neuer Fall im Enum. Logo und Favicons (`public/images/logo.svg`,
+  `favicon.svg`, `public/favicon.ico`, `apple-touch-icon.png`, `logo-mail.png`)
+  stammen aus `bk-avatar-kreis_schwarz.eps`; Seiten ohne Panel binden
+  `partials.icons` ein.
+- Handy: Tabellenspalten, die unter 768 px (oder 1024 px) nicht nötig sind,
+  bekommen `->visibleFrom('md')` bzw. `('lg')` – auf dem Handy bleiben zwei bis
+  drei Spalten. Formulare: Speichern-Leiste bleibt unten stehen, enge
+  Innenabstände (vcontrol.css, Abschnitt „Handy und Tablet“).
 - Nach jeder Änderung: Tests grün, `php artisan vc:check-access` gleich,
   `php artisan vc:smoke` fehlerfrei. Letzteres rendert als Admin jede Seite mit den
   echten Daten (je Resource die neuesten Datensätze und den ältesten) und findet,

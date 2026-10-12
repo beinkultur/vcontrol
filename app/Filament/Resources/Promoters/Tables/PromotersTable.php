@@ -18,6 +18,7 @@ class PromotersTable
             ->columns([
                 TextColumn::make('customer_no')
                     ->label('Kd.-Nr.')
+                    ->visibleFrom('lg')
                     ->fontFamily(FontFamily::Mono)
                     ->searchable()
                     ->sortable(),
@@ -34,20 +35,24 @@ class PromotersTable
                     ->sortable(),
                 TextColumn::make('city')
                     ->label('Ort')
+                    ->visibleFrom('md')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('contacts_count')
                     ->label('Ansprechpartner')
+                    ->visibleFrom('md')
                     ->counts('contacts')
                     ->alignCenter()
                     ->sortable(),
                 TextColumn::make('email')
                     ->label('E-Mail')
+                    ->visibleFrom('lg')
                     ->searchable()
                     ->copyable()
                     ->toggleable(),
                 TextColumn::make('updated_at')
                     ->label('Geändert')
+                    ->visibleFrom('lg')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

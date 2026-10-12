@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>Daysheet nicht mehr verfügbar</title>
+    @include('partials.icons')
     <style>
         body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f3f4f6; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #111827; }
         .box { max-width: 28rem; margin: 1rem; padding: 1.5rem 2rem; background: #fff; border-radius: .75rem; box-shadow: 0 1px 3px rgba(0, 0, 0, .1); }

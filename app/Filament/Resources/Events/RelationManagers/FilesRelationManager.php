@@ -87,6 +87,7 @@ class FilesRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('tag.name')
                     ->label('Tag')
+                    ->visibleFrom('md')
                     ->badge()
                     ->color('gray'),
                 TextColumn::make('display_name')
@@ -99,6 +100,7 @@ class FilesRelationManager extends RelationManager
                     ->searchable(['title', 'original_name']),
                 IconColumn::make('hidden_from_externals')
                     ->label('Extern')
+                    ->visibleFrom('md')
                     ->boolean()
                     ->trueIcon(Heroicon::OutlinedEyeSlash)
                     ->falseIcon(Heroicon::OutlinedEye)
@@ -110,10 +112,12 @@ class FilesRelationManager extends RelationManager
                     ->state(fn (EventFile $record): string => ($record->uploaded_at?->format('d.m.Y H:i') ?? '–') . ' · v' . $record->version),
                 TextColumn::make('size')
                     ->label('Größe')
+                    ->visibleFrom('md')
                     ->state(fn (EventFile $record): string => $record->sizeLabel())
                     ->alignEnd(),
                 TextColumn::make('created_by_name')
                     ->label('Von')
+                    ->visibleFrom('lg')
                     ->description(fn (EventFile $record): ?string => filled($record->updated_by_name) && $record->updated_by_name !== $record->created_by_name
                         ? 'geändert von ' . $record->updated_by_name
                         : null),

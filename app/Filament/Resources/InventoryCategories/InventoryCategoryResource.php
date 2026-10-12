@@ -64,6 +64,7 @@ class InventoryCategoryResource extends Resource
                     ->alignCenter(),
                 IconColumn::make('is_active')
                     ->label('Aktiv')
+                    ->visibleFrom('sm')
                     ->boolean()
                     ->alignCenter(),
             ])

@@ -60,10 +60,11 @@ class HandoverProtocolResource extends Resource
                     ->label('Event')
                     ->description(fn (HandoverProtocol $record): ?string => $record->event?->starts_at?->format('d.m.Y'))
                     ->searchable(),
-                TextColumn::make('handed_to')->label('An wen')->searchable(),
-                TextColumn::make('created_by_name')->label('Von')->placeholder('–'),
+                TextColumn::make('handed_to')->label('An wen')->visibleFrom('md')->searchable(),
+                TextColumn::make('created_by_name')->label('Von')->visibleFrom('lg')->placeholder('–'),
                 TextColumn::make('items_list')
                     ->label('Artikel')
+                    ->visibleFrom('md')
                     ->state(fn (HandoverProtocol $record): string => $record->items->pluck('item_name')->implode(', '))
                     ->limit(60)
                     ->tooltip(fn (HandoverProtocol $record): string => $record->items->pluck('item_name')->implode(', ')),
@@ -72,7 +73,7 @@ class HandoverProtocolResource extends Resource
                     ->state(fn (HandoverProtocol $record): string => $record->statusLabel())
                     ->badge()
                     ->color(fn (HandoverProtocol $record): string => $record->isOpen() ? 'warning' : 'success'),
-                TextColumn::make('returned_at')->label('Zurück am')->dateTime('d.m.Y H:i')->placeholder('–'),
+                TextColumn::make('returned_at')->label('Zurück am')->visibleFrom('md')->dateTime('d.m.Y H:i')->placeholder('–'),
             ])
             ->filters([
                 SelectFilter::make('status')
