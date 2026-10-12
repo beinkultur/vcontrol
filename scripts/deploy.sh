@@ -40,8 +40,11 @@ CLEAN_DIRS='app|config|database|resources|routes|tests'
 
 cd "$(dirname "$0")/.."
 
+# vendor/ und node_modules/ nur ganz oben: ohne den führenden / träfe die Regel
+# jeden Ordner dieses Namens, auch resources/views/vendor (eigene Mail-Vorlagen)
+# und lang/vendor (Filament-Texte) – beides kam bis 12.10.2026 nie auf den Server.
 EXCLUDES=(
-    --exclude .git/ --exclude vendor/ --exclude node_modules/
+    --exclude .git/ --exclude /vendor/ --exclude /node_modules/
     --exclude .env --exclude '.env.*' --exclude auth.json --exclude .DS_Store
     --exclude storage/ --exclude bootstrap/cache/
     --exclude database/database.sqlite

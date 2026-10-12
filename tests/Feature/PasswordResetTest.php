@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Models\AuditLog;
+use App\Models\Setting;
+use App\Models\User;
 use Filament\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Filament\Auth\Pages\PasswordReset\ResetPassword;
 use Filament\Facades\Filament;
@@ -84,6 +86,26 @@ class PasswordResetTest extends TestCase
             ->call('resetPassword');
 
         $this->assertFalse(Hash::check('Neues-Passwort-2026', (string) $user->fresh()->password));
+    }
+
+    public function test_mail_mit_dem_fuss_der_daysheet_mail(): void
+    {
+        Setting::put(Setting::VENUE_NAME, 'Inselpark Arena');
+        $notification = new ResetPasswordNotification('abc');
+        $notification->url = 'https://example.org/passwort/neu';
+        User::factory()->create()->notify($notification);
+
+        $email = app('mailer')->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $html = $email->getHtmlBody();
+        $this->assertStringContainsString('https://example.org/passwort/neu', $html);
+        $this->assertStringContainsString('Inselpark Arena', $html);
+        $this->assertMatchesRegularExpression('#erstellt mit <a href="https://www\.vcontrol\.eu"[^>]*>VenueControl</a>.*?<img src="cid:[^"]+" width="40" height="40"#s', $html);
+        $this->assertStringNotContainsString('Alle Rechte vorbehalten', $html);
+        $this->assertCount(1, $email->getAttachments(), 'nur das Logo, eingebettet');
+
+        // Textfassung: dieselbe Zeile, ohne Bild
+        $this->assertStringContainsString('Inselpark Arena · erstellt mit [VenueControl](https://www.vcontrol.eu)', $email->getTextBody());
+        $this->assertStringNotContainsString('<img', $email->getTextBody());
     }
 
     public function test_scheitert_der_mailversand_bleibt_die_antwort_gleich(): void

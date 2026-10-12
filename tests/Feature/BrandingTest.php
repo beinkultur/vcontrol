@@ -100,10 +100,10 @@ class BrandingTest extends TestCase
             $this->assertStringContainsString('viewBox="0 0 591 591"', file_get_contents(public_path($svg)), $svg);
         }
         $this->assertSame([180, 180], array_slice(getimagesize(public_path('apple-touch-icon.png')), 0, 2));
-        $this->assertSame([48, 48], array_slice(getimagesize(public_path('images/logo-mail.png')), 0, 2));
+        $this->assertSame([120, 120], array_slice(getimagesize(public_path('images/logo-mail.png')), 0, 2));
     }
 
-    public function test_logo_klein_im_fuss_der_daysheet_mail(): void
+    public function test_logo_unter_der_zeile_im_fuss_der_daysheet_mail(): void
     {
         $link = 'https://example.org/daysheet/abc';
         Mail::to('buero@halle.de')->send(new DaysheetMail('Daysheet', "Hier:\n\n{$link}", link: $link));
@@ -113,6 +113,7 @@ class BrandingTest extends TestCase
 
         $this->assertNotNull($logo, 'Logo hängt eingebettet an der Mail');
         $this->assertSame('image/png', $logo->getMediaType() . '/' . $logo->getMediaSubtype());
-        $this->assertMatchesRegularExpression('#erstellt mit <a href="https://www.vcontrol.eu"[^>]*><img src="cid:[^"]+" width="16" height="16"#', $email->getHtmlBody());
+        $this->assertMatchesRegularExpression('#erstellt mit <a href="https://www\.vcontrol\.eu"[^>]*>VenueControl</a>.*?<img src="cid:[^"]+" width="40" height="40"#s', $email->getHtmlBody());
+        $this->assertStringNotContainsString('<img', $email->getTextBody());
     }
 }

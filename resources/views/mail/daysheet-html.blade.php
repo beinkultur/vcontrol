@@ -3,8 +3,8 @@
     Mails (etwa „Passwort vergessen“). Der Text aus dem Versand-Dialog steht als
     eigenes HTML in <p>, damit Markdown ihn nicht umdeutet (ein „*“ oder „#“ bleibt,
     was es ist); e() maskiert ihn. Nicht einrücken: Markdown macht sonst Code daraus.
-    Das Logo im Fuß hängt eingebettet an der Mail ($message->embed), so zeigen es
-    Mailprogramme auch, die Bilder aus dem Netz erst nach Rückfrage laden.
+    Im Fuß unter „… erstellt mit VenueControl“ das Logo (vendor/mail/html/logo,
+    wie in der Passwort-Mail).
 --}}
 <x-mail::layout>
 <x-slot:header>
@@ -33,7 +33,9 @@ Sollten Sie Schwierigkeiten haben, die Schaltfläche „Daysheet öffnen“ zu k
 
 <x-slot:footer>
 <x-mail::footer>
-{{ $venue }} · erstellt mit [<img src="{{ $message->embed(public_path('images/logo-mail.png')) }}" width="16" height="16" alt="" style="vertical-align: -3px; border: 0;"> VenueControl]({{ config('venuecontrol.website') }})
+{{ $venue }} · erstellt mit [VenueControl]({{ config('venuecontrol.website') }})
+
+<x-mail::logo :mail="$message" />
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>
