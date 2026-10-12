@@ -60,6 +60,10 @@ class AppPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->spa()
+            // Wer ein Formular mit ungespeicherten Änderungen verlässt, wird gefragt –
+            // auch beim Wechsel über die Navigation (SPA). Reiterwechsel im Event bleiben
+            // in derselben Seite und verlieren nichts.
+            ->unsavedChangesAlerts()
             ->topNavigation()
             ->maxContentWidth(Width::Full)
             // Eigene Stile ohne Build-Schritt (Event-Liste, Workspace; sheet.css: Event-Infos

@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\StagePlanPage;
 use App\Http\Controllers\EventFileController;
 use App\Models\Event;
 use App\Models\EventStage;
 use App\Support\StagePlan;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -135,6 +137,36 @@ class StagePlanTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'image/svg+xml; charset=utf-8')
             ->assertHeader('Content-Security-Policy', EventFileController::SANDBOX);
+    }
+
+    public function test_buehnenplan_anzeigen_speichert_vorher(): void
+    {
+        $this->actingAs($this->admin());
+
+        Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
+            ->fillForm(['stage.width' => 16])
+            ->callAction(TestAction::make('stagePlan')->schemaComponent('stagePlanActions'))
+            ->assertHasNoFormErrors()
+            ->assertRedirect(EventResource::getUrl('stage-plan', ['record' => $this->event]));
+
+        $this->assertSame(16, (int) $this->event->stage()->firstOrFail()->width);
+
+        // Ungültiges wird nicht gespeichert, und es geht nicht weiter zum Plan
+        Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
+            ->fillForm(['stage.width' => 120])
+            ->callAction(TestAction::make('stagePlan')->schemaComponent('stagePlanActions'))
+            ->assertHasFormErrors(['stage.width'])
+            ->assertNoRedirect();
+
+        $this->assertSame(16, (int) $this->event->stage()->firstOrFail()->width);
+    }
+
+    public function test_fragt_vor_dem_verlassen_mit_ungespeicherten_aenderungen(): void
+    {
+        $this->actingAs($this->admin())
+            ->get(EventResource::getUrl('edit', ['record' => $this->event]))
+            ->assertOk()
+            ->assertSee('setUpSpaModeUnsavedDataChangesAlert', false);
     }
 
     public function test_verlinkt_im_workspace(): void

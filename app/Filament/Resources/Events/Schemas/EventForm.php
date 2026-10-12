@@ -7,6 +7,7 @@ use App\Access\Level;
 use App\Enums\AssignmentRole;
 use App\Enums\OptionField;
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\DamagesRelationManager;
@@ -59,6 +60,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
+use Livewire\Component;
 
 /**
  * Event-Workspace wie in der PHP-Version: Übersicht (Dashboard) und die drei
@@ -145,8 +147,16 @@ class EventForm
                                         Action::make('stagePlan')
                                             ->label('Bühnenplan anzeigen')
                                             ->icon(Heroicon::OutlinedMap)
-                                            ->url(fn (Event $record): string => EventResource::getUrl('stage-plan', ['record' => $record])),
-                                    ])->alignEnd(),
+                                            // Erst speichern, damit der Plan die eben eingetragenen Maße zeigt.
+                                            // Scheitert die Prüfung, bleibt man im Formular und sieht den Fehler.
+                                            // In der Lese-Ansicht (ViewEvent) gibt es nichts zu speichern.
+                                            ->action(function (Component $livewire, Event $record): void {
+                                                if ($livewire instanceof EditEvent) {
+                                                    $livewire->save(shouldRedirect: false, shouldSendSavedNotification: false);
+                                                }
+                                                $livewire->redirect(EventResource::getUrl('stage-plan', ['record' => $record]), navigate: true);
+                                            }),
+                                    ])->key('stagePlanActions')->alignEnd(),
                                     self::stage(),
                                 ]),
                                 self::tab('Personal', 'personal')->schema([
