@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\DB;
  * Je Eingangsrechnung zwei Schalter: „erwartet“ und „Rechnung da“. Der zweite
  * erscheint sofort, wenn der erste an ist. Gespeichert wird nur, was vom
  * automatischen Stand abweicht – unberührte Positionen folgen weiter der
- * Automatik (Mobiliar bei „bestuhlt“, Cobra bei Haus-Delay).
+ * Automatik (Mobiliar bei „bestuhlt“). Cobra – Haus-Delay ist bei Haus-Delay
+ * Pflicht: „erwartet“ ist dann an und gesperrt.
  */
 final class IncomingInvoiceFields
 {
@@ -32,6 +33,11 @@ final class IncomingInvoiceFields
                         ->label('erwartet')
                         ->live()
                         ->afterStateHydrated(fn (Toggle $component, ?Event $record) => $component->state(self::slot($record, $key)['active'] ?? false))
+                        // Pflicht, solange die Regel greift (Cobra bei Haus-Delay) – siehe IncomingInvoices
+                        ->disabled(fn (?Event $record): bool => self::slot($record, $key)['forced'] ?? false)
+                        ->helperText(fn (?Event $record): ?string => (self::slot($record, $key)['forced'] ?? false)
+                            ? 'Immer erwartet, weil Haus-Delay unter Durchführung › Betrieb auf ja steht.'
+                            : null)
                         ->dehydrated(false),
                     Toggle::make("invoice_{$key}_received")
                         ->label('Rechnung da')
@@ -51,7 +57,7 @@ final class IncomingInvoiceFields
         return $fields;
     }
 
-    /** @return array{key: string, label: string, active: bool, received: bool, auto: bool}|null */
+    /** @return array{key: string, label: string, active: bool, received: bool, auto: bool, forced: bool}|null */
     private static function slot(?Event $event, string $key): ?array
     {
         return $event ? collect(IncomingInvoices::slots($event))->firstWhere('key', $key) : null;

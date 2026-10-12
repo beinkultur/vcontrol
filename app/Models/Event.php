@@ -250,7 +250,8 @@ class Event extends Model
     /**
      * Alle aktiven Eingangsrechnungen sind da. Gleiche Regel wie
      * App\Support\IncomingInvoices: gespeicherter Eintrag gewinnt, ohne Eintrag
-     * sind Mobiliar (bei „bestuhlt“) und Haus-Delay automatisch aktiv.
+     * ist Mobiliar (bei „bestuhlt“) automatisch aktiv; bei Haus-Delay ist Cobra
+     * immer erwartet, erledigt also erst mit eingegangener Rechnung.
      */
     public function scopeIncomingInvoicesSettled(Builder $query): void
     {
@@ -264,7 +265,7 @@ class Event extends Model
                 ->orWhereHas('incomingInvoices', $stored('mobiliar_stuehle')))
             ->where(fn (Builder $q) => $q
                 ->whereDoesntHave('operation', fn (Builder $o) => $o->where('house_delay', true))
-                ->orWhereHas('incomingInvoices', $stored('cobra_hausdelay')));
+                ->orWhereHas('incomingInvoices', fn (Builder $i) => $i->where('invoice_key', 'cobra_hausdelay')->where('is_received', true)));
     }
 
     /** Archivreif: abgeschlossen und alle aktiven Eingangsrechnungen da. */

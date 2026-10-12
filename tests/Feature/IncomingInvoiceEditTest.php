@@ -77,6 +77,38 @@ class IncomingInvoiceEditTest extends TestCase
         $this->assertSame(0, $this->event->incomingInvoices()->count());
     }
 
+    public function test_bei_haus_delay_ist_cobra_immer_erwartet(): void
+    {
+        $event = Event::create(['title' => 'Delay', 'starts_at' => now()->addWeek()]);
+        $cobra = fn (): array => collect(IncomingInvoices::slots($event->fresh()))->firstWhere('key', 'cobra_hausdelay');
+        $settled = fn (): bool => Event::query()->incomingInvoicesSettled()->whereKey($event->id)->exists();
+        // Gespeichert „nicht erwartet“ – ohne Haus-Delay gilt das
+        $event->incomingInvoices()->create(['invoice_key' => 'cobra_hausdelay', 'is_active' => false, 'is_received' => false]);
+        $this->assertFalse($cobra()['active']);
+        $this->assertTrue($settled());
+
+        // Haus-Delay ja geht vor: erwartet, noch nicht da
+        $event->operation()->create(['house_delay' => true]);
+        $this->assertTrue($cobra()['active']);
+        $this->assertFalse(IncomingInvoices::settled($event->fresh()));
+        $this->assertSame('0/1', IncomingInvoices::summary($event->fresh()));
+        $this->assertFalse($settled());
+
+        // In der Buchhaltung an und gesperrt; „Rechnung da“ lässt sich setzen
+        $this->actingAs($this->admin());
+        Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
+            ->assertSchemaStateSet(['invoice_cobra_hausdelay_active' => true])
+            ->assertFormFieldIsDisabled('invoice_cobra_hausdelay_active')
+            ->assertFormFieldIsEnabled('invoice_vfv_active')
+            ->fillForm(['invoice_cobra_hausdelay_received' => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue($cobra()['received']);
+        $this->assertTrue(IncomingInvoices::settled($event->fresh()));
+        $this->assertTrue($settled());
+    }
+
     public function test_finanz_warnung_wie_in_der_php_version(): void
     {
         $bald = Event::create(['title' => 'Bald', 'starts_at' => now()->addDays(10)]);
