@@ -108,6 +108,19 @@ class ExternPortalTest extends TestCase
             ->assertDontSee('geheimwlan');
     }
 
+    public function test_buehne_unter_den_notizen_plan_erst_auf_klick(): void
+    {
+        $this->mine->stage()->create(['width' => 14, 'depth' => 8, 'height' => 1.4]);
+        $this->actingAs($this->freelancer);
+
+        $this->get('/extern/events/' . $this->mine->id)
+            ->assertOk()
+            ->assertSeeInOrder(['<h2>Notizen</h2>', 'Ladehof über Tor 3', '<h2>Bühne</h2>', 'Hauptbühne'], escape: false)
+            // Plan eingeklappt in <details>, nicht mit open
+            ->assertSeeInOrder(['<details class="vc-sheet__plan-toggle">', 'Bühnenplan anzeigen', '<svg'], escape: false)
+            ->assertDontSee('<details class="vc-sheet__plan-toggle" open', escape: false);
+    }
+
     public function test_dateien_nur_sichtbare_von_beteiligten_events(): void
     {
         $this->actingAs($this->freelancer);

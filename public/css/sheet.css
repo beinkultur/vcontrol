@@ -179,7 +179,41 @@
     height: auto;
 }
 
+/* Bühnenplan eingeklappt: „Bühnenplan anzeigen“ wie ein Link */
+.vc-sheet__plan-toggle {
+    margin-top: 0.8rem;
+}
+
+.vc-sheet__plan-toggle > summary {
+    display: inline-block;
+    cursor: pointer;
+    color: var(--sheet-accent);
+    font-weight: 600;
+    list-style: none;
+}
+
+.vc-sheet__plan-toggle > summary::-webkit-details-marker {
+    display: none;
+}
+
+.vc-sheet__plan-toggle > summary::before {
+    content: "▸ ";
+}
+
+.vc-sheet__plan-toggle[open] > summary::before {
+    content: "▾ ";
+}
+
+.vc-sheet__plan-toggle:not([open]) .vc-sheet__when-open,
+.vc-sheet__plan-toggle[open] .vc-sheet__when-closed {
+    display: none;
+}
+
 @media print {
+    .vc-sheet__plan-toggle > summary {
+        display: none;
+    }
+
     .vc-sheet {
         font-size: 10pt;
         gap: 4mm;
