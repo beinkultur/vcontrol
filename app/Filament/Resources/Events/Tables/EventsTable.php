@@ -187,7 +187,7 @@ class EventsTable
                     ->relationship('promoter', 'name')
                     ->searchable()
                     ->preload(),
-            ], layout: FiltersLayout::AboveContent)
+            ], layout: FiltersLayout::AboveContentCollapsible) // auf dem Handy hinter dem Filter-Symbol, sonst immer offen (vcontrol.css)
             // Handy: zwei Filter je Zeile statt vier untereinander
             ->filtersFormColumns(['default' => 2, 'lg' => 4])
             ->deferFilters(false)

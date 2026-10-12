@@ -10,6 +10,7 @@ use App\Models\Event;
 use App\Models\Promoter;
 use App\Support\EventDisplay;
 use Filament\Facades\Filament;
+use Filament\Tables\Enums\FiltersLayout;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -102,8 +103,9 @@ class EventListTest extends TestCase
         $this->assertSame(['starts_at', 'status', 'title'], $onPhone);
         $this->assertSame('md', $table->getColumn('promoter_short')->getVisibleFrom());
 
-        // Filter zu zweit nebeneinander statt untereinander
+        // Filter zu zweit nebeneinander statt untereinander, auf dem Handy hinter dem Filter-Symbol
         $this->assertSame(['default' => 2, 'lg' => 4], $table->getFiltersFormColumns());
+        $this->assertSame(FiltersLayout::AboveContentCollapsible, $table->getFiltersLayout());
     }
 
     public function test_fortschritt_aller_drei_phasen(): void

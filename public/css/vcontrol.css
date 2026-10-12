@@ -68,6 +68,65 @@
         align-items: flex-end;
         padding: 0.6rem 0.75rem 0.6rem 0;
     }
+
+    /* Die Filter sind aufklappbar (EventsTable: AboveContentCollapsible) – ab
+       Tablet immer offen, ohne Filter-Symbol */
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn > .fi-ta-filters {
+        display: grid !important;
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-trigger-action-ctn {
+        display: none;
+    }
+}
+
+/* Handy: Filter hinter dem Filter-Symbol rechts neben der Suche, sie klappen
+   darunter auf. Der Container der Filter gibt seine Kinder (Filter, Symbol) an
+   das Raster weiter (display: contents). Werkzeug-Aktionen hat die Liste keine. */
+@media (max-width: 47.999rem) {
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-ctn {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        column-gap: 0.5rem;
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .dark .fi-resource-events.fi-resource-list-records-page .fi-ta-header-ctn {
+        border-bottom-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn {
+        display: contents;
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar {
+        grid-column: 1;
+        grid-row: 1;
+        padding: 0;
+        border: 0;
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar > .fi-ta-actions {
+        display: none;
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar > div:last-child {
+        flex: 1 1 auto;
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-trigger-action-ctn {
+        grid-column: 2;
+        grid-row: 1;
+        margin: 0 !important;
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn > .fi-ta-filters {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        margin-top: 0.75rem;
+    }
 }
 
 .fi-resource-events.fi-resource-list-records-page .fi-ta-text,
