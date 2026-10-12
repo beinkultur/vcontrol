@@ -2,15 +2,16 @@
 
 namespace App\Filament\Resources\Events\RelationManagers;
 
+use App\Filament\Forms\SafeFileUpload;
 use App\Filament\Resources\EventFileTags\EventFileTagResource;
 use App\Models\EventFile;
 use App\Models\EventFileTag;
 use App\Models\User;
+use App\Support\Uploads;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -21,9 +22,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Closure;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -56,23 +55,17 @@ class FilesRelationManager extends RelationManager
                     ->label('Anzeigename')
                     ->placeholder(fn (?EventFile $record): string => $record?->original_name ?? 'leer: Dateiname')
                     ->maxLength(255),
-                FileUpload::make('upload')
+                SafeFileUpload::make('upload')
                     ->label(fn (string $operation): string => $operation === 'create' ? 'Datei' : 'Neue Version (optional)')
                     ->helperText(fn (string $operation): string => ($operation === 'create' ? '' : 'Ersetzt die Datei und erhöht die Versionsnummer. ')
-                        . 'Max. 15 MB: ' . implode(', ', self::extensions()) . '.')
+                        . 'Max. ' . intdiv(Uploads::MAX_KB, 1024) . ' MB: ' . implode(', ', self::extensions()) . '.')
                     ->disk(EventFile::DISK)
                     ->directory(fn (): string => 'event-files/' . $this->getOwnerRecord()->getKey())
                     ->visibility('private')
                     // Nur frische Uploads – sonst ließe sich per Livewire der Pfad einer fremden Datei unterschieben
                     ->preventFilePathTampering()
-                    ->maxSize(EventFile::MAX_KB)
-                    ->rule(fn (): string => 'extensions:' . implode(',', self::extensions()))
-                    // Die Endung allein sagt nichts: HTML oder SVG als „.pdf“ wäre ausführbarer Inhalt
-                    ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
-                        if ($value instanceof UploadedFile && in_array(strtolower((string) $value->getMimeType()), EventFile::BLOCKED_TYPES, true)) {
-                            $fail('Webseiten, SVG-Grafiken und Skripte sind als Datei nicht erlaubt.');
-                        }
-                    })
+                    // Auswahl, Endung, Inhalt und Größe (25 MB)
+                    ->allowedExtensions(fn (): array => self::extensions())
                     ->storeFileNamesIn('original_name')
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->columnSpanFull(),

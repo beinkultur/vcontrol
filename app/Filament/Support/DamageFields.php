@@ -8,6 +8,7 @@ use App\Models\Damage;
 use App\Models\Event;
 use App\Models\User;
 use App\Support\DamageNotifier;
+use App\Support\Uploads;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
@@ -56,12 +57,12 @@ final class DamageFields
                 ->columnSpanFull(),
             FileUpload::make('photos')
                 ->label('Fotos (optional)')
-                ->helperText('JPG, PNG, WebP oder GIF, bis ' . self::MAX_PHOTOS . ' Fotos zu je 15 MB.')
+                ->helperText('JPG, PNG, WebP oder GIF, bis ' . self::MAX_PHOTOS . ' Fotos zu je ' . intdiv(Uploads::MAX_KB, 1024) . ' MB.')
                 ->image()
                 ->acceptedFileTypes(Damage::PHOTO_TYPES)
                 ->multiple()
                 ->maxFiles(self::MAX_PHOTOS)
-                ->maxSize(15 * 1024)
+                ->maxSize(Uploads::MAX_KB)
                 ->disk(Damage::DISK)
                 ->directory(Damage::PHOTO_DIRECTORY)
                 ->visibility('private')

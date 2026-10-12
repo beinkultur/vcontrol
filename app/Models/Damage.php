@@ -24,6 +24,9 @@ class Damage extends Model
 
     public const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+    /** Dieselben Fotos als Endungen – für die Zwischenablage der Uploads (App\Support\Uploads) */
+    public const PHOTO_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
     /**
      * @return array<string, string>
      */

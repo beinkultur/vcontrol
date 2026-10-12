@@ -19,9 +19,7 @@ class EventFile extends Model
 {
     public const DISK = 'local';
 
-    public const MAX_KB = 15 * 1024;
-
-    /** Wie in der PHP-Version; Archive nur für Admins. */
+    /** Wie in der PHP-Version; Archive nur für Admins. Größe und verbotene Inhalte: App\Support\Uploads */
     public const EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'dwg', 'dxf', 'txt', 'csv'];
 
     public const ARCHIVE_EXTENSIONS = ['zip', 'rar', '7z'];
@@ -35,12 +33,6 @@ class EventFile extends Model
         'webp' => 'image/webp',
         'gif' => 'image/gif',
         'txt' => 'text/plain',
-    ];
-
-    /** Inhalte, die kein Upload haben darf – egal unter welcher Endung */
-    public const BLOCKED_TYPES = [
-        'text/html', 'application/xhtml+xml', 'image/svg+xml', 'text/xml', 'application/xml',
-        'text/javascript', 'application/javascript', 'text/x-php', 'application/x-httpd-php',
     ];
 
     protected static function booted(): void

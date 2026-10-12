@@ -25,6 +25,12 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   vendor/ nie –, und leert die Caches. Bei mehr als 20 Löschungen bricht es vorher
   ab (`MAX_DELETE=n` hebt die Grenze). Neue Migrationen danach selbst mit
   `php artisan migrate --force` ausführen.
+- Composer und `php artisan filament:assets` nie unter `umask 077` laufen lassen.
+  Die Dateien unter `public/` liefert der Webserver als anderer Benutzer aus; nur
+  für den Eigentümer lesbar heißt 403, und die Oberfläche lädt ohne CSS und JS
+  (so geschehen am 11.10.2026, zehn Stunden lang unbemerkt). Nach einem Update
+  nicht nur die Login-Seite prüfen, sondern auch eine Asset-URL wie
+  `/css/filament/filament/app.css` – `scripts/deploy.sh` macht beides am Ende.
 - Änderungsprotokoll: Alles, was über Eloquent gespeichert wird, protokolliert
   `App\Support\Audit` automatisch. Wer an Eloquent vorbei schreibt (`DB::table`,
   `->query()->update()/delete()`, Pivot ohne eigenes Modell), muss `Audit::record()`
@@ -94,7 +100,13 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   frische Komponente nehmen. `fillForm()` wirkt nur mit APP_ENV=testing.
 - Dateien (Event-Dateien) liegen auf der Disk „local“ (`storage/app/private`),
   nie unter `public/`; ausgeliefert über eine Route mit Rechteprüfung.
-  Upload-Grenze 15 MB: `config/livewire.php` und `public/.user.ini`.
+  Uploads: erlaubte Endungen, verbotene Inhalte und die Grenze von 25 MB stehen
+  in `App\Support\Uploads`. Livewire legt jede ausgewählte Datei sofort in seine
+  Zwischenablage (`livewire-tmp`); `config/livewire.php` prüft deshalb schon dort,
+  sonst landet alles bis zur Größengrenze auf dem Server. Upload-Felder für
+  Dokumente mit `App\Filament\Forms\SafeFileUpload::allowedExtensions()` (der
+  Auswahldialog zeigt nur diese Endungen), nicht mit `acceptedFileTypes()`.
+  PHP-Grenze in `public/.user.ini`.
 - Seitenbreite: Listen voll, Formulare/Dashboards mit `BoxedPage` (1400 px).
 - Verfasser/Bearbeiter mit dauerhaftem Namen: Trait `App\Models\Concerns\StampsAuthor`
   (Spalten created_by, created_by_name, updated_by, updated_by_name).

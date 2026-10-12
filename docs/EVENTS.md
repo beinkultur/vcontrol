@@ -108,7 +108,7 @@ Bedienbar:
   Mehrere je Event, löschbar mit Recht „Event-Operationen“. Prüfpunkte in
   `App\Support\ShowChecklist`.
 - **Durchführung › Schäden** wie in der PHP-Version: Zeitpunkt, Beschreibung,
-  bis 20 Fotos (je 15 MB), „behoben“ setzen Event-Operationen oder die
+  bis 20 Fotos (je 25 MB), „behoben“ setzen Event-Operationen oder die
   Buchhaltung; nicht löschbar. Übersicht unter Protokolle › Schäden, dort auch
   allgemeine Schäden ohne Event. Neue Schäden gehen per Mail an die
   Empfänger unter Verwaltung › Halle › E-Mail, sonst an alle aktiven Benutzer
@@ -126,7 +126,8 @@ Bedienbar:
   Halle) oder angemeldet mit Kalender-Recht. Adresse unter Events › „Kalender
   abonnieren“ und Verwaltung › Halle (neu erzeugen, ausschalten).
 - **Dateien** wie in der PHP-Version: Planung › Dateien zum Hochladen (Tag,
-  Anzeigename, max. 15 MB, Archive nur für Admins), neue Version hochladen
+  Anzeigename, max. 25 MB, Archive nur für Admins; die Dateiauswahl bietet nur
+  erlaubte Endungen an), neue Version hochladen
   (Versionsnummer zählt hoch, „Stand: Datum · vN“), Löschen; auf der Übersicht
   nach Tag gruppiert. Dateien liegen nicht öffentlich (Disk „local“),
   heruntergeladen wird über `/dateien/{id}/download` mit Rechteprüfung.

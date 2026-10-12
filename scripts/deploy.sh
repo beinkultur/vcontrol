@@ -115,3 +115,21 @@ ssh "$HOST" "cd ${DIR} \
     && if [ \"\$pending\" -gt 0 ]; then echo \"Offene Migrationen: \$pending – php artisan migrate --force\"; fi"
 
 report_kept
+
+# public/ liefert der Webserver selbst aus, als anderer Benutzer als PHP: Was dort nur für den
+# Eigentümer lesbar ist, kommt mit 403 an. So am 11.10.2026 passiert – ein Composer-Lauf unter
+# umask 077 hat Filaments CSS und JS neu angelegt, die Oberfläche lud ohne Stil und Bedienung.
+problem=0
+unreadable=$(ssh "$HOST" "cd ${DIR} && find public \( -type f ! -perm -o=r \) -o \( -type d ! -perm -o=rx \)" || true)
+if [ -n "$unreadable" ]; then
+    echo "Achtung, für den Webserver nicht lesbar (Antwort 403):" >&2
+    echo "$unreadable" | head -20 | sed 's/^/  /' >&2
+    echo "Beheben: ssh ${HOST} 'cd ${DIR}/public && find . -type f ! -perm -o=r -exec chmod 644 {} + && find . -type d ! -perm -o=rx -exec chmod 755 {} +'" >&2
+    problem=1
+fi
+asset=$(curl -s -o /dev/null -w '%{http_code}' "https://${TARGET}/css/filament/filament/app.css" || true)
+if [ "$asset" != "200" ]; then
+    echo "Achtung: https://${TARGET}/css/filament/filament/app.css antwortet mit ${asset} – die Oberfläche lädt dann ohne Stil und Bedienung." >&2
+    problem=1
+fi
+[ "$problem" = 0 ] || exit 1

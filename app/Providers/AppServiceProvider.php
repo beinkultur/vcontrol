@@ -8,10 +8,12 @@ use App\Models\Trade;
 use App\Models\User;
 use App\Support\Audit;
 use App\Support\StageSettings;
+use App\Support\Uploads;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event as Events;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -48,6 +50,11 @@ class AppServiceProvider extends ServiceProvider
                 $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
             }
         });
+
+        // Zwischenablage der Uploads (config/livewire.php): kein Programm, Skript oder
+        // Webseite als Inhalt, egal unter welcher Endung – als Name, weil die Regeln
+        // dort in der Konfiguration stehen
+        Validator::extend('upload_inhalt', fn (string $attribute, mixed $value): bool => ! Uploads::hasBlockedContent($value), Uploads::BLOCKED_MESSAGE);
 
         // Kurznamen statt Klassennamen in polymorphen Spalten – dieselben Werte
         // wie assignee_type in der PHP-Version
