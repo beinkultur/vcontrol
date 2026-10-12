@@ -45,6 +45,9 @@ class CheckAccess extends Command
         'GET /extern/events' => '/extern/events',
     ];
 
+    /** Bewusst strenger als die PHP-Version: Diese Seiten erreicht hier nur der System-Admin. */
+    private const SYSTEM_ADMIN_ONLY = ['/rollen'];
+
     public function handle(Kernel $kernel): int
     {
         // Ohne gespeicherte Sessions: Sonst stünde je Seite und Rolle eine Zeile mit
@@ -63,7 +66,9 @@ class CheckAccess extends Command
         foreach (self::PAGES as $legacyPage => $path) {
             foreach ($roles as $role) {
                 // Den System-Admin gibt es nur hier – er erreicht mindestens, was der Admin erreicht
-                $expected = $baseline[($role->is_system_admin ? 'admin' : $role->slug) . '|' . $legacyPage] ?? null;
+                $expected = in_array($path, self::SYSTEM_ADMIN_ONLY, true)
+                    ? ($role->is_system_admin ? 200 : 403)
+                    : $baseline[($role->is_system_admin ? 'admin' : $role->slug) . '|' . $legacyPage] ?? null;
                 $actual = $this->status($kernel, $path, $this->userWithOnly($role));
                 $ok = $expected !== null && (($expected === 200) === ($actual === 200));
                 $mismatches += $ok ? 0 : 1;
@@ -84,7 +89,7 @@ class CheckAccess extends Command
 
             return self::FAILURE;
         }
-        $this->info(count($rows) . ' Vergleiche, alle wie in der PHP-Version');
+        $this->info(count($rows) . ' Vergleiche, alle wie in der PHP-Version (bewusst strenger: ' . implode(', ', self::SYSTEM_ADMIN_ONLY) . ' nur für System-Admins)');
 
         return self::SUCCESS;
     }

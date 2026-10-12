@@ -8,9 +8,9 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Rollen & Rechte ändert nur der System-Admin. Admins der Halle und alle mit
- * dem Recht „Rollen & Rechte“ sehen die Rollen nur an und weisen sie unter
- * Benutzer zu; die System-Admin-Rolle sehen nur System-Admins.
+ * Rollen & Rechte sieht und ändert nur der System-Admin (Wunsch des Betreibers,
+ * 12.10.2026) – auch Admins der Halle und Rollen mit dem Recht „Rollen &
+ * Rechte“ nicht. Zugewiesen werden Rollen weiterhin unter Benutzer.
  */
 class RolePolicy extends AreaPolicy
 {
@@ -19,11 +19,14 @@ class RolePolicy extends AreaPolicy
         return Area::AdminRollen;
     }
 
+    public function viewAny(User $user): bool
+    {
+        return parent::viewAny($user) && $user->access()->isSystemAdmin();
+    }
+
     public function view(User $user, Model $record): bool
     {
-        return $record instanceof Role
-            && parent::view($user, $record)
-            && (!$record->is_system_admin || $user->access()->isSystemAdmin());
+        return $record instanceof Role && parent::view($user, $record);
     }
 
     public function create(User $user): bool

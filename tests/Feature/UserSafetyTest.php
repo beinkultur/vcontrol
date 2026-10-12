@@ -86,7 +86,7 @@ class UserSafetyTest extends TestCase
         $this->assertTrue(Gate::forUser($zweiter)->allows('delete', $admin), 'mit zwei Admins darf einer den anderen löschen');
     }
 
-    public function test_rollen_und_rechte_aendert_nur_der_system_admin(): void
+    public function test_rollen_und_rechte_sieht_und_aendert_nur_der_system_admin(): void
     {
         $adminRolle = $this->role('admin', super: true);
         $catering = $this->role('catering', ['kalender' => 'read']);
@@ -94,23 +94,24 @@ class UserSafetyTest extends TestCase
         $admin = $this->admin();
         $system = $this->systemAdmin();
 
+        // Seit 12.10.2026 auch nicht mehr ansehen: weder Admin der Halle noch das Recht „Rollen & Rechte“
         foreach (['Rollenpfleger' => $rollenpfleger, 'Admin der Halle' => $admin] as $wer => $user) {
+            $this->assertFalse(Gate::forUser($user)->allows('viewAny', Role::class), $wer);
+            $this->assertFalse(Gate::forUser($user)->allows('view', $catering), $wer);
             $this->assertFalse(Gate::forUser($user)->allows('create', Role::class), $wer);
-            $this->assertFalse(Gate::forUser($user)->allows('update', $catering), $wer);
             $this->assertFalse(Gate::forUser($user)->allows('update', $adminRolle), $wer);
-            $this->assertTrue(Gate::forUser($user)->allows('view', $catering), $wer);
+
+            $this->actingAs($user);
+            $this->get('/rollen')->assertForbidden();
+            $this->get('/rollen/' . $catering->id)->assertForbidden();
+            $this->get('/rollen/' . $catering->id . '/edit')->assertForbidden();
+            $this->get('/rollen/create')->assertForbidden();
         }
         $this->assertTrue(Gate::forUser($system)->allows('create', Role::class));
         $this->assertTrue(Gate::forUser($system)->allows('update', $adminRolle));
 
-        // Admin der Halle: Rollen nur ansehen
-        $this->actingAs($admin);
-        $this->get('/rollen')->assertOk()->assertSee('Rollen und Rechte ändert der System-Admin');
-        $this->get('/rollen/' . $catering->id)->assertOk()->assertSee('Catering');
-        $this->get('/rollen/' . $catering->id . '/edit')->assertForbidden();
-        $this->get('/rollen/create')->assertForbidden();
-
         $this->actingAs($system);
+        $this->get('/rollen')->assertOk()->assertSee('Admins der Halle sehen diese Seite nicht');
         Livewire::test(EditRole::class, ['record' => $catering->getRouteKey()])
             ->fillForm(['permissions' => ['kalender' => 'read', 'events' => 'read']])
             ->call('save')

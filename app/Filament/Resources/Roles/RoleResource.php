@@ -20,9 +20,8 @@ use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
 /**
- * Rollen & Rechte: ändern nur System-Admins (RolePolicy). Alle anderen mit dem
- * Recht „Rollen & Rechte“, also auch die Admins der Halle, sehen die Rechte
- * einer Rolle nur an.
+ * Rollen & Rechte: sehen und ändern nur System-Admins (RolePolicy) – auch die
+ * Admins der Halle nicht. Sie weisen Rollen unter Benutzer zu.
  */
 class RoleResource extends Resource
 {

@@ -131,7 +131,9 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
 - **Zwei Admin-Stufen:** Admin (`roles.is_super`) ist der Admin der Halle – alle
   Bereiche, Kalender, Benutzer und Verwaltung › Halle. System-Admin
   (`roles.is_system_admin`, nur der Betreiber) hat zusätzlich: Module schalten,
-  Rollen & Rechte ändern (alle anderen sehen Rollen nur an, `ViewRole`),
+  Rollen & Rechte (sieht und ändert nur er, seit 12.10.2026 auch nicht mehr zum
+  Ansehen für Admins; zugewiesen werden Rollen unter Benutzer – `vc:check-access`
+  führt `/rollen` deshalb als bewusst strenger als die PHP-Version),
   IP-Adresse und Browser im Audit, System-Admin-Konten. System-Admins und ihre
   Rolle sieht nur, wer selbst System-Admin ist (Scope `visibleTo()` an `User` und
   `Role`, auch im Audit). Den ersten System-Admin einer Halle macht

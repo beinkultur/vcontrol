@@ -94,7 +94,7 @@ class AccessTest extends TestCase
         return [
             'Veranstalter' => ['/veranstalter', 'veranstalter'],
             'Benutzer' => ['/benutzer', 'admin_benutzer'],
-            'Rollen' => ['/rollen', 'admin_rollen'],
+            // Rollen & Rechte: nur für System-Admins, siehe UserSafetyTest
             'Gewerke' => ['/gewerke', 'admin_gewerke'],
             'Mitarbeiter' => ['/mitarbeiter', 'admin_mitarbeiter'],
             'Räume' => ['/raeume', 'admin_raeume'],

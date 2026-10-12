@@ -69,8 +69,9 @@ class RoleForm
                     fn (Area $area) => AccessFields::level(
                         'permissions.' . $area->value,
                         $area->label() . ($area->isDisabled() ? ' (Modul abgeschaltet)' : ''),
-                    )->helperText($area === Area::AdminRollen ? 'Rollen ansehen; ändern kann sie nur der System-Admin.' : null),
-                    Area::inGroup($group),
+                    ),
+                    // „Rollen & Rechte“ sieht nur der System-Admin (RolePolicy) – das Recht hätte hier keine Wirkung
+                    array_values(array_filter(Area::inGroup($group), fn (Area $area): bool => $area !== Area::AdminRollen)),
                 ));
         }
 

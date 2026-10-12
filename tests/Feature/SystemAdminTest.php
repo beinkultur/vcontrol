@@ -8,7 +8,6 @@ use App\Access\Modules;
 use App\Filament\Pages\ManageSystem;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\AuditLogs\Pages\ListAuditLogs;
-use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\AuditLog;
@@ -62,7 +61,7 @@ class SystemAdminTest extends TestCase
         Livewire::test(ListUsers::class)
             ->assertCanSeeTableRecords([$admin, $kollege])
             ->assertCanNotSeeTableRecords([$system]);
-        Livewire::test(ListRoles::class)->assertCanNotSeeTableRecords([Role::systemAdmin()]);
+        $this->get('/rollen')->assertForbidden();
         $this->get('/benutzer/' . $system->id . '/edit')->assertNotFound();
         $this->get('/rollen/' . Role::systemAdmin()->id)->assertNotFound();
         // Auch nicht als Rolle zur Auswahl
