@@ -118,6 +118,15 @@ class EventListTest extends TestCase
             ->assertDontSeeHtml('vc-mini-progress__pct');
     }
 
+    public function test_filter_symbol_zaehlt_abweichungen_von_der_vorgabe(): void
+    {
+        $component = Livewire::test(ListEvents::class);
+        $this->assertSame(0, $component->instance()->getTable()->getActiveFiltersCount(), 'offen und zukünftig sind die Vorgabe');
+
+        $component->set('tableFilters.state.state', 'all')->set('tableFilters.time.time', 'past');
+        $this->assertSame(2, $component->instance()->getTable()->getActiveFiltersCount());
+    }
+
     public function test_klick_oeffnet_den_workspace(): void
     {
         $leser = $this->userWith($this->role('catering', ['events' => 'read']));

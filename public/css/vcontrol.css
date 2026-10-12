@@ -112,7 +112,8 @@
         display: none;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar > div:last-child {
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar > div:last-child,
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-search-field {
         flex: 1 1 auto;
     }
 

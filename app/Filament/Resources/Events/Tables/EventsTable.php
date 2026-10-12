@@ -160,7 +160,11 @@ class EventsTable
                         'closed' => $query->where('closed', true),
                         'all' => $query,
                         default => $query->where('closed', false),
-                    }),
+                    })
+                    // Zählt am Filter-Symbol (Handy) mit, sobald nicht die Vorgabe gilt
+                    ->indicateUsing(fn (array $data): ?string => ($data['state'] ?? 'open') === 'open'
+                        ? null
+                        : 'Status: ' . (self::STATE_OPTIONS[$data['state']] ?? $data['state'])),
                 Filter::make('time')
                     ->schema([
                         Select::make('time')
@@ -173,7 +177,10 @@ class EventsTable
                         'past' => $query->whereDate('starts_at', '<', today()),
                         'all' => $query,
                         default => $query->whereDate('starts_at', '>=', today()),
-                    }),
+                    })
+                    ->indicateUsing(fn (array $data): ?string => ($data['time'] ?? 'future') === 'future'
+                        ? null
+                        : 'Zeitraum: ' . (self::TIME_OPTIONS[$data['time']] ?? $data['time'])),
                 SelectFilter::make('year')
                     ->label('Jahr')
                     ->placeholder('Alle')
