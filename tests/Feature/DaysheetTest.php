@@ -207,7 +207,10 @@ class DaysheetTest extends TestCase
             ->assertOk()
             ->assertSee('--vc-accent:#660B64;', false)
             ->assertSee('<link rel="apple-touch-icon"', false)
-            ->assertSee('erstellt mit <a href="https://www.vcontrol.eu" target="_blank" rel="noopener"><img src="' . asset('images/logo.svg') . '"', false);
+            ->assertSeeInOrder([
+                'erstellt mit <a href="https://www.vcontrol.eu" target="_blank" rel="noopener">VenueControl</a></p>',
+                '<img src="' . asset('images/logo.svg') . '" alt="VenueControl" width="40" height="40">',
+            ], false);
     }
 
     public function test_dateien_ueber_den_link_ohne_verborgene(): void

@@ -16,9 +16,11 @@
         .toolbar strong { color: #b45309; }
         .toolbar button { font: inherit; padding: .5rem 1rem; border-radius: .5rem; border: 1px solid var(--vc-accent, #2563eb); background: var(--vc-accent, #2563eb); color: #fff; cursor: pointer; }
         .page { max-width: 60rem; margin: 0 auto 2rem; padding: 0 1rem; }
-        .footer { max-width: 60rem; margin: 0 auto 2rem; padding: 0 1rem; color: #6b7280; font-size: .8rem; }
+        .footer { max-width: 60rem; margin: 0 auto 2rem; padding: 0 1rem; color: #6b7280; font-size: .8rem; text-align: center; }
+        .footer p { margin: 0 0 .5rem; }
         .footer a { color: inherit; }
-        .footer__logo { vertical-align: -2px; }
+        .footer__logo { display: inline-block; }
+        .footer__logo img { display: block; }
         @media print {
             @page { size: A4; margin: 12mm; }
             body { background: #fff; }
@@ -39,6 +41,10 @@
     <main class="page">
         @include('extern.sheet', ['sheet' => $sheet, 'showHead' => true])
     </main>
-    <p class="footer">{{ $venue }} · erstellt mit <a href="{{ config('venuecontrol.website') }}" target="_blank" rel="noopener"><img src="{{ asset('images/logo.svg') }}" alt="" width="14" height="14" class="footer__logo"> VenueControl</a></p>
+    {{-- Wie der Fuß der Mails (vendor/mail/html/logo): Zeile, darunter das Logo --}}
+    <footer class="footer">
+        <p>{{ $venue }} · erstellt mit <a href="{{ config('venuecontrol.website') }}" target="_blank" rel="noopener">VenueControl</a></p>
+        <a href="{{ config('venuecontrol.website') }}" target="_blank" rel="noopener" class="footer__logo"><img src="{{ asset('images/logo.svg') }}" alt="VenueControl" width="40" height="40"></a>
+    </footer>
 </body>
 </html>
