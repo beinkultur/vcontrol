@@ -15,6 +15,7 @@
         .toolbar button { font: inherit; padding: .5rem 1rem; border-radius: .5rem; border: 1px solid #2563eb; background: #2563eb; color: #fff; cursor: pointer; }
         .page { max-width: 60rem; margin: 0 auto 2rem; padding: 0 1rem; }
         .footer { max-width: 60rem; margin: 0 auto 2rem; padding: 0 1rem; color: #6b7280; font-size: .8rem; }
+        .footer a { color: inherit; }
         @media print {
             @page { size: A4; margin: 12mm; }
             body { background: #fff; }
@@ -35,6 +36,6 @@
     <main class="page">
         @include('extern.sheet', ['sheet' => $sheet, 'showHead' => true])
     </main>
-    <p class="footer">{{ $venue }} · erstellt mit VenueControl</p>
+    <p class="footer">{{ $venue }} · erstellt mit <a href="{{ config('venuecontrol.website') }}" target="_blank" rel="noopener">VenueControl</a></p>
 </body>
 </html>

@@ -59,4 +59,11 @@ return [
 
     'ops_status_token' => env('OPS_STATUS_TOKEN'),
 
+    /*
+    | Website von VenueControl: verlinkt in „erstellt mit VenueControl“
+    | (Daysheet-Mail und Daysheet-Seite).
+    */
+
+    'website' => 'https://www.vcontrol.eu',
+
 ];

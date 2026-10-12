@@ -31,7 +31,7 @@ Sollten Sie Schwierigkeiten haben, die Schaltfläche „Daysheet öffnen“ zu k
 
 <x-slot:footer>
 <x-mail::footer>
-{{ $venue }} · erstellt mit VenueControl
+{{ $venue }} · erstellt mit [VenueControl]({{ config('venuecontrol.website') }})
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>
