@@ -103,9 +103,7 @@ class EventForm
         if ($schema->getOperation() === 'create') {
             return $schema
                 ->columns(1)
-                ->components([
-                    Section::make('Daten')->columns(3)->schema(self::bookingData()),
-                ]);
+                ->components(self::bookingData());
         }
 
         return $schema
@@ -126,8 +124,7 @@ class EventForm
                             ]),
                         self::phase('Buchung', 'buchung')->schema([
                             self::sections('buchung', array_values(array_filter([
-                                self::tab('Daten', 'daten')
-                                    ->schema([Section::make()->columns(3)->schema(self::bookingData())]),
+                                self::tab('Daten', 'daten')->schema(self::bookingData()),
                                 // Nur mit Recht auf die Buchhaltung, bearbeiten nur mit Schreibrecht dort.
                                 // Nicht bloß ausgeblendet: Filament füllt auch verborgene Abschnitte,
                                 // die Finanzdaten stünden sonst im Seitenquelltext.
@@ -260,75 +257,102 @@ class EventForm
         ]);
     }
 
-    /** Buchung › Daten wie in der PHP-Version; auch das Formular zum Anlegen. */
+    /**
+     * Buchung › Daten, auch das Formular zum Anlegen. Links, was das Event ist
+     * und für wen (Veranstaltung) und wie es in der Halle läuft (Halle &
+     * Publikum), rechts daneben Termin und Internes – auf dem Handy in dieser
+     * Reihenfolge untereinander. VA-ID, laufende Nummer und „abgeschlossen“ gibt
+     * es erst, wenn das Event existiert.
+     *
+     * @return list<Grid>
+     */
     private static function bookingData(): array
     {
         return [
-            TextInput::make('title')
-                ->label('Titel')
-                ->required()
-                ->maxLength(255)
-                ->columnSpanFull(),
-            DateTimePicker::make('starts_at')
-                ->label('Beginn')
-                ->required()
-                ->seconds(false),
-            DateTimePicker::make('ends_at')
-                ->label('Ende')
-                ->seconds(false)
-                ->afterOrEqual('starts_at'),
-            Select::make('status')
-                ->label('VA-Status')
-                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::VaStatus, $record?->status))
-                ->native(false),
-            Select::make('promoter_id')
-                ->label('Veranstalter')
-                ->relationship('promoter', 'name', fn ($query) => $query->where('is_archived', false)->orderBy('name'))
-                ->searchable()
-                ->preload(),
-            AssignmentFields::select(AssignmentRole::ProjectLead),
-            Toggle::make('closed')
-                ->label('Event abgeschlossen')
-                ->inline(false)
-                ->hiddenOn('create'),
-            Select::make('event_type1')
-                ->label('Kategorie 1')
-                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::VaType1, $record?->event_type1))
-                ->live()
-                ->afterStateUpdated(fn (Set $set) => $set('event_type2', null))
-                ->native(false),
-            Select::make('event_type2')
-                ->label('Kategorie 2')
-                ->options(fn (Get $get, ?Event $record): array => OptionChoices::for(OptionField::VaType2, $record?->event_type2, $get('event_type1')))
-                ->native(false),
-            Select::make('ticketing')
-                ->label('Ticketing')
-                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Ticketing, $record?->ticketing))
-                ->native(false),
-            TextInput::make('va_id')
-                ->label('VA-ID')
-                ->disabled()
-                ->dehydrated(false)
-                ->placeholder('wird beim Anlegen vergeben'),
-            TextInput::make('va_nr')
-                ->label('Laufende Nummer')
-                ->disabled()
-                ->dehydrated(false)
-                ->placeholder('wird beim Anlegen vergeben'),
-            TextInput::make('pax_expected')
-                ->label('PAX erwartet')
-                ->numeric()
-                ->minValue(0),
-            CheckboxList::make('areas')
-                ->label('Bereiche')
-                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Areas, $record?->areas)),
-            CheckboxList::make('seating')
-                ->label('Bestuhlung')
-                ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Seating, $record?->seating)),
-            Textarea::make('booking_notes')
-                ->label('Interne Buchungsnotizen')
-                ->rows(3)
-                ->columnSpanFull(),
+            Grid::make(['default' => 1, 'lg' => 3])->schema([
+                Section::make('Veranstaltung')
+                    ->columnSpan(['lg' => 2])
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('title')
+                            ->label('Titel')
+                            ->required()
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+                        Select::make('promoter_id')
+                            ->label('Veranstalter')
+                            ->relationship('promoter', 'name', fn ($query) => $query->where('is_archived', false)->orderBy('name'))
+                            ->searchable()
+                            ->preload(),
+                        Select::make('status')
+                            ->label('VA-Status')
+                            ->options(fn (?Event $record): array => OptionChoices::for(OptionField::VaStatus, $record?->status))
+                            ->native(false),
+                        Select::make('event_type1')
+                            ->label('Kategorie 1')
+                            ->options(fn (?Event $record): array => OptionChoices::for(OptionField::VaType1, $record?->event_type1))
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('event_type2', null))
+                            ->native(false),
+                        Select::make('event_type2')
+                            ->label('Kategorie 2')
+                            ->options(fn (Get $get, ?Event $record): array => OptionChoices::for(OptionField::VaType2, $record?->event_type2, $get('event_type1')))
+                            ->native(false),
+                    ]),
+                Section::make('Termin')
+                    ->schema([
+                        DateTimePicker::make('starts_at')
+                            ->label('Beginn')
+                            ->required()
+                            ->seconds(false),
+                        DateTimePicker::make('ends_at')
+                            ->label('Ende')
+                            ->seconds(false)
+                            ->afterOrEqual('starts_at'),
+                    ]),
+                Section::make('Halle & Publikum')
+                    ->columnSpan(['lg' => 2])
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('pax_expected')
+                            ->label('PAX erwartet')
+                            ->numeric()
+                            ->minValue(0),
+                        Select::make('ticketing')
+                            ->label('Ticketing')
+                            ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Ticketing, $record?->ticketing))
+                            ->native(false),
+                        CheckboxList::make('areas')
+                            ->label('Bereiche')
+                            ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Areas, $record?->areas))
+                            ->columns(2),
+                        CheckboxList::make('seating')
+                            ->label('Bestuhlung')
+                            ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Seating, $record?->seating)),
+                    ]),
+                Section::make('Intern')
+                    ->schema([
+                        AssignmentFields::select(AssignmentRole::ProjectLead),
+                        Grid::make(2)
+                            ->hiddenOn('create')
+                            ->schema([
+                                TextInput::make('va_id')
+                                    ->label('VA-ID')
+                                    ->disabled()
+                                    ->dehydrated(false),
+                                TextInput::make('va_nr')
+                                    ->label('Laufende Nummer')
+                                    ->disabled()
+                                    ->dehydrated(false),
+                            ]),
+                        Toggle::make('closed')
+                            ->label('Event abgeschlossen')
+                            ->hiddenOn('create'),
+                        Textarea::make('booking_notes')
+                            ->label('Interne Buchungsnotizen')
+                            ->rows(3),
+                    ]),
+            ]),
         ];
     }
 

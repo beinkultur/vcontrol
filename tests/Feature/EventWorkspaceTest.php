@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Models\Event;
@@ -43,6 +44,24 @@ class EventWorkspaceTest extends TestCase
         $event = Event::where('title', 'Neu')->firstOrFail();
         $this->assertSame('00721', $event->va_nr);
         $this->assertSame('2005000721', $event->va_id);
+    }
+
+    public function test_anlegen_in_abschnitten_nummern_erst_danach(): void
+    {
+        $this->actingAs($this->admin());
+
+        // Veranstaltung und Termin, darunter Halle & Publikum und Internes
+        $this->get(EventResource::getUrl('create'))
+            ->assertOk()
+            ->assertSeeInOrder(['Veranstaltung', 'Titel', 'Kategorie 2', 'Termin', 'Beginn', 'Halle & Publikum', 'PAX erwartet', 'Bestuhlung', 'Intern', 'Projektleitung', 'Interne Buchungsnotizen'])
+            ->assertDontSee('Laufende Nummer')
+            ->assertDontSee('Event abgeschlossen');
+
+        // Im Workspace (Buchung › Daten) dieselben Abschnitte, dazu die Nummern
+        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
+        $this->get(EventResource::getUrl('edit', ['record' => $event]))
+            ->assertOk()
+            ->assertSeeInOrder(['Halle & Publikum', 'Intern', 'VA-ID', 'Laufende Nummer', 'Event abgeschlossen']);
     }
 
     public function test_veranstalterwechsel_bildet_va_id_neu_nummer_bleibt(): void
