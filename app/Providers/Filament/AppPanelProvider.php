@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Backups;
@@ -41,6 +42,8 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('')
             ->login(Login::class)
+            // „Passwort vergessen?“: Link per Mail, 60 Minuten gültig (config/auth.php)
+            ->passwordReset(RequestPasswordReset::class)
             // Benutzermenü › Profil: eigenes Passwort ändern (Name und E-Mail nur zur Ansicht)
             ->profile(EditProfile::class, isSimple: false)
             // Jede Seite braucht eine vollständige Policy – fehlt eine Methode, bricht
