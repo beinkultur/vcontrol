@@ -1,0 +1,85 @@
+/*
+ * Farbschema „Lila-Grün“ (App\Enums\ColorScheme::stylesheet): die dunkle
+ * Kopfleiste des T1X-Veranstalterbereichs (T1XPalette::TOPBAR_BACKGROUND und
+ * TOPBAR_HOVER) – Hintergrund #1A2421, Menüpunkte weiß, aktiv und beim
+ * Darüberfahren T1X-Grün #46C7AF. Nur geladen, wenn das Schema aktiv ist; im
+ * Dunkelmodus gleich.
+ */
+
+.fi-topbar {
+    background-color: #1a2421;
+}
+
+/* Logo und Hallenname weiß */
+.fi-topbar .fi-logo {
+    color: #fff;
+}
+
+.fi-topbar .vc-brand__logo {
+    filter: invert(1);
+}
+
+/* Menüknopf auf Tablet und Handy */
+.fi-topbar .fi-icon-btn,
+.fi-topbar .fi-icon-btn .fi-icon {
+    color: rgb(255 255 255 / 0.85);
+}
+
+.fi-topbar .fi-icon-btn:hover {
+    background-color: rgb(255 255 255 / 0.08);
+}
+
+/* Menüpunkte */
+.fi-topbar .fi-topbar-item-label {
+    color: rgb(255 255 255 / 0.85);
+}
+
+.fi-topbar .fi-topbar-item-btn > .fi-icon {
+    color: rgb(255 255 255 / 0.6);
+}
+
+.fi-topbar .fi-topbar-item-btn:hover,
+.fi-topbar .fi-topbar-item-btn:focus-visible,
+.fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-btn {
+    background-color: #46c7af;
+}
+
+.fi-topbar .fi-topbar-item-btn:hover .fi-topbar-item-label,
+.fi-topbar .fi-topbar-item-btn:hover > .fi-icon,
+.fi-topbar .fi-topbar-item-btn:focus-visible .fi-topbar-item-label,
+.fi-topbar .fi-topbar-item-btn:focus-visible > .fi-icon,
+.fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
+.fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-btn > .fi-icon {
+    color: #fff;
+}
+
+.fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label {
+    font-weight: 600;
+}
+
+/* Suche: durchscheinend auf dem dunklen Grund */
+.fi-topbar .fi-global-search-field .fi-input-wrp {
+    background-color: rgb(255 255 255 / 0.08);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.15);
+}
+
+.fi-topbar .fi-global-search-field .fi-input-wrp:focus-within {
+    box-shadow: inset 0 0 0 2px #46c7af;
+}
+
+.fi-topbar .fi-global-search-field .fi-input {
+    color: #fff;
+}
+
+.fi-topbar .fi-global-search-field .fi-input::placeholder {
+    color: rgb(255 255 255 / 0.6);
+}
+
+.fi-topbar .fi-global-search-field .fi-icon {
+    color: rgb(255 255 255 / 0.6);
+}
+
+/* Avatar (im Schema fast so dunkel wie die Leiste) mit hellem Rand */
+.fi-topbar .fi-user-menu-trigger .fi-avatar {
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.3);
+}

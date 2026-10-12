@@ -119,7 +119,10 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   wählbar unter Verwaltung › System): Filament-Farben (`--primary-600` …) oder die
   Variablen des Schemas (`--vc-buchung`, `--vc-planung`, `--vc-durchfuehrung`,
   `--vc-accent`), keine neuen festen Hex-Werte für Markenfarben. Ein neues Schema
-  ist ein neuer Fall im Enum. Logo und Favicons (`public/images/logo.svg`,
+  ist ein neuer Fall im Enum (Farben, Variablen, bei Bedarf ein eigenes Stylesheet
+  wie `public/css/scheme-lila-gruen.css` für die dunkle Kopfleiste). Einzelne
+  Farben als ganze Skala angeben – Filament 5 nimmt aus einem Hex-Wert nur den
+  Farbton (`ColorScheme::shadesLikeFilament3`). Logo und Favicons (`public/images/logo.svg`,
   `favicon.svg`, `public/favicon.ico`, `apple-touch-icon.png`, `logo-mail.png`)
   stammen aus `bk-avatar-kreis_schwarz.eps`; Seiten ohne Panel binden
   `partials.icons` ein.

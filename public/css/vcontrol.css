@@ -8,6 +8,10 @@
     --vc-buchung: #2563eb;
     --vc-planung: #0d9488;
     --vc-durchfuehrung: #d97706;
+    /* Schrift auf der Phasenfarbe; Farbschemata mit hellen Phasen setzen sie dunkel */
+    --vc-buchung-ink: #fff;
+    --vc-planung-ink: #fff;
+    --vc-durchfuehrung-ink: #fff;
     --vc-track: var(--gray-200);
 }
 
@@ -221,9 +225,9 @@ a.vc-card:hover {
     color: var(--color-white);
 }
 
-.vc-card--buchung .vc-card__num { background: var(--vc-buchung); }
-.vc-card--planung .vc-card__num { background: var(--vc-planung); }
-.vc-card--durchfuehrung .vc-card__num { background: var(--vc-durchfuehrung); }
+.vc-card--buchung .vc-card__num { background: var(--vc-buchung); color: var(--vc-buchung-ink); }
+.vc-card--planung .vc-card__num { background: var(--vc-planung); color: var(--vc-planung-ink); }
+.vc-card--durchfuehrung .vc-card__num { background: var(--vc-durchfuehrung); color: var(--vc-durchfuehrung-ink); }
 
 .vc-card__title {
     font-size: 1rem;
@@ -434,6 +438,7 @@ a.vc-card:hover {
 
 .vc-phases > .fi-tabs > .fi-tabs-item {
     --vc-phase: var(--primary-600);
+    --vc-phase-ink: var(--color-white);
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -452,9 +457,9 @@ a.vc-card:hover {
     background: var(--gray-900);
 }
 
-.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(2) { --vc-phase: var(--vc-buchung); }
-.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(3) { --vc-phase: var(--vc-planung); }
-.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(4) { --vc-phase: var(--vc-durchfuehrung); }
+.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(2) { --vc-phase: var(--vc-buchung); --vc-phase-ink: var(--vc-buchung-ink); }
+.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(3) { --vc-phase: var(--vc-planung); --vc-phase-ink: var(--vc-planung-ink); }
+.vc-phases > .fi-tabs > .fi-tabs-item:nth-child(4) { --vc-phase: var(--vc-durchfuehrung); --vc-phase-ink: var(--vc-durchfuehrung-ink); }
 
 .vc-phases > .fi-tabs > .fi-tabs-item:hover {
     border-color: var(--vc-phase);
@@ -497,7 +502,7 @@ a.vc-card:hover {
 
 .fi-tabs-item.fi-active .vc-step__num {
     background: var(--vc-phase);
-    color: var(--color-white);
+    color: var(--vc-phase-ink, var(--color-white));
 }
 
 .vc-step__text {
@@ -559,15 +564,15 @@ a.vc-card:hover {
     margin-inline: 0;
 }
 
-.vc-sections--buchung { --vc-phase: var(--vc-buchung); }
-.vc-sections--planung { --vc-phase: var(--vc-planung); }
+.vc-sections--buchung { --vc-phase: var(--vc-buchung); --vc-phase-ink: var(--vc-buchung-ink); }
+.vc-sections--planung { --vc-phase: var(--vc-planung); --vc-phase-ink: var(--vc-planung-ink); }
 
 .vc-sections > .fi-tabs > .fi-tabs-item.fi-active {
     background: var(--vc-phase);
 }
 
 .vc-sections > .fi-tabs > .fi-tabs-item.fi-active .fi-tabs-item-label {
-    color: var(--color-white);
+    color: var(--vc-phase-ink, var(--color-white));
 }
 
 /* Speichern/Abbrechen am Ende der Reiterzeile (filament/events/section-actions):
@@ -792,7 +797,7 @@ a.vc-card:hover {
     border-bottom: 0;
 }
 
-.vc-sections--durchfuehrung { --vc-phase: var(--vc-durchfuehrung); }
+.vc-sections--durchfuehrung { --vc-phase: var(--vc-durchfuehrung); --vc-phase-ink: var(--vc-durchfuehrung-ink); }
 
 /* ---------------------------------------------------------------------
  * Kopf des Event-Workspace: eine Zeile, kompakt

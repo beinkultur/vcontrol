@@ -11,13 +11,15 @@ use Filament\Support\Contracts\HasLabel;
  * System-Admins). Ohne Einstellung gilt VC Basic.
  *
  * colors(): Farben für Filament – Knöpfe, Navigation, Hinweise, Grautöne
- * (AppPanelProvider). Filament bildet aus einer einzelnen Farbe eine ganze
- * Skala im Farbton dieser Farbe.
+ * (AppPanelProvider), je als ganze Skala von 50 bis 950.
  *
  * variables(): die eigenen Farben von VenueControl als CSS-Variablen – die drei
  * Phasen (public/css/vcontrol.css) und der Akzent der Event-Infos für Externe
  * (public/css/sheet.css, auch auf der Daysheet-Seite ohne Filament). Die Werte
  * stehen fest im Code, nichts davon kommt von Benutzern.
+ *
+ * stylesheet(): was sich nicht über Farben allein machen lässt, etwa die dunkle
+ * Kopfleiste von Lila-Grün (public/css/scheme-lila-gruen.css).
  */
 enum ColorScheme: string implements HasLabel
 {
@@ -44,7 +46,7 @@ enum ColorScheme: string implements HasLabel
     {
         return match ($this) {
             self::VcBasic => 'Blau mit neutralem Grau – das bisherige Aussehen.',
-            self::LilaGruen => 'Lila mit Grün und grünlichem Grau – die Farben des T1X-Backends.',
+            self::LilaGruen => 'Lila mit Grün, grünlichem Grau und dunkler Kopfleiste – die Farben von T1X.',
         };
     }
 
@@ -52,7 +54,7 @@ enum ColorScheme: string implements HasLabel
      * Alle Farben, die Filament kennt – auch die unveränderten, damit beim
      * Wechsel nichts vom anderen Schema stehen bleibt.
      *
-     * @return array<string, string|array<int, string>>
+     * @return array<string, array<int, string>>
      */
     public function colors(): array
     {
@@ -66,7 +68,7 @@ enum ColorScheme: string implements HasLabel
                 'danger' => Color::Red,
             ],
             self::LilaGruen => [
-                'primary' => '#660B64',
+                'primary' => self::shadesLikeFilament3('#660B64'),
                 'gray' => [
                     50 => '#F2F5F4',
                     100 => '#E3E8E6',
@@ -94,16 +96,38 @@ enum ColorScheme: string implements HasLabel
                     900 => '#213935',
                     950 => '#182A27',
                 ],
-                'warning' => '#F6C876',
-                'danger' => '#E45247',
+                'warning' => self::shadesLikeFilament3('#F6C876'),
+                'danger' => self::shadesLikeFilament3('#E45247'),
             ],
         };
     }
 
     /**
+     * Skala aus einer Farbe so, wie Filament 3 sie bildet – damit sieht es aus
+     * wie im T1X-Backend (Filament 3). 500 ist die Farbe selbst, darüber zu Weiß
+     * gemischt, darunter abgedunkelt. Filament 5 nähme nur den Farbton und
+     * machte aus dem tiefen T1X-Lila ein helles Orchidee mit dunkler Schrift.
+     *
+     * @return array<int, string>
+     */
+    private static function shadesLikeFilament3(string $hex): array
+    {
+        [$red, $green, $blue] = sscanf($hex, '#%02x%02x%02x');
+        $shades = [];
+        foreach ([50 => 0.95, 100 => 0.9, 200 => 0.75, 300 => 0.6, 400 => 0.3, 500 => 1.0, 600 => 0.9, 700 => 0.75, 800 => 0.6, 900 => 0.49, 950 => 0.3] as $shade => $intensity) {
+            $mix = fn (int $channel): int => (int) round($shade < 500 ? (255 - $channel) * $intensity + $channel : $channel * $intensity);
+            $shades[$shade] = sprintf('#%02x%02x%02x', $mix($red), $mix($green), $mix($blue));
+        }
+
+        return $shades;
+    }
+
+    /**
      * Phasen nur im Panel (dort gibt es Filaments Variablen wie --primary-600),
      * der Akzent auch auf der Daysheet-Seite – dort deshalb als feste Farbe.
-     * --vc-accent-dark gilt nur im Dunkelmodus des Panels.
+     * --vc-accent-dark gilt nur im Dunkelmodus des Panels. *-ink ist die Schrift
+     * auf der Phasenfarbe (Nummern, aktiver Unterbereich): auf hellem Grün und
+     * Gold dunkel, sonst weiß.
      *
      * @return array<string, string>
      */
@@ -114,13 +138,19 @@ enum ColorScheme: string implements HasLabel
                 '--vc-buchung' => '#2563eb',
                 '--vc-planung' => '#0d9488',
                 '--vc-durchfuehrung' => '#d97706',
+                '--vc-buchung-ink' => '#fff',
+                '--vc-planung-ink' => '#fff',
+                '--vc-durchfuehrung-ink' => '#fff',
                 '--vc-accent' => '#2563eb',
                 '--vc-accent-dark' => '#60a5fa',
             ],
             self::LilaGruen => [
                 '--vc-buchung' => 'var(--primary-600)',
-                '--vc-planung' => 'var(--success-600)',
-                '--vc-durchfuehrung' => 'var(--warning-600)',
+                '--vc-planung' => 'var(--success-500)',
+                '--vc-durchfuehrung' => 'var(--warning-500)',
+                '--vc-buchung-ink' => '#fff',
+                '--vc-planung-ink' => 'var(--gray-950)',
+                '--vc-durchfuehrung-ink' => 'var(--gray-950)',
                 '--vc-accent' => '#660B64',
                 '--vc-accent-dark' => 'var(--primary-400)',
             ],
@@ -128,17 +158,25 @@ enum ColorScheme: string implements HasLabel
     }
 
     /**
-     * Farbmuster für die Auswahl: Hauptfarbe, Grün, Gelb, Rot, Grau – so, wie
-     * Filament sie anzeigt (aus einer einzelnen Farbe wird eine Skala).
+     * Farbmuster für die Auswahl: Hauptfarbe, Grün, Gelb, Rot, Grau.
      *
      * @return list<string>
      */
     public function swatches(): array
     {
         $colors = $this->colors();
-        $shade = fn (string $name, int $shade): string => (string) (is_string($colors[$name]) ? Color::generatePalette($colors[$name]) : $colors[$name])[$shade];
+        $shade = fn (string $name, int $shade): string => (string) $colors[$name][$shade];
 
         return [$shade('primary', 600), $shade('success', 500), $shade('warning', 500), $shade('danger', 600), $shade('gray', 700)];
+    }
+
+    /** Eigene Stile des Schemas (Pfad unter public/), etwa die dunkle Kopfleiste von Lila-Grün. */
+    public function stylesheet(): ?string
+    {
+        return match ($this) {
+            self::VcBasic => null,
+            self::LilaGruen => 'css/scheme-lila-gruen.css',
+        };
     }
 
     /** Die Variablen als CSS für ein <style>-Element. */

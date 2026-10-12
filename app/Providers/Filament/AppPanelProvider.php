@@ -77,8 +77,9 @@ class AppPanelProvider extends PanelProvider
             ->maxContentWidth(Width::Full)
             // Eigene Stile ohne Build-Schritt (Event-Liste, Workspace; sheet.css: Event-Infos
             // für Externe, auch auf der Daysheet-Seite), Version = Änderungszeit; danach
-            // die eigenen Farben des Farbschemas (Phasen, Akzent)
-            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): string => collect(['css/vcontrol.css', 'css/sheet.css'])
+            // die Stile und eigenen Farben des Farbschemas (Kopfleiste, Phasen, Akzent)
+            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn (): string => collect(['css/vcontrol.css', 'css/sheet.css', ColorScheme::current()->stylesheet()])
+                ->filter()
                 ->map(fn (string $file): string => sprintf(
                     '<link rel="stylesheet" href="%s?v=%d">',
                     asset($file),

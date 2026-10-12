@@ -24,11 +24,17 @@ class BrandingTest extends TestCase
             ->assertOk()
             ->assertSee('--primary-600:' . Color::Blue[600], false)
             ->assertSee('--vc-buchung:#2563eb;--vc-planung:#0d9488;--vc-durchfuehrung:#d97706;', false)
-            ->assertDontSee(Color::generatePalette('#660B64')[600], false);
+            ->assertDontSee(Color::convertToOklch('#5c0a5a'), false)
+            ->assertDontSee('scheme-lila-gruen.css', false);
     }
 
     public function test_lila_gruen_mit_den_farben_des_t1x_backends(): void
     {
+        // Skalen wie in Filament 3 (T1X): 500 ist die T1X-Farbe, 600 dunkler
+        $primary = ColorScheme::LilaGruen->colors()['primary'];
+        $this->assertSame(['#f7f3f7', '#660b64', '#5c0a5a', '#1f031e'], [$primary[50], $primary[500], $primary[600], $primary[950]]);
+        $this->assertSame('#f6c876', ColorScheme::LilaGruen->colors()['warning'][500]);
+
         Setting::put(Setting::COLOR_SCHEME, ColorScheme::LilaGruen->value);
 
         // Auch ohne Anmeldung (Anmeldeseite)
@@ -37,10 +43,13 @@ class BrandingTest extends TestCase
         $this->actingAs($this->admin())
             ->get('/events')
             ->assertOk()
-            ->assertSee('--primary-600:' . Color::generatePalette('#660B64')[600], false)
+            ->assertSee('--primary-600:' . Color::convertToOklch('#5c0a5a'), false)
             ->assertSee('--success-500:' . Color::convertToOklch('#46C7AF'), false)
             ->assertSee('--gray-950:' . Color::convertToOklch('#1A2421'), false)
-            ->assertSee('--vc-buchung:var(--primary-600);--vc-planung:var(--success-600);', false)
+            ->assertSee('--vc-buchung:var(--primary-600);--vc-planung:var(--success-500);', false)
+            ->assertSee('--vc-planung-ink:var(--gray-950);', false)
+            // Dunkle Kopfleiste wie im T1X-Veranstalterbereich
+            ->assertSee(asset('css/scheme-lila-gruen.css') . '?v=', false)
             ->assertDontSee('--primary-600:' . Color::Blue[600], false);
     }
 
