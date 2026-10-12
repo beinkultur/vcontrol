@@ -233,6 +233,13 @@ class EventForm
         ));
     }
 
+    /**
+     * Render-Hook am Ende der Reiterzeile: Speichern/Abbrechen rechtsbündig
+     * (filament.events.section-actions), nur auf EditEvent – registriert im
+     * AppPanelProvider mit diesem Scope, die Lese-Ansicht bekommt keine.
+     */
+    public const SECTION_ACTIONS_HOOK = 'vc-event-section-actions';
+
     /** @param  list<Tab>  $tabs  Unterbereiche einer Phase, in der Farbe der Phase */
     private static function sections(string $phase, array $tabs): Tabs
     {
@@ -240,6 +247,7 @@ class EventForm
             ->persistTabInQueryString('bereich')
             ->contained(false)
             ->extraAttributes(['class' => "vc-sections vc-sections--{$phase}"])
+            ->endRenderHooks([self::SECTION_ACTIONS_HOOK])
             ->tabs($tabs);
     }
 

@@ -7,6 +7,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\Concerns\HasEventHeading;
 use App\Filament\Support\DaysheetActions;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Enums\Alignment;
 
 /**
  * Der Event-Workspace: Übersicht und Phasen (siehe EventForm). Events werden
@@ -27,6 +28,12 @@ class EditEvent extends EditRecord
             DaysheetActions::send(),
             $this->historyAction(),
         ];
+    }
+
+    /** Speichern/Abbrechen unten rechtsbündig, wie oben in der Reiterzeile (EventForm::SECTION_ACTIONS_HOOK). */
+    public function getFormActionsAlignment(): string|Alignment
+    {
+        return Alignment::End;
     }
 
     /**

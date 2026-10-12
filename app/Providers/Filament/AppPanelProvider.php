@@ -5,6 +5,9 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\RequestPasswordReset;
+use App\Filament\Resources\Events\EventResource;
+use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Backups;
@@ -25,6 +28,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Livewire\Livewire;
 
 /**
  * Der interne Arbeitsbereich. Er ist die App selbst und liegt deshalb ohne
@@ -82,6 +86,14 @@ class AppPanelProvider extends PanelProvider
 
                 return $warning === null ? '' : view('filament.system.backup-warning', ['warning' => $warning])->render();
             })
+            // Event-Workspace: Speichern/Abbrechen zusätzlich in der Reiterzeile der Unterbereiche
+            ->renderHook(
+                EventForm::SECTION_ACTIONS_HOOK,
+                fn (): string => view('filament.events.section-actions', [
+                    'cancelUrl' => (($page = Livewire::current()) instanceof EditEvent ? $page->previousUrl : null) ?? EventResource::getUrl(),
+                ])->render(),
+                scopes: EditEvent::class,
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             // Kein Dashboard: / führt zum ersten Menüpunkt, den der Benutzer sehen darf –

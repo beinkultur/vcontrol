@@ -570,6 +570,16 @@ a.vc-card:hover {
     color: var(--color-white);
 }
 
+/* Speichern/Abbrechen am Ende der Reiterzeile (filament/events/section-actions):
+   rechtsbündig, bei Platzmangel rechts in der nächsten Zeile */
+.vc-sections__actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-inline-start: auto;
+    padding-inline-start: 0.5rem;
+}
+
 /* ---------------------------------------------------------------------
  * Planung › Bühne: Podest-Berechnung
  * ------------------------------------------------------------------ */
