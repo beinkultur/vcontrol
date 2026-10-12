@@ -50,6 +50,26 @@
     padding-block: 0.4rem;
 }
 
+/* Suche rechts in der Zeile der Filter statt in einer eigenen Zeile darunter,
+   unten bündig mit den Auswahlfeldern; auf dem Handy bleibt sie darunter */
+@media (min-width: 48rem) {
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-ctn {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar {
+        flex: 0 0 auto;
+        align-items: flex-end;
+        padding: 0.6rem 0.75rem 0.6rem 0;
+    }
+}
+
 .fi-resource-events.fi-resource-list-records-page .fi-ta-text,
 .fi-resource-events.fi-resource-list-records-page .fi-ta-text-item {
     font-size: 0.8125rem;
