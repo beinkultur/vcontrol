@@ -153,10 +153,12 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   Speichern prüft `AccountSafety` die neuen Rollen und Kalender-Rechte.
 - Passwort ändert jeder selbst unter Profil (`App\Filament\Pages\Auth\EditProfile`,
   nur das Passwort); „Angemeldet bleiben“ gilt 30 Tage (`config/auth.php`).
-  „Passwort vergessen?“ schickt einen Link per Mail (60 Minuten gültig). Die
-  eigene Anfrageseite `App\Filament\Pages\Auth\RequestPasswordReset` antwortet
-  auf jede Adresse gleich – auch unbekannte und gesperrte, die keine Mail
-  bekommen –, damit sich nicht ausprobieren lässt, wer ein Konto hat.
+  „Passwort vergessen?“ schickt einen Link per Mail, 10 Minuten gültig
+  (`config/auth.php`). Die eigene Anfrageseite
+  `App\Filament\Pages\Auth\RequestPasswordReset` antwortet auf jede Adresse
+  gleich – auch unbekannte und gesperrte, die keine Mail bekommen, und wenn der
+  Mailversand scheitert (steht dann im Log) –, damit sich nicht ausprobieren
+  lässt, wer ein Konto hat.
 - **Externe (Recht „Events (extern)“) sind im selben Panel.** Sie sehen nur
   „Meine Events“ (`ExternEventResource` mit eigenem Modell `ExternEvent` und
   `ExternEventPolicy`) – alles andere sperren Policies und `canAccess()`. Jede

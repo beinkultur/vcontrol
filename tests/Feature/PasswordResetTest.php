@@ -7,11 +7,13 @@ use App\Models\AuditLog;
 use Filament\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Filament\Auth\Pages\PasswordReset\ResetPassword;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Sleep;
 use Livewire\Livewire;
+use RuntimeException;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
@@ -67,5 +69,41 @@ class PasswordResetTest extends TestCase
         $hash = (string) $user->fresh()->password;
         $this->assertTrue(Hash::check('Neues-Passwort-2026', $hash));
         $this->assertStringNotContainsString($hash, AuditLog::query()->get()->toJson());
+    }
+
+    public function test_link_gilt_nur_zehn_minuten(): void
+    {
+        $this->assertSame(10, config('auth.passwords.users.expire'));
+        $user = $this->admin();
+        $token = Password::broker()->createToken($user);
+        $this->travel(11)->minutes();
+
+        Livewire::withQueryParams(['email' => $user->email, 'token' => $token])
+            ->test(ResetPassword::class)
+            ->fillForm(['password' => 'Neues-Passwort-2026', 'passwordConfirmation' => 'Neues-Passwort-2026'])
+            ->call('resetPassword');
+
+        $this->assertFalse(Hash::check('Neues-Passwort-2026', (string) $user->fresh()->password));
+    }
+
+    public function test_scheitert_der_mailversand_bleibt_die_antwort_gleich(): void
+    {
+        Exceptions::fake();
+        $aktiv = $this->admin();
+        $this->app->bind(ResetPasswordNotification::class, fn ($app, array $parameters): ResetPasswordNotification => new class($parameters['token']) extends ResetPasswordNotification
+        {
+            public function toMail($notifiable): never
+            {
+                throw new RuntimeException('SMTP nicht erreichbar');
+            }
+        });
+
+        Livewire::test(RequestPasswordReset::class)
+            ->fillForm(['email' => $aktiv->email])
+            ->call('request')
+            ->assertNotified(__('passwords.sent'))
+            ->assertSet('data.email', null);
+
+        Exceptions::assertReported(RuntimeException::class);
     }
 }

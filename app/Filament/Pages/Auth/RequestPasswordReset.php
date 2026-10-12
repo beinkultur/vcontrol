@@ -6,6 +6,8 @@ use Filament\Auth\Pages\PasswordReset\RequestPasswordReset as BaseRequestPasswor
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Timebox;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * „Passwort vergessen?“ wie bei Filament, aber ohne zu verraten, ob es ein
@@ -19,9 +21,18 @@ class RequestPasswordReset extends BaseRequestPasswordReset
 {
     public function request(): void
     {
-        (new Timebox)->call(function (): void {
-            parent::request();
-        }, 1_500_000);
+        try {
+            (new Timebox)->call(function (): void {
+                parent::request();
+            }, 1_500_000);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            // Mailversand gescheitert: ins Log, nach außen dieselbe Antwort wie sonst –
+            // eine Fehlermeldung gäbe es nur bei Adressen, zu denen es ein Konto gibt
+            report($exception);
+            $this->getSentNotification(Password::RESET_LINK_SENT)?->send();
+        }
 
         $this->form->fill();
     }

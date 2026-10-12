@@ -42,7 +42,7 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('')
             ->login(Login::class)
-            // „Passwort vergessen?“: Link per Mail, 60 Minuten gültig (config/auth.php)
+            // „Passwort vergessen?“: Link per Mail, 10 Minuten gültig (config/auth.php)
             ->passwordReset(RequestPasswordReset::class)
             // Benutzermenü › Profil: eigenes Passwort ändern (Name und E-Mail nur zur Ansicht)
             ->profile(EditProfile::class, isSimple: false)
