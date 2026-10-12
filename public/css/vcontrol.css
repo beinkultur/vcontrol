@@ -1068,35 +1068,16 @@ a.vc-card:hover {
     filter: invert(1);
 }
 
-/* Kopfzeile so niedrig wie bei Lexware: 40 statt Filaments 64 px. Die Variable
-   nutzt Filament auch für Seitenleiste und Abstände; Logo, Menüpunkte, Suche
-   und Avatar passen sich an (die Logo-Höhe setzt Filament inline aus
-   brandLogoHeight, die Anmeldeseite behält sie). */
+/* Kopfzeile 50 statt Filaments 64 px hoch (Vorbild Lexware: 40 px). Die
+   Variable nutzt Filament auch für Seitenleiste und Abstände. Ohne den
+   Außenabstand der Menüzeile (lg:my-2) passen Logo, Menüpunkte, Suche und
+   Avatar in ihrer Standardgröße hinein. */
 .fi-body {
-    --topbar-height: 2.5rem;
-}
-
-.fi-topbar .fi-logo,
-.fi-sidebar-header .fi-logo {
-    height: 1.75rem !important;
-    font-size: 1.125rem;
+    --topbar-height: 3.125rem;
 }
 
 .fi-topbar-nav-groups {
     margin-block: 0;
-}
-
-.fi-topbar-item-btn {
-    padding-block: 0.25rem;
-}
-
-.fi-topbar .fi-global-search-field .fi-input {
-    padding-block: 0.25rem;
-}
-
-.fi-topbar .fi-user-menu-trigger .fi-avatar {
-    width: 1.75rem;
-    height: 1.75rem;
 }
 
 /* 1024–1439 px: Menüpunkte enger, damit Events bis Verwaltung neben Logo,
