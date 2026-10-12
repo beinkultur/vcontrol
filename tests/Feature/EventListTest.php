@@ -106,6 +106,15 @@ class EventListTest extends TestCase
         $this->assertSame(['default' => 2, 'lg' => 4], $table->getFiltersFormColumns());
     }
 
+    public function test_fortschritt_aller_drei_phasen(): void
+    {
+        Livewire::test(ListEvents::class)
+            ->assertSeeHtml('vc-mini-progress__fill vc-fill--buchung')
+            ->assertSeeHtml('vc-mini-progress__fill vc-fill--planung')
+            ->assertSeeHtml('vc-mini-progress__fill vc-fill--durchfuehrung')
+            ->assertSee('% · Durchführung');
+    }
+
     public function test_klick_oeffnet_den_workspace(): void
     {
         $leser = $this->userWith($this->role('catering', ['events' => 'read']));

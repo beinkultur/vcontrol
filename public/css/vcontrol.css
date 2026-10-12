@@ -99,10 +99,10 @@
     box-shadow: inset 3px 0 0 #fbbf24;
 }
 
-/* Fortschritt Buchung/Planung in einer Zeile */
+/* Fortschritt Buchung, Planung, Durchführung in einer Zeile */
 .vc-mini-progress {
     display: grid;
-    grid-template-columns: auto 2.1rem 1.2rem auto 2.1rem 1.2rem;
+    grid-template-columns: repeat(3, auto 2.1rem 1.2rem);
     align-items: center;
     gap: 0.2rem;
     padding: 0.3rem 0.4rem;
