@@ -78,7 +78,10 @@ Bedienbar:
   lesend – ohne Buchhaltung (fehlt ganz, nicht nur ausgeblendet) und ohne
   WLAN-Passwort, wie in der PHP-Version. Neu anlegen: nur die Daten, danach
   geht es in den Workspace. Die Checkliste zeigt die PHP-Version nur als
-  Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar.
+  Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar, mit
+  der Überschrift „Sind folgende Positionen geplant?“. Seit 12.10.2026 ohne
+  „Briefing vollständig“ (Spalte bleibt mit Altwerten); Merch-Fee und
+  „Merch-Fee eingesammelt“ stehen unter Durchführung › Betrieb › Check.
 - Gästeliste mit Druckansicht für den Einlass (A4, nach Name sortiert, Summe,
   Spalte zum Abhaken).
 - **Durchführung › Betrieb** (01.10.2026): Räume einmal je Raum mit Backstage /
@@ -86,8 +89,9 @@ Bedienbar:
   abgerechnet, Spalte in der Buchhaltung); Stromzähler Stand Anfang und Ende,
   der Verbrauch wird daraus berechnet (kein Eingabefeld mehr); „Check“ wie in
   der PHP-Version: Sonderreinigung, Haus-Delay, Miete Elektro-Ameise, Haus-Rig
-  ab 7 Uhr, Sold-Out-Award, dazu PAX abgerechnet. Die Zählerstände gibt es nur
-  hier, nicht in der PHP-Version.
+  ab 7 Uhr, Sold-Out-Award, dazu PAX abgerechnet und (seit 12.10.2026, vorher
+  Planung › Checkliste) Merch-Fee und „Merch-Fee eingesammelt“ (ja/nein/
+  entfällt). Die Zählerstände gibt es nur hier, nicht in der PHP-Version.
 - **Durchführung › Übergabeprotokolle** wie in der PHP-Version: Inventar an
   einen Empfänger (mit dessen Unterschrift), „Zurückerhalten“, Unterschrift
   später ergänzen. **Durchführung › Bestellscheine**: „Bestellt von“, Artikel

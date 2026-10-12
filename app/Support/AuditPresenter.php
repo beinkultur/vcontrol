@@ -177,7 +177,7 @@ final class AuditPresenter
         'get_in' => 'Get-in', 'load_in' => 'Load-in', 'admission' => 'Einlass', 'vip_admission' => 'VIP-Einlass', 'start_time' => 'Show-Beginn',
         'end_time' => 'Show-Ende', 'curfew' => 'Curfew', 'load_out' => 'Load-out',
         // Checkliste
-        'merch_fee' => 'Merch-Fee', 'special_cleaning' => 'Sonderreinigung', 'power_ant' => 'Elektro-Ameise', 'house_rig_early' => 'Haus-Rig ab 7 Uhr',
+        'merch_fee' => 'Merch-Fee', 'merch_fee_check' => 'Merch-Fee eingesammelt', 'special_cleaning' => 'Sonderreinigung', 'power_ant' => 'Elektro-Ameise', 'house_rig_early' => 'Haus-Rig ab 7 Uhr',
         'briefing_complete' => 'Briefing vollständig',
         // Bühne
         'stage_info' => 'Bühne (Info)', 'width' => 'Breite', 'depth' => 'Tiefe', 'height' => 'Höhe', 'wing_sl_width' => 'Wing SL Breite',

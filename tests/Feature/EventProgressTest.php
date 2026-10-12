@@ -33,7 +33,7 @@ class EventProgressTest extends TestCase
 
         $phases = EventProgress::phases($event->fresh());
         $this->assertSame(100, $phases['buchung']);
-        // Planung: alles außer Personal (Rolle außer PL), Gewerke und WLAN/Briefing = 8 von 11
+        // Planung: alles außer Personal (Rolle außer PL), Gewerke und WLAN = 8 von 11
         $this->assertSame(73, $phases['planung']);
         // Durchführung: PAX und abgeschlossen = 2 von 5
         $this->assertSame(40, $phases['durchfuehrung']);

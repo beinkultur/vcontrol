@@ -46,7 +46,7 @@ final class EventProgress
             'gewerke' => self::filledServices($event) > 0,
             'gaeste' => $guestCount > 0,
             'dateien' => $fileCount > 0,
-            'sonstiges' => filled($event->wlan) || (bool) $c?->briefing_complete,
+            'sonstiges' => filled($event->wlan),
         ];
     }
 
@@ -95,7 +95,8 @@ final class EventProgress
             // PHP: Durchführung (Freitext, nicht übernommen) oder Aufschließen – hier: eine Rolle außer PL
             $e->assignments->contains(fn (EventAssignment $a): bool => $a->role !== AssignmentRole::ProjectLead),
             self::filledServices($e) > 0,
-            filled($e->wlan) || (bool) $c?->briefing_complete,
+            // „Briefing vollständig“ gibt es seit 12.10.2026 nicht mehr
+            filled($e->wlan),
         ];
     }
 
@@ -109,7 +110,7 @@ final class EventProgress
             $e->pax !== null,
             $e->rooms->isNotEmpty() || filled($op?->backstages) || filled($op?->offices),
             $op?->bus_power !== null,
-            in_array($c?->merch_fee_check, ['yes', 'no'], true)
+            self::answered($c?->merch_fee_check)
                 || in_array($c?->special_cleaning, ['yes', 'no'], true)
                 || $op?->house_delay !== null
                 || $c?->power_ant !== null

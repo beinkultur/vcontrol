@@ -90,7 +90,6 @@ class EventForm
         'bar_setup' => 'Tresen Aufbau',
         'bar_teardown' => 'Tresen Abbau',
         'chairs_ordered' => 'Stühle bestellt',
-        'merch_fee_check' => 'Merch-Fee eingesammelt',
     ];
 
     public const CHECK_OPTIONS = ['yes' => 'ja', 'no' => 'nein', 'na' => 'entfällt'];
@@ -386,27 +385,25 @@ class EventForm
             ));
     }
 
+    /**
+     * Planung › Checkliste. Merch-Fee und „Merch-Fee eingesammelt“ stehen seit
+     * dem 12.10.2026 unter Durchführung › Betrieb › Check, „Briefing vollständig“
+     * gibt es nicht mehr (die Spalte bleibt mit ihren Altwerten stehen).
+     */
     private static function checklist(): Section
     {
-        return Section::make()
+        return Section::make('Sind folgende Positionen geplant?')
             ->relationship('checklist')
             ->columns(3)
-            ->schema([
-                ...array_map(
-                    fn (string $field, string $label): ToggleButtons => ToggleButtons::make($field)
-                        ->label($label)
-                        ->options(self::CHECK_OPTIONS)
-                        ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
-                        ->grouped(),
-                    array_keys(self::CHECKS),
-                    self::CHECKS,
-                ),
-                TextInput::make('merch_fee')
-                    ->label('Merch-Fee')
-                    ->maxLength(120),
-                Toggle::make('briefing_complete')
-                    ->label('Briefing vollständig'),
-            ]);
+            ->schema(array_map(
+                fn (string $field, string $label): ToggleButtons => ToggleButtons::make($field)
+                    ->label($label)
+                    ->options(self::CHECK_OPTIONS)
+                    ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
+                    ->grouped(),
+                array_keys(self::CHECKS),
+                self::CHECKS,
+            ));
     }
 
     /** Planung › Sonstiges: in der PHP-Version WLAN; dazu, was keinen eigenen Platz hat. */
@@ -480,8 +477,24 @@ class EventForm
                         ->label('PAX abgerechnet')
                         ->numeric()
                         ->minValue(0),
+                    // Bis 12.10.2026 unter Planung › Checkliste
+                    self::relationText('checklist', 'merch_fee', 'Merch-Fee', 120),
+                    self::yesNo('checklist', 'merch_fee_check', 'Merch-Fee eingesammelt', textValues: true, notApplicable: true),
                 ]),
         ];
+    }
+
+    /** Textfeld aus einer anderen 1:1-Tabelle, gespeichert wie yesNo() per updateOrCreate. */
+    private static function relationText(string $relation, string $column, string $label, int $maxLength): TextInput
+    {
+        return TextInput::make($column)
+            ->label($label)
+            ->maxLength($maxLength)
+            ->dehydrated(false)
+            ->afterStateHydrated(fn (TextInput $component, ?Event $record) => $component->state($record?->{$relation}?->{$column}))
+            ->saveRelationshipsUsing(fn (Event $record, mixed $state) => $record->{$relation}()->updateOrCreate([], [
+                $column => filled($state) ? trim((string) $state) : null,
+            ]));
     }
 
     private static function meterReading(string $name, string $label): TextInput
@@ -515,27 +528,29 @@ class EventForm
      * Ohne Bindung gespeichert per updateOrCreate – ein zweiter Abschnitt auf
      * derselben Beziehung legte bei neuen Events die Zeile doppelt an. Leer
      * heißt: nicht erfasst. Textwerte wie in der Checkliste („yes“/„no“), aber
-     * nur ja/nein (Wunsch vom 01.10.2026).
+     * nur ja/nein (Wunsch vom 01.10.2026) – mit $notApplicable auch „entfällt“
+     * (Merch-Fee eingesammelt: ohne Merch gibt es nichts einzusammeln).
      */
-    private static function yesNo(string $relation, string $column, string $label, bool $textValues = false): ToggleButtons
+    private static function yesNo(string $relation, string $column, string $label, bool $textValues = false, bool $notApplicable = false): ToggleButtons
     {
         $field = ToggleButtons::make($column)
             ->label($label)
             ->grouped()
             ->dehydrated(false);
+        $allowed = $notApplicable ? ['yes', 'no', 'na'] : ['yes', 'no'];
         $field = $textValues
-            ? $field->options(['yes' => 'ja', 'no' => 'nein'])
-                ->colors(['yes' => 'success', 'no' => 'danger'])
+            ? $field->options(array_intersect_key(self::CHECK_OPTIONS, array_flip($allowed)))
+                ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
                 ->icons(['yes' => Heroicon::Check, 'no' => Heroicon::XMark])
             : $field->boolean('ja', 'nein');
 
         return $field
             // Für Ja/Nein als 1/0 wie die Schaltflächen: Filament wandelt vor diesem Aufruf um.
-            ->afterStateHydrated(function (ToggleButtons $component, ?Event $record) use ($relation, $column, $textValues): void {
+            ->afterStateHydrated(function (ToggleButtons $component, ?Event $record) use ($relation, $column, $textValues, $allowed): void {
                 $value = $record?->{$relation}?->{$column};
                 $component->state(match (true) {
                     $value === null => null,
-                    $textValues => in_array($value, ['yes', 'no'], true) ? $value : null, // „entfällt“ gibt es hier nicht
+                    $textValues => in_array($value, $allowed, true) ? $value : null,
                     default => (int) $value,
                 });
             })
