@@ -31,12 +31,12 @@
         .items { width: 100%; }
         /* Jeder Abschnitt eine eigene Tabelle im Block: bleibt beisammen, die Überschrift nie allein am Seitenende */
         .section-block { page-break-inside: avoid; }
-        .c-unit { width: 30mm; }
+        .c-unit { width: 30mm; text-align: right; }
         .c-price { width: 25mm; }
         .c-factor { width: 15mm; }
         .c-amount { width: 25mm; }
         .items th { font-size: 7.5pt; font-weight: normal; color: #666; text-align: left; border-bottom: 0.8pt solid #888; padding: 1.2mm 1.5mm; }
-        .items th.num { text-align: right; }
+        .items th.num, .items th.c-unit { text-align: right; }
         .items td { padding: 1.2mm 1.5mm; border-bottom: 0.4pt solid #ddd; vertical-align: top; }
         .items .section td { font-weight: bold; font-size: 8pt; text-transform: uppercase; padding-top: 4mm; border-bottom: 0.8pt solid #888; }
         .items .subtotal td { border-bottom: 0; color: #666; font-size: 7.5pt; padding-top: 0.6mm; }
