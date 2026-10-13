@@ -187,7 +187,7 @@ final class AuditPresenter
         'seating_plan_mime_type' => 'Saalplan-Typ', 'price_list_id' => 'Preisliste',
         // Preislisten, Costings
         'intro' => 'Kopf', 'section' => 'Abschnitt', 'minimum' => 'Mindestbetrag', 'default_factor' => 'Faktor (Vorgabe)',
-        'factor_from_pax' => 'Faktor = PAX erwartet', 'factor' => 'Faktor', 'fixed_price' => 'Preis aus der Preisliste',
+        'factor_from_pax' => 'Faktor = PAX erwartet', 'default_active' => 'Im Costing (Vorgabe)', 'factor' => 'Faktor', 'fixed_price' => 'Preis aus der Preisliste',
         'price_list_item_id' => 'Preislisten-Posten', 'costing_id' => 'Costing', 'vat_rate' => 'MwSt. (%)', 'sent_at' => 'Verschickt',
         'sent_to' => 'Verschickt an', 'sent_by_name' => 'Verschickt von',
         // Buchhaltung, PR
@@ -254,7 +254,7 @@ final class AuditPresenter
     /** Felder mit ja/nein */
     private const BOOLEANS = ['closed', 'accounting_closed', 'power_ant', 'house_rig_early', 'briefing_complete', 'sold_out_award', 'house_delay',
         'stair_third', 'split_setup_teardown', 'is_active', 'is_archived', 'is_system', 'is_super', 'is_system_admin', 'is_shared', 'is_settled', 'is_fixed',
-        'is_received', 'hidden_from_externals', 'factor_from_pax', 'fixed_price'];
+        'is_received', 'hidden_from_externals', 'factor_from_pax', 'default_active', 'fixed_price'];
 
     /** Fremdschlüssel → [Modell, Spalte(n) für den Namen] */
     private const REFERENCES = [

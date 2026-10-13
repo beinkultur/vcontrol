@@ -19,10 +19,14 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   im Repo ändern, in einer abgeschotteten Testkopie auf dem Server mit **echter**
   Kopie von vendor (`cp -a`, nie `cp -al` – Composer schriebe sonst über die
   Hardlinks in die Live-Installation) `composer update <paket> --with-dependencies`,
-  `composer.lock` zurück ins Repo holen, dort testen. Einspielen: `php artisan down`,
-  `scripts/deploy.sh`, `composer install` (umask 022), Migrationen, `php artisan up`,
-  erst dann die Tests (im Wartungsmodus antworten sie mit 503). So am 13.10.2026
-  mit dompdf.
+  `composer.lock` zurück ins Repo holen, dort testen. Einspielen:
+  `php artisan down --render="errors::503" --retry=60` (die eigene Wartungsseite,
+  vorab gerendert – sie kommt auch, wenn die App mitten im Composer-Lauf nicht
+  startet), `scripts/deploy.sh`, `composer install` (umask 022), Migrationen,
+  `php artisan up`. So am 13.10.2026 mit dompdf. Ebenso bei Migrationen, die
+  Spalten umbauen. Die Tests nutzen den Wartungsmodus „array“ (phpunit.xml) – sie
+  laufen auch in der Live-Installation und dürfen die Datei
+  `storage/framework/down` nie anlegen.
 - Deploy: `scripts/deploy.sh` (Standard ipa.vcontrol.eu, sonst die Halle als
   Parameter; `--dry-run` zeigt nur an). Überträgt per rsync, löscht auf dem
   Server, was im Repo gelöscht oder umbenannt wurde – nur in app, config,

@@ -93,7 +93,8 @@ class PriceListResource extends Resource
                 Section::make('Kostenpunkte')
                     ->description('In der Reihenfolge der Preisliste, nach Abschnitten. Einheiten kommen aus Verwaltung › Event-Feldoptionen › Einheit (Preislisten). '
                         . 'Ohne Preis: nach Aufwand. Einheit „%“: Zuschlag in Prozent – im Costing ist der Faktor dann der Betrag in €, auf den er gilt. '
-                        . 'Faktor: Vorgabe für neue Costings (leer = 0); „PAX“: stattdessen die erwarteten PAX des Events, etwa „pro verkauftem Ticket“.')
+                        . 'Faktor, PAX und Im Costing sind Vorgaben für neue Costings: Faktor leer = 0; „PAX“ nimmt stattdessen die erwarteten PAX des Events, '
+                        . 'etwa „pro verkauftem Ticket“; „Im Costing“ aus startet den Kostenpunkt ausgeschaltet, etwa eine Alternative.')
                     ->schema([
                         Repeater::make('items')
                             ->hiddenLabel()
@@ -108,6 +109,7 @@ class PriceListResource extends Resource
                                 TableColumn::make('Mindestbetrag')->width('8rem'),
                                 TableColumn::make('Faktor')->width('6rem'),
                                 TableColumn::make('PAX')->width('4rem')->alignment(Alignment::Center),
+                                TableColumn::make('Im Costing')->width('6rem')->alignment(Alignment::Center),
                             ])
                             ->schema([
                                 TextInput::make('section')
@@ -137,6 +139,9 @@ class PriceListResource extends Resource
                                     ->numeric(),
                                 Checkbox::make('factor_from_pax')
                                     ->label('Faktor = PAX erwartet'),
+                                Toggle::make('default_active')
+                                    ->label('Im neuen Costing eingeschaltet')
+                                    ->default(true),
                             ])
                             ->addActionLabel('Kostenpunkt hinzufügen')
                             ->defaultItems(0),

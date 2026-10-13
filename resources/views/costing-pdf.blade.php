@@ -4,6 +4,7 @@
     Seitenzahlen setzt CostingPdf, der Fuß steht fest am Seitenende.
 --}}
 @php
+    $venueLogo ??= null;
     $money = fn (float $amount): string => \App\Support\Costings::money($amount);
     $number = fn (float $value): string => \App\Support\Costings::number($value);
     $priceList = $costing->priceList;
@@ -18,7 +19,10 @@
         @page { margin: 16mm 16mm 24mm; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 8.5pt; color: #1a1a1a; line-height: 1.35; }
         .venue { font-size: 10pt; font-weight: bold; letter-spacing: 0.04em; text-transform: uppercase; color: #555; }
-        h1 { font-size: 17pt; margin: 1mm 0 4mm; }
+        h1 { font-size: 17pt; margin: 1mm 0 0; }
+        .head { width: 100%; margin-bottom: 5mm; }
+        .head td { vertical-align: bottom; padding: 0; }
+        .head-logo { text-align: right; }
         table { border-collapse: collapse; }
         .meta { width: 100%; margin-bottom: 5mm; }
         .meta td { padding: 0.8mm 2mm 0.8mm 0; vertical-align: top; }
@@ -51,8 +55,22 @@
 <body>
     <div class="footer">{{ $venue }} · erstellt mit VenueControl<img src="{{ $logo }}" alt=""></div>
 
-    <div class="venue">{{ $venue }}</div>
-    <h1>Costing</h1>
+    {{-- Mit Logo der Halle steht ihr Name nicht noch einmal darüber --}}
+    <table class="head">
+        <tr>
+            <td>
+                @if (!$venueLogo)
+                    <div class="venue">{{ $venue }}</div>
+                @endif
+                <h1>Costing</h1>
+            </td>
+            @if ($venueLogo)
+                <td class="head-logo">
+                    <img src="{{ $venueLogo['src'] }}" alt="{{ $venue }}" style="width: {{ $venueLogo['width'] }}mm; height: {{ $venueLogo['height'] }}mm;">
+                </td>
+            @endif
+        </tr>
+    </table>
 
     <table class="meta">
         <tr>
@@ -127,7 +145,7 @@
                         <td class="num c-amount">{{ $amount === null ? 'nach Aufwand' : $money($amount) }}</td>
                     </tr>
                 @endforeach
-                @if ($priced > 1)
+                @if ($priced > 1 && $subtotal != 0.0)
                     <tr class="subtotal"><td colspan="4" class="num">Summe {{ $section }}</td><td class="num c-amount">{{ $money($subtotal) }}</td></tr>
                 @endif
             </table>

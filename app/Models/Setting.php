@@ -11,6 +11,9 @@ class Setting extends Model
 {
     public const VENUE_NAME = 'venue_name';
 
+    /** Pfad des Hallen-Logos (App\Support\VenueLogo), steht auf dem Costing */
+    public const VENUE_LOGO = 'venue_logo';
+
     public const PODEST_INVENTORY = 'podest_inventory';
 
     public const PODEST_INCLUDED = 'podest_included';

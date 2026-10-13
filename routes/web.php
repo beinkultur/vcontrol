@@ -10,6 +10,7 @@ use App\Http\Controllers\GuestListPrintController;
 use App\Http\Controllers\OpsStatusController;
 use App\Http\Controllers\SeatingPlanController;
 use App\Http\Controllers\StagePlanController;
+use App\Http\Controllers\VenueLogoController;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Session\Middleware\StartSession;
@@ -33,6 +34,7 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
     Route::get('/saalplaene/{plan}/pdf', [SeatingPlanController::class, 'standard'])->name('seating-plans.pdf');
     Route::get('/costings/{costing}/pdf', [CostingController::class, 'pdf'])->name('costings.pdf');
     Route::get('/events/{event}/costing', [CostingController::class, 'event'])->name('events.costing');
+    Route::get('/halle/logo', VenueLogoController::class)->name('venue.logo');
 });
 
 // Daysheet: ohne Konto, der Schlüssel im Link berechtigt (bis zum Tag nach der

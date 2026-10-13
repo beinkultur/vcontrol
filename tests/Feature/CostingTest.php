@@ -34,17 +34,18 @@ class CostingTest extends TestCase
         Filament::setCurrentPanel(Filament::getPanel('app'));
 
         $this->list = PriceList::create(['name' => 'Konzert-Preisliste 2025-09', 'valid_from' => '2025-09-01', 'notes' => 'Alle Preise zzgl. MwSt.']);
+        // Abschnitt, Kostenpunkt, Einheit, Preis, Mindestbetrag, Faktor, PAX, im neuen Costing an
         $items = [
-            ['Mietkosten', 'Grundmiete unbestuhlt', 'pauschal', 2800, null, 1, false],
-            ['Mietkosten', 'Grundmiete vollbestuhlt HS', 'pauschal', 4300, null, null, false],
-            ['Nebenkosten', 'Facility-Fee', 'pro verkauftem Ticket', 1.5, 2500, null, true],
-            ['Nebenkosten', 'Verkehrsposten', 'pro Person/Stunde', 28.5, null, 4, false],
-            ['Zusätzlich', 'Nacht-/Sonn-/Feiertagszuschlag', '%', 15, null, null, false],
-            ['Weitere Kosten', 'Sicherheitsdienst', null, null, null, 1, false],
+            ['Mietkosten', 'Grundmiete unbestuhlt', 'pauschal', 2800, null, 1, false, true],
+            ['Mietkosten', 'Grundmiete vollbestuhlt HS', 'pauschal', 4300, null, null, false, false],
+            ['Nebenkosten', 'Facility-Fee', 'pro verkauftem Ticket', 1.5, 2500, null, true, true],
+            ['Nebenkosten', 'Verkehrsposten', 'pro Person/Stunde', 28.5, null, 4, false, true],
+            ['Zusätzlich', 'Nacht-/Sonn-/Feiertagszuschlag', '%', 15, null, null, false, true],
+            ['Weitere Kosten', 'Sicherheitsdienst', null, null, null, 1, false, true],
         ];
-        foreach ($items as $index => [$section, $name, $unit, $price, $minimum, $factor, $pax]) {
+        foreach ($items as $index => [$section, $name, $unit, $price, $minimum, $factor, $pax, $active]) {
             $this->list->items()->create(['section' => $section, 'name' => $name, 'unit' => $unit, 'price' => $price,
-                'minimum' => $minimum, 'default_factor' => $factor, 'factor_from_pax' => $pax, 'sort_order' => $index + 1]);
+                'minimum' => $minimum, 'default_factor' => $factor, 'factor_from_pax' => $pax, 'default_active' => $active, 'sort_order' => $index + 1]);
         }
 
         $promoter = Promoter::create(['name' => 'Konzertagentur']);
@@ -82,6 +83,11 @@ class CostingTest extends TestCase
         ], $factors);
         $this->assertTrue($costing->items[0]->fixed_price);
         $this->assertFalse($costing->items[5]->fixed_price, 'ohne Preis in der Liste: Schätzung möglich');
+        // Die Alternative startet ausgeschaltet, wie in der Preisliste vorgegeben
+        $this->assertSame(
+            ['Grundmiete vollbestuhlt HS'],
+            $costing->items->reject(fn ($item): bool => $item->is_active)->pluck('name')->values()->all(),
+        );
 
         // 2.800 + 2.000 × 1,50 + 4 × 28,50; Sicherheitsdienst nach Aufwand
         $this->assertSame(5914.0, $costing->net());
@@ -223,8 +229,9 @@ class CostingTest extends TestCase
             'sections' => $costing->printedSections(), 'logo' => '',
         ])->render();
         $this->assertStringContainsString('Grundmiete unbestuhlt', $html);
-        $this->assertStringContainsString('Grundmiete vollbestuhlt HS', $html, 'Faktor 0 steht im PDF, mit 0,00 €');
+        $this->assertStringContainsString('Nacht-/Sonn-/Feiertagszuschlag', $html, 'Faktor 0 steht im PDF, mit 0,00 €');
         $this->assertStringContainsString('0,00 €', $html);
+        $this->assertStringNotContainsString('Grundmiete vollbestuhlt HS', $html, 'in der Preisliste vorgegeben: aus');
         $this->assertStringContainsString('mind. 2.500,00 €', $html);
         $this->assertStringContainsString('nach Aufwand', $html);
         $this->assertStringContainsString('5.914,00 €', $html);

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Access\Area;
 use App\Access\Module;
 use App\Filament\Concerns\BoxedPage;
+use App\Filament\Forms\SafeFileUpload;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\CostingSettings;
@@ -14,6 +15,7 @@ use App\Support\MailIdentity;
 use App\Support\StagePlan;
 use App\Support\StagePodests;
 use App\Support\StageSettings;
+use App\Support\VenueLogo;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
@@ -33,7 +35,10 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Closure;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -72,6 +77,7 @@ class ManageVenue extends Page
         $stage = StageSettings::load();
         $this->form->fill([
             'venue_name' => Setting::lookup(Setting::VENUE_NAME),
+            'venue_logo' => VenueLogo::path(),
             'podest_inventory' => $stage->inventory,
             'podest_included' => $stage->included,
             'stage_base_width' => $stage->baseWidth,
@@ -112,6 +118,27 @@ class ManageVenue extends Page
                             ->helperText('Erscheint in der Kopfzeile und auf der Anmeldeseite.')
                             ->required()
                             ->maxLength(120),
+                        SafeFileUpload::make('venue_logo')
+                            ->label('Logo der Halle')
+                            ->helperText('Steht oben auf dem Costing (PDF). PNG oder JPG, am besten mit transparentem Hintergrund und mindestens 600 Pixel breit.')
+                            ->allowedExtensions(['png', 'jpg', 'jpeg'])
+                            ->maxSize(2048)
+                            ->disk(VenueLogo::DISK)
+                            ->directory(VenueLogo::DIRECTORY)
+                            ->visibility('private')
+                            ->imagePreviewHeight('80')
+                            // Am Inhalt: nur PNG und JPG, auch wenn die Endung stimmt
+                            ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                                if ($value instanceof UploadedFile && !in_array($value->getMimeType(), VenueLogo::TYPES, true)) {
+                                    $fail('Das Logo muss ein PNG- oder JPG-Bild sein.');
+                                }
+                            })
+                            ->getUploadedFileUsing(fn (string $file): ?array => Storage::disk(VenueLogo::DISK)->exists($file) ? [
+                                'name' => basename($file),
+                                'size' => Storage::disk(VenueLogo::DISK)->size($file),
+                                'type' => Storage::disk(VenueLogo::DISK)->mimeType($file) ?: null,
+                                'url' => route('venue.logo'),
+                            ] : null),
                     ]),
                 // Nur mit dem Modul Bühnenplan (Verwaltung › System)
                 Section::make('Bühne')
@@ -350,6 +377,7 @@ class ManageVenue extends Page
 
         $data = $this->form->getState();
         Setting::put(Setting::VENUE_NAME, trim((string) $data['venue_name']));
+        VenueLogo::replace(is_string($data['venue_logo'] ?? null) ? $data['venue_logo'] : null);
 
         // Ohne das Modul Bühnenplan fehlt der Abschnitt Bühne: die Werte bleiben, wie sie sind
         if (Module::StagePlan->isEnabled()) {

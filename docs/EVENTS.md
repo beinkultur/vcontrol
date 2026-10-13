@@ -269,7 +269,8 @@ Freitermin, Sortierung
   Stammdaten › Preislisten (`price_lists`, `price_list_items`): Kostenpunkte nach
   Abschnitten mit Hinweis, Einheit, Preis (leer: nach Aufwand; Einheit „%“:
   Zuschlag, im Costing ist der Faktor dann der Betrag in €), Mindestbetrag,
-  Vorgabe-Faktor und „Faktor = PAX erwartet“. Pflegen mit Stammdaten-Recht, lesen
+  Vorgabe-Faktor, „Faktor = PAX erwartet“ und „Im Costing“ (aus: startet im
+  neuen Costing ausgeschaltet, etwa Alternativen wie die Grundmiete bestuhlt). Pflegen mit Stammdaten-Recht, lesen
   auch Buchhaltung und Eventmanager. Das Event wählt seine Preisliste unter
   Buchung › Daten (`events.price_list_id`); bis 13.10.2026 war sie eine Feldoption
   der Buchhaltung (`event_finances.price_list`) – die Migration hat jeden Wert zu
@@ -293,7 +294,8 @@ Freitermin, Sortierung
   wer Events bearbeitet. Zwei Schalter, ob die Ansicht für Externe und das
   Daysheet das zuletzt verschickte Costing als PDF zeigen (Vorgabe: nein;
   `events.costing`, `daysheet.costing`). Dazu Betreff, Text und feste BCC-Adressen
-  der Costing-Mail.
+  der Costing-Mail. Das Logo der Halle (Verwaltung › Halle, PNG oder JPG,
+  `App\Support\VenueLogo`) steht oben rechts auf dem Costing statt ihres Namens.
 
 ## Offene Punkte
 

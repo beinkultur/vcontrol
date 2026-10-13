@@ -132,9 +132,10 @@ class Costing extends Model
     }
 
     /**
-     * Neues Costing aus der Preisliste: alle Kostenpunkte eingeschaltet, mit ihren
-     * Vorgabe-Faktoren, Posten „Faktor = PAX erwartet“ mit den erwarteten PAX
-     * des Events. Ohne Preisliste ein leeres Costing zum Ausfüllen.
+     * Neues Costing aus der Preisliste: alle Kostenpunkte, ein- oder ausgeschaltet
+     * nach der Vorgabe der Preisliste, mit ihren Vorgabe-Faktoren, Posten „Faktor
+     * = PAX erwartet“ mit den erwarteten PAX des Events. Ohne Preisliste ein
+     * leeres Costing zum Ausfüllen.
      */
     public static function createFor(Event $event, ?PriceList $list): self
     {
@@ -155,7 +156,7 @@ class Costing extends Model
                     'minimum' => $item->minimum,
                     'factor' => $item->factor_from_pax && $event->pax_expected > 0 ? $event->pax_expected : ($item->default_factor ?? 0),
                     'fixed_price' => $item->price !== null,
-                    'is_active' => true,
+                    'is_active' => $item->default_active !== false,
                     'sort_order' => $index + 1,
                 ]);
             }

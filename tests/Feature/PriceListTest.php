@@ -47,9 +47,9 @@ class PriceListTest extends TestCase
                 'notes' => 'Alle Preise zzgl. MwSt.',
                 'is_active' => true,
                 'items' => [
-                    ['section' => 'Mietkosten', 'name' => 'Grundmiete', 'description' => null, 'unit' => 'pauschal', 'price' => '2800', 'minimum' => null, 'default_factor' => '1', 'factor_from_pax' => false],
+                    ['section' => 'Mietkosten', 'name' => 'Grundmiete', 'description' => null, 'unit' => 'pauschal', 'price' => '2800', 'minimum' => null, 'default_factor' => '1', 'factor_from_pax' => false, 'default_active' => true],
                     ['section' => 'Nebenkosten', 'name' => 'Facility-Fee', 'description' => 'inkl. Reinigung', 'unit' => 'pro verkauftem Ticket', 'price' => '1.50', 'minimum' => '2500', 'default_factor' => null, 'factor_from_pax' => true],
-                    ['section' => 'Weitere Kosten', 'name' => 'Sicherheitsdienst', 'description' => null, 'unit' => null, 'price' => null, 'minimum' => null, 'default_factor' => '1', 'factor_from_pax' => false],
+                    ['section' => 'Weitere Kosten', 'name' => 'Sicherheitsdienst', 'description' => null, 'unit' => null, 'price' => null, 'minimum' => null, 'default_factor' => '1', 'factor_from_pax' => false, 'default_active' => false],
                     // So, wie die Maske es schreibt: Tausenderpunkt, Komma
                     ['section' => 'Bestuhlung', 'name' => 'Vollbestuhlung', 'description' => null, 'unit' => 'pauschal', 'price' => '3.800,50', 'minimum' => null, 'default_factor' => null, 'factor_from_pax' => false],
                 ],
@@ -68,6 +68,8 @@ class PriceListTest extends TestCase
         $this->assertSame(2500.0, $fee->minimum);
         $this->assertTrue($fee->factor_from_pax);
         $this->assertNull($list->items[2]->price, 'ohne Preis: nach Aufwand');
+        $this->assertFalse($list->items[2]->default_active, 'startet im neuen Costing ausgeschaltet');
+        $this->assertTrue($list->items[0]->default_active);
     }
 
     public function test_preise_mit_tausenderpunkt_einheiten_aus_den_feldoptionen(): void
