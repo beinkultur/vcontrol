@@ -23,7 +23,9 @@ use Closure;
  * Betrieb, WLAN. Dateien und Notizen ohne die „für Externe verborgenen“. Mit
  * ihrem Modul (Verwaltung › System) gehören die Bühne mit dem Bühnenplan und
  * der Saalplan (eigener oder Standard) mit den genutzten Bereichen und der
- * Bestuhlung dazu.
+ * Bestuhlung dazu, dazu das zuletzt verschickte Costing, wenn die Halle es für
+ * Externe bzw. das Daysheet freigibt (CostingSettings) – dann gibt der Aufrufer
+ * die Adresse dafür mit.
  */
 final class ExternSheet
 {
@@ -33,6 +35,7 @@ final class ExternSheet
     /**
      * @param  Closure(EventFile): string  $fileUrl  Download-Adresse je nach Zugang (Konto oder Daysheet-Link)
      * @param  (Closure(Event): string)|null  $seatingPlanUrl  ebenso für den Saalplan; ohne: Route mit Konto
+     * @param  (Closure(Event): string)|null  $costingUrl  Costing-PDF; ohne: kein Costing in der Ansicht
      * @return array{title: string, date: string, promoter: ?string, venue: string, cancelled: bool,
      *     times: list<array{label: string, value: string}>,
      *     contacts: list<array{label: string, name: string, time: ?string}>,
@@ -40,9 +43,10 @@ final class ExternSheet
      *     stage: array{rows: array<string, string>, notes: ?string, svg: ?string}|null,
      *     files: array<string, list<array{name: string, stand: string, size: string, url: string}>>,
      *     notes: list<array{subject: string, body: string, date: ?string, author: ?string}>,
-     *     seating_plan: array{file: array{name: string, url: string}|null, areas: list<string>, seating: list<string>}|null}
+     *     seating_plan: array{file: array{name: string, url: string}|null, areas: list<string>, seating: list<string>}|null,
+     *     costing: array{name: string, url: string}|null}
      */
-    public static function make(Event $event, Closure $fileUrl, ?Closure $seatingPlanUrl = null): array
+    public static function make(Event $event, Closure $fileUrl, ?Closure $seatingPlanUrl = null, ?Closure $costingUrl = null): array
     {
         $event->loadMissing(['promoter', 'schedule', 'stage', 'services.trade', 'assignments.assignee', 'seatingPlan']);
         $seatingPlanUrl ??= fn (Event $event): string => route('events.seating-plan', $event);
@@ -60,6 +64,21 @@ final class ExternSheet
             'files' => self::files($event, $fileUrl),
             'notes' => self::notes($event),
             'seating_plan' => Module::SeatingPlan->isEnabled() ? self::seatingPlan($event, $seatingPlanUrl) : null,
+            'costing' => $costingUrl !== null && Module::PriceLists->isEnabled() ? self::costing($event, $costingUrl) : null,
+        ];
+    }
+
+    /**
+     * @param  Closure(Event): string  $url
+     * @return array{name: string, url: string}|null  die zuletzt verschickte Fassung
+     */
+    private static function costing(Event $event, Closure $url): ?array
+    {
+        $costing = $event->sentCosting();
+
+        return $costing === null ? null : [
+            'name' => 'Costing, ' . $costing->label() . ' vom ' . $costing->sent_at->format('d.m.Y'),
+            'url' => $url($event),
         ];
     }
 
@@ -79,12 +98,17 @@ final class ExternSheet
         ];
     }
 
-    /** Was die Ansicht zeigt, für Hinweistexte: „Zeiten, Ansprechpartner, …, Saalplan und Bühne“ – je nach Modulen */
-    public static function contents(): string
+    /**
+     * Was die Ansicht zeigt, für Hinweistexte: „Zeiten, Ansprechpartner, …,
+     * Saalplan, Costing und Bühne“ – je nach Modulen und ob das Costing dabei ist
+     * (CostingSettings, für Externe bzw. das Daysheet).
+     */
+    public static function contents(bool $withCosting = false): string
     {
         return collect([
             'Zeiten', 'Ansprechpartner', 'Gewerke', 'Dateien', 'Notizen',
             Module::SeatingPlan->isEnabled() ? 'Saalplan' : null,
+            $withCosting && Module::PriceLists->isEnabled() ? 'Costing' : null,
             Module::StagePlan->isEnabled() ? 'Bühne' : null,
         ])->filter()->join(', ', ' und ');
     }

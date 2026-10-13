@@ -2,21 +2,30 @@
 
 namespace App\Filament\Resources\Costings;
 
+use App\Access\Module;
 use App\Filament\Resources\Costings\Pages\EditCosting;
 use App\Filament\Resources\Costings\Pages\ListCostings;
 use App\Filament\Resources\Costings\Pages\ViewCosting;
+use App\Enums\OptionField;
+use App\Filament\Forms\MoneyInput;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Support\CostingActions;
+use App\Filament\Support\OptionChoices;
 use App\Models\Costing;
 use App\Models\CostingItem;
 use App\Models\PriceListItem;
+use App\Models\User;
 use App\Support\Costings;
+use App\Support\CostingSettings;
 use App\Support\ExternSheet;
+use App\Support\Money;
 use BackedEnum;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
@@ -30,13 +39,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
 
 /**
- * Costings aller Events (Modul Preislisten & Costing): Liste für Eventmanager
- * und Buchhaltung, dazu Bearbeiten (Entwürfe) und Ansehen. Erstellt wird ein
- * Costing im Event unter Buchung › Costing (CostingsRelationManager), verschickt
- * mit CostingActions. Rechte: CostingPolicy.
+ * Costings aller Events (Modul Preislisten & Costing): die Liste (Menüpunkt, nur
+ * für die Rollen dafür), dazu Bearbeiten (Entwürfe) und Ansehen – auch für die
+ * Rollen, die das Costing am Event sehen. Erstellt wird ein Costing im Event
+ * unter Buchung › Costing (CostingsRelationManager), verschickt mit
+ * CostingActions. Rechte: CostingPolicy, Rollen unter Verwaltung › Halle.
  */
 class CostingResource extends Resource
 {
@@ -51,6 +61,19 @@ class CostingResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalculator;
 
     protected static ?int $navigationSort = 3;
+
+    /** Seiten eines Costings: wer Costings sieht; die Liste prüft ListCostings selbst (Menüpunkt) */
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && Module::PriceLists->isEnabled() && CostingSettings::sees($user);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny();
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -78,8 +101,9 @@ class CostingResource extends Resource
                                 : 'Entwurf'),
                     ]),
                 Section::make('Posten')
-                    ->description('Faktor: Menge, Stunden, Tickets … – bei „%“ der Betrag in €, auf den der Zuschlag gilt. Faktor 0 steht nicht im PDF. '
-                        . 'Preise aus der Preisliste bleiben fest; ohne Preis steht „nach Aufwand“ im PDF, außer du trägst eine Schätzung ein. Alle Preise netto.')
+                    ->description('Aktiv: steht im Costing, auch mit Faktor 0 – ausgeschaltete Posten fehlen im PDF und in der Summe. '
+                        . 'Faktor: Menge, Stunden, Tickets … – bei „%“ der Betrag in €, auf den der Zuschlag gilt. '
+                        . 'Preis und Einheit aus der Preisliste bleiben fest; ohne Preis steht „nach Aufwand“ im PDF, außer du trägst eine Schätzung ein. Alle Preise netto.')
                     ->schema([self::items()]),
                 Grid::make(['default' => 1, 'lg' => 3])
                     ->schema([
@@ -98,8 +122,10 @@ class CostingResource extends Resource
     }
 
     /**
-     * Posten als Tabelle. Preise aus der Preisliste (fixed_price) bleiben fest –
-     * auch beim Speichern, nicht nur im Formular. Ergänzte Posten sind frei.
+     * Posten als Tabelle. Abschnitte führt das Costing nur fürs PDF mit, aus der
+     * Preisliste; ergänzte Posten stehen dort unter „Weitere Posten“. Preis und
+     * Einheit aus der Preisliste (fixed_price) bleiben fest – auch beim
+     * Speichern, nicht nur im Formular. Ergänzte Posten sind frei.
      */
     private static function items(): Repeater
     {
@@ -108,19 +134,19 @@ class CostingResource extends Resource
             ->relationship()
             ->orderColumn('sort_order')
             ->table([
-                TableColumn::make('Abschnitt')->width('10rem'),
+                TableColumn::make('Aktiv')->width('4.5rem')->alignment(Alignment::Center),
                 TableColumn::make('Posten')->markAsRequired(),
                 TableColumn::make('Hinweis'),
-                TableColumn::make('Einheit')->width('8rem'),
-                TableColumn::make('Preis')->width('8rem'),
+                TableColumn::make('Einheit')->width('11rem'),
+                TableColumn::make('Preis')->width('9rem'),
                 TableColumn::make('Faktor')->width('7rem'),
                 TableColumn::make('Betrag')->width('8rem')->alignment(Alignment::End),
             ])
             ->schema([
-                TextInput::make('section')
-                    ->label('Abschnitt')
-                    ->datalist(fn (Component $livewire): array => self::sections($livewire))
-                    ->maxLength(120),
+                Toggle::make('is_active')
+                    ->label('Im Costing')
+                    ->default(true)
+                    ->live(),
                 TextInput::make('name')
                     ->label('Posten')
                     ->required()
@@ -128,16 +154,15 @@ class CostingResource extends Resource
                 TextInput::make('description')
                     ->label('Hinweis')
                     ->maxLength(500),
-                TextInput::make('unit')
+                Select::make('unit')
                     ->label('Einheit')
-                    ->datalist(PriceListItem::UNITS)
-                    ->maxLength(60)
-                    ->live(onBlur: true),
-                TextInput::make('price')
+                    ->options(fn (Get $get): array => OptionChoices::forRows(OptionField::CostUnit, $get('unit')))
+                    ->disabled(fn (Get $get): bool => (bool) $get('fixed_price'))
+                    ->live(),
+                MoneyInput::make('price')
                     ->label('Preis')
-                    ->numeric()
                     ->suffix(fn (Get $get): string => PriceListItem::isPercent($get('unit')) ? '%' : '€')
-                    ->helperText(fn (Get $get): ?string => is_numeric($get('minimum')) ? 'mind. ' . Costings::money((float) $get('minimum')) : null)
+                    ->helperText(fn (Get $get): ?string => Money::parse($get('minimum')) !== null ? 'mind. ' . Costings::money((float) Money::parse($get('minimum'))) : null)
                     ->disabled(fn (Get $get): bool => (bool) $get('fixed_price'))
                     ->live(onBlur: true),
                 TextInput::make('factor')
@@ -150,14 +175,19 @@ class CostingResource extends Resource
                 TextEntry::make('amount')
                     ->label('Betrag')
                     ->state(function (Get $get): string {
+                        if ($get('is_active') === false) {
+                            return '–';
+                        }
                         $amount = CostingItem::calculate($get('price'), $get('factor'), $get('unit'), $get('minimum'));
 
                         return $amount === null ? 'nach Aufwand' : Costings::money($amount);
                     })
                     ->alignEnd(),
             ])
-            ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => [...$data, 'fixed_price' => false, 'price_list_item_id' => null])
-            ->mutateRelationshipDataBeforeSaveUsing(fn (array $data, CostingItem $record): array => $record->fixed_price ? [...$data, 'price' => $record->price] : $data)
+            ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => [...$data, 'fixed_price' => false, 'price_list_item_id' => null, 'section' => null])
+            ->mutateRelationshipDataBeforeSaveUsing(fn (array $data, CostingItem $record): array => $record->fixed_price
+                ? [...$data, 'price' => $record->price, 'unit' => $record->unit]
+                : $data)
             ->addActionLabel('Posten ergänzen')
             ->defaultItems(0);
     }
@@ -222,14 +252,6 @@ class CostingResource extends Resource
         }
 
         return EventResource::canView($event) ? EventResource::getUrl('view', ['record' => $event]) . '?phase=buchung&bereich=costing' : null;
-    }
-
-    /** Abschnitte dieses Costings als Vorschläge @return list<string> */
-    private static function sections(Component $livewire): array
-    {
-        $record = method_exists($livewire, 'getRecord') ? $livewire->getRecord() : null;
-
-        return $record instanceof Costing ? $record->items->pluck('section')->filter()->unique()->values()->all() : [];
     }
 
     public static function getPages(): array

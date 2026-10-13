@@ -43,6 +43,23 @@ class Setting extends Model
     /** Farbschema der Oberfläche (App\Enums\ColorScheme), nur der System-Admin ändert es */
     public const COLOR_SCHEME = 'color_scheme';
 
+    /** Costing (App\Support\CostingSettings): Mail-Vorgaben, wer es sieht, ob Externe und das Daysheet es zeigen */
+    public const COSTING_SUBJECT = 'costing_subject';
+
+    public const COSTING_TEXT = 'costing_text';
+
+    public const COSTING_BCC = 'costing_bcc';
+
+    /** Rollen-IDs mit Komma; ohne Eintrag: wer Events bearbeitet oder die Buchhaltung sieht */
+    public const COSTING_MENU_ROLES = 'costing_menu_roles';
+
+    public const COSTING_EVENT_ROLES = 'costing_event_roles';
+
+    /** '1' = zeigen; ohne Eintrag verborgen */
+    public const COSTING_EXTERN = 'costing_extern';
+
+    public const COSTING_DAYSHEET = 'costing_daysheet';
+
     protected $primaryKey = 'key';
 
     protected $keyType = 'string';

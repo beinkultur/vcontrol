@@ -12,6 +12,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Buchung › Costing: die Fassungen dieses Events, neueste zuerst. „Costing
@@ -27,6 +28,12 @@ class CostingsRelationManager extends RelationManager
     protected static ?string $modelLabel = 'Costing';
 
     protected static ?string $pluralModelLabel = 'Costings';
+
+    /** Die Rollen fürs Event (Verwaltung › Halle) – Filament prüfte sonst den Menüpunkt (viewAny) */
+    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+    {
+        return CostingResource::canAccess();
+    }
 
     public function table(Table $table): Table
     {

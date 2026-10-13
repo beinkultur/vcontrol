@@ -12,16 +12,13 @@ use InvalidArgumentException;
 /**
  * Costings verschicken (Modul Preislisten & Costing): Mail an den Veranstalter
  * mit dem Costing als PDF im Anhang (CostingPdf). Vorbelegt mit den
- * Ansprechpartnern des Veranstalters, dem Absender in Kopie und Betreff und Text
- * mit Platzhaltern wie beim Daysheet. Dazu die Zahlen, wie Formular und PDF sie
+ * Ansprechpartnern des Veranstalters, in Kopie den Adressen der Halle und dem
+ * Absender, Betreff und Text aus Verwaltung › Halle (CostingSettings) mit
+ * Platzhaltern wie beim Daysheet. Dazu die Zahlen, wie Formular und PDF sie
  * zeigen.
  */
 final class Costings
 {
-    public const DEFAULT_SUBJECT = 'Costing {event} – {datum}';
-
-    public const DEFAULT_TEXT = "Hallo,\n\nanbei das Costing für {event} am {datum} in der {halle} ({fassung}, Preisliste {preisliste}).\n\nViele Grüße\n{halle}";
-
     /**
      * Vorbelegung des Versand-Dialogs.
      *
@@ -33,9 +30,9 @@ final class Costings
 
         return [
             'to' => Daysheets::emails($contacts),
-            'bcc' => $sender !== null ? Daysheets::emails([$sender->email]) : [],
-            'subject' => self::fill(self::DEFAULT_SUBJECT, $costing),
-            'body' => self::fill(self::DEFAULT_TEXT, $costing),
+            'bcc' => Daysheets::emails([...CostingSettings::bcc(), ...($sender !== null ? [$sender->email] : [])]),
+            'subject' => self::fill(CostingSettings::subject(), $costing),
+            'body' => self::fill(CostingSettings::text(), $costing),
         ];
     }
 
@@ -80,22 +77,23 @@ final class Costings
     }
 
     /**
-     * Summen aus dem Formular (Posten als Arrays, Zahlen als Zeichenketten).
+     * Summen aus dem Formular (Posten als Arrays, Zahlen als Zeichenketten wie
+     * „2.800,00“); ausgeschaltete Posten zählen nicht.
      *
      * @param  array<array-key, mixed>  $items
-     * @return array{net: float, vat: float, gross: float, open: int}  open: Posten nach Aufwand
+     * @return array{net: float, vat: float, gross: float, open: int}  open: eingeschaltete Posten nach Aufwand
      */
     public static function totals(array $items, float $vatRate): array
     {
         $net = 0.0;
         $open = 0;
         foreach ($items as $item) {
-            if (!is_array($item)) {
+            if (!is_array($item) || ($item['is_active'] ?? true) === false) {
                 continue;
             }
             $amount = CostingItem::calculate($item['price'] ?? null, $item['factor'] ?? null, $item['unit'] ?? null, $item['minimum'] ?? null);
             if ($amount === null) {
-                $open += is_numeric($item['factor'] ?? null) && (float) $item['factor'] !== 0.0 ? 1 : 0;
+                $open++;
             } else {
                 $net += $amount;
             }

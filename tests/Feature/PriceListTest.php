@@ -4,12 +4,15 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\PriceLists\Pages\CreatePriceList;
+use App\Filament\Resources\PriceLists\Pages\EditPriceList;
 use App\Filament\Resources\PriceLists\Pages\ListPriceLists;
 use App\Filament\Resources\PriceLists\PriceListResource;
 use App\Models\Event;
+use App\Models\FieldOption;
 use App\Models\PriceList;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -47,6 +50,8 @@ class PriceListTest extends TestCase
                     ['section' => 'Mietkosten', 'name' => 'Grundmiete', 'description' => null, 'unit' => 'pauschal', 'price' => '2800', 'minimum' => null, 'default_factor' => '1', 'factor_from_pax' => false],
                     ['section' => 'Nebenkosten', 'name' => 'Facility-Fee', 'description' => 'inkl. Reinigung', 'unit' => 'pro verkauftem Ticket', 'price' => '1.50', 'minimum' => '2500', 'default_factor' => null, 'factor_from_pax' => true],
                     ['section' => 'Weitere Kosten', 'name' => 'Sicherheitsdienst', 'description' => null, 'unit' => null, 'price' => null, 'minimum' => null, 'default_factor' => '1', 'factor_from_pax' => false],
+                    // So, wie die Maske es schreibt: Tausenderpunkt, Komma
+                    ['section' => 'Bestuhlung', 'name' => 'Vollbestuhlung', 'description' => null, 'unit' => 'pauschal', 'price' => '3.800,50', 'minimum' => null, 'default_factor' => null, 'factor_from_pax' => false],
                 ],
             ])
             ->call('create')
@@ -55,13 +60,37 @@ class PriceListTest extends TestCase
 
         $list = PriceList::query()->sole();
         $this->assertSame('2025-09-01', $list->valid_from->toDateString());
-        $this->assertSame(['Grundmiete', 'Facility-Fee', 'Sicherheitsdienst'], $list->items->pluck('name')->all());
-        $this->assertSame([1, 2, 3], $list->items->pluck('sort_order')->all());
+        $this->assertSame(['Grundmiete', 'Facility-Fee', 'Sicherheitsdienst', 'Vollbestuhlung'], $list->items->pluck('name')->all());
+        $this->assertSame([1, 2, 3, 4], $list->items->pluck('sort_order')->all());
+        $this->assertSame(3800.5, $list->items[3]->price);
         $fee = $list->items[1];
         $this->assertSame(1.5, $fee->price);
         $this->assertSame(2500.0, $fee->minimum);
         $this->assertTrue($fee->factor_from_pax);
         $this->assertNull($list->items[2]->price, 'ohne Preis: nach Aufwand');
+    }
+
+    public function test_preise_mit_tausenderpunkt_einheiten_aus_den_feldoptionen(): void
+    {
+        FieldOption::create(['field_key' => 'cost_unit', 'value' => 'pro Tag']);
+        $list = $this->priceList();
+        $rent = $list->items[0];
+        $this->actingAs($this->admin());
+
+        Livewire::test(EditPriceList::class, ['record' => $list->getRouteKey()])
+            ->assertSchemaStateSet(['items.record-' . $rent->id . '.price' => '2.800,00', 'items.record-' . $list->items[1]->id . '.minimum' => '2.500,00'])
+            ->assertFormFieldExists('items.record-' . $rent->id . '.unit', fn (Select $field): bool => array_key_exists('pro Tag', $field->getOptions())
+                && array_key_exists('%', $field->getOptions()))
+            ->set('data.items.record-' . $rent->id . '.price', '12.345,67')
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame(12345.67, $rent->fresh()->price);
+
+        // Keine Zahl: Fehler statt still 0
+        Livewire::test(EditPriceList::class, ['record' => $list->getRouteKey()])
+            ->set('data.items.record-' . $rent->id . '.price', 'viel')
+            ->call('save')
+            ->assertHasFormErrors(['items.record-' . $rent->id . '.price']);
     }
 
     public function test_lesen_duerfen_buchhaltung_und_eventmanager_pflegen_nur_admins(): void

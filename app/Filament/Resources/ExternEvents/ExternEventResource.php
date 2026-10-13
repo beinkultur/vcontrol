@@ -5,8 +5,10 @@ namespace App\Filament\Resources\ExternEvents;
 use App\Access\Area;
 use App\Filament\Resources\ExternEvents\Pages\ListExternEvents;
 use App\Filament\Resources\ExternEvents\Pages\ViewExternEvent;
+use App\Models\Event;
 use App\Models\ExternEvent;
 use App\Models\User;
+use App\Support\CostingSettings;
 use App\Support\EventDisplay;
 use App\Support\ExternSheet;
 use App\Support\Involvement;
@@ -76,7 +78,12 @@ class ExternEventResource extends Resource
             ->components([
                 View::make('extern.sheet')
                     ->viewData(fn (ExternEvent $record): array => [
-                        'sheet' => ExternSheet::make($record, fn ($file): string => $file->downloadUrl()),
+                        'sheet' => ExternSheet::make(
+                            $record,
+                            fn ($file): string => $file->downloadUrl(),
+                            null,
+                            CostingSettings::inExtern() ? fn (Event $event): string => route('events.costing', $event) : null,
+                        ),
                         'showHead' => false,
                     ]),
             ]);

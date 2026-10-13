@@ -31,9 +31,9 @@
     $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
-    // Preisliste und Costing: nur mit ihrem Modul, das Costing nur für Eventmanager und Buchhaltung (CostingPolicy)
+    // Preisliste und Costing: nur mit ihrem Modul, das Costing nur für die Rollen unter Verwaltung › Halle (CostingSettings)
     $priceLists = \App\Access\Module::PriceLists->isEnabled();
-    $costing = $priceLists && \App\Filament\Resources\Costings\CostingResource::canViewAny() ? $event->costings()->first() : null;
+    $costing = $priceLists && \App\Filament\Resources\Costings\CostingResource::canAccess() ? $event->costings()->first() : null;
     $time = fn ($value): ?string => filled($value) ? substr((string) $value, 0, 5) : null;
     $stage = $stagePlan ? \App\Support\StagePodests::summary($event->stage)['text'] : '–';
     $link = fn (string $phase, ?string $section = null): string => $pageUrl . '?phase=' . $phase . ($section ? '&bereich=' . $section : '');

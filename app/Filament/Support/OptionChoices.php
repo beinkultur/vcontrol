@@ -30,4 +30,28 @@ final class OptionChoices
 
         return $options;
     }
+
+    /**
+     * Wie for(), die Feldoptionen aber einmal je Anfrage gelesen – für Tabellen
+     * mit vielen Zeilen (Einheiten in Preisliste und Costing).
+     *
+     * @return array<string, string>
+     */
+    public static function forRows(OptionField $field, mixed $current = null): array
+    {
+        $options = self::cached($field);
+        foreach ((array) $current as $value) {
+            if (is_string($value) && $value !== '') {
+                $options[$value] ??= $value;
+            }
+        }
+
+        return $options;
+    }
+
+    /** @return array<string, string> once() merkt sich das Ergebnis je Feld (die Argumente dieser Methode) */
+    private static function cached(OptionField $field): array
+    {
+        return once(fn (): array => self::for($field));
+    }
 }

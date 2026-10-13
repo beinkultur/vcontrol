@@ -276,11 +276,24 @@ Freitermin, Sortierung
   einer Preisliste ohne Kostenpunkte gemacht. Das Costing (`costings`,
   `costing_items`, Buchung › Costing und Menüpunkt Costings) übernimmt
   Kostenpunkte, Preise und Vorgabe-Faktoren, der Eventmanager passt Faktoren an
-  und ergänzt Posten; Preise der Liste bleiben fest (auch beim Speichern,
-  `fixed_price`). Verschickt wird per Mail mit PDF (Dompdf), danach bleibt die
-  Fassung, Änderungen gehen als neue Fassung. Alle Preise netto, 19 % MwSt.
-  kommen im PDF dazu, gerechnet in Cent (`Costing::percentOf`). Die Buchhaltung
-  sieht Preislisten und Costings lesend, andere Leserollen nicht.
+  und ergänzt Posten; Preis und Einheit der Liste bleiben fest (auch beim
+  Speichern, `fixed_price`). Jeder Posten hat einen Schalter „Aktiv“: Faktor 0
+  steht mit 0,00 € im PDF, nur ausgeschaltete Posten fehlen dort und in der
+  Summe. Den Abschnitt zeigt der Editor nicht, das PDF gliedert nach den
+  Abschnitten der Preisliste, ergänzte Posten unter „Weitere Posten“.
+  Verschickt wird per Mail mit PDF (Dompdf), danach bleibt die Fassung,
+  Änderungen gehen als neue Fassung. Alle Preise netto, 19 % MwSt. kommen im PDF
+  dazu, gerechnet in Cent (`Costing::percentOf`). Beträge stehen in Formularen mit
+  Tausenderpunkt (`MoneyInput`, `App\Support\Money`). Einheiten sind die
+  Feldoption „Einheit (Preislisten)“.
+- **Costing-Einstellungen (Verwaltung › Halle, `CostingSettings`):** welche Rollen
+  den Menüpunkt Costings sehen (die Liste und darin jedes Costing) und welche das
+  Costing am Event; Admins immer. Bis zum ersten Speichern gilt: wer Events
+  bearbeitet oder die Buchhaltung sieht. Erstellen und verschicken darf davon,
+  wer Events bearbeitet. Zwei Schalter, ob die Ansicht für Externe und das
+  Daysheet das zuletzt verschickte Costing als PDF zeigen (Vorgabe: nein;
+  `events.costing`, `daysheet.costing`). Dazu Betreff, Text und feste BCC-Adressen
+  der Costing-Mail.
 
 ## Offene Punkte
 

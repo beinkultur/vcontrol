@@ -32,6 +32,7 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
     Route::get('/events/{event}/saalplan', [SeatingPlanController::class, 'event'])->name('events.seating-plan');
     Route::get('/saalplaene/{plan}/pdf', [SeatingPlanController::class, 'standard'])->name('seating-plans.pdf');
     Route::get('/costings/{costing}/pdf', [CostingController::class, 'pdf'])->name('costings.pdf');
+    Route::get('/events/{event}/costing', [CostingController::class, 'event'])->name('events.costing');
 });
 
 // Daysheet: ohne Konto, der Schlüssel im Link berechtigt (bis zum Tag nach der
@@ -47,6 +48,9 @@ Route::middleware('throttle:60,1')->group(function (): void {
     Route::get('/daysheet/{token}/saalplan', [DaysheetController::class, 'seatingPlan'])
         ->where('token', '[A-Za-z0-9]{48}')
         ->name('daysheet.seating-plan');
+    Route::get('/daysheet/{token}/costing', [DaysheetController::class, 'costing'])
+        ->where('token', '[A-Za-z0-9]{48}')
+        ->name('daysheet.costing');
 });
 
 // Kalender-Feed: Kalender-Apps rufen ohne Anmeldung ab, deshalb mit Schlüssel

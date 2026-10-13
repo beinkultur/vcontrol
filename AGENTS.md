@@ -30,6 +30,11 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   vendor/ nie –, und leert die Caches. Bei mehr als 20 Löschungen bricht es vorher
   ab (`MAX_DELETE=n` hebt die Grenze). Neue Migrationen danach selbst mit
   `php artisan migrate --force` ausführen.
+- Beträge in Formularen mit `App\Filament\Forms\MoneyInput` (Tausenderpunkt beim
+  Tippen, „2.800,50“); gerechnet wird mit `App\Support\Money::parse()`, das beide
+  Schreibweisen versteht. Relation Manager, die eingebettet sind, prüft Filament
+  selbst mit `canViewForRecord()` (sonst `viewAny` der Policy) – weicht das Recht
+  für den Reiter davon ab, dort überschreiben (CostingsRelationManager).
 - PDFs erzeugt Dompdf (`App\Support\CostingPdf`, Vorlage `costing-pdf`): nur CSS
   2.1 – Tabellen statt Flex/Grid, Schrift DejaVu Sans (€, Umlaute), Bilder als
   data-URI, fremde Adressen aus. Was zusammenbleiben soll, als eigene Tabelle in

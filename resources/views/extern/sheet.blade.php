@@ -147,6 +147,17 @@
         </section>
     @endif
 
+    {{-- Nur mit dem Modul Preislisten & Costing und wenn die Halle es freigibt (Verwaltung › Halle) --}}
+    @if ($sheet['costing'] !== null)
+        <section>
+            <h2>Costing</h2>
+            <p class="vc-sheet__seating-plan">
+                <a href="{{ $sheet['costing']['url'] }}" target="_blank" rel="noopener">{{ $sheet['costing']['name'] }}</a>
+                <span class="vc-sheet__muted">· PDF</span>
+            </p>
+        </section>
+    @endif
+
     {{-- Nur mit dem Modul Bühnenplan --}}
     @if ($sheet['stage'] !== null)
         <section>

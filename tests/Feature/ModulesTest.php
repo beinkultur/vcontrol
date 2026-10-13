@@ -269,6 +269,9 @@ class ModulesTest extends TestCase
             ->assertDontSee('Konzert-Preisliste')
             ->assertDontSee('Costing');
 
+        // Einheiten der Preislisten gibt es unter den Feldoptionen nicht
+        $this->assertNotContains(OptionField::CostUnit, OptionField::available());
+
         // Gespeichertes bleibt
         $this->assertSame($list->id, $this->event->fresh()->price_list_id);
         $this->assertSame(1, Costing::query()->count());

@@ -7,6 +7,7 @@ use App\Access\Module;
 use App\Filament\Concerns\BoxedPage;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\CostingSettings;
 use App\Support\Daysheets;
 use App\Support\EventIcsFeed;
 use App\Support\MailIdentity;
@@ -15,9 +16,11 @@ use App\Support\StagePodests;
 use App\Support\StageSettings;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -86,6 +89,13 @@ class ManageVenue extends Page
             'daysheet_to' => Daysheets::emails(explode(',', (string) Setting::lookup(Setting::DAYSHEET_TO))),
             'daysheet_subject' => Setting::lookup(Setting::DAYSHEET_SUBJECT) ?: Daysheets::DEFAULT_SUBJECT,
             'daysheet_text' => Setting::lookup(Setting::DAYSHEET_TEXT) ?: Daysheets::DEFAULT_TEXT,
+            'costing_menu_roles' => CostingSettings::menuRoleIds(),
+            'costing_event_roles' => CostingSettings::eventRoleIds(),
+            'costing_extern' => CostingSettings::inExtern(),
+            'costing_daysheet' => CostingSettings::inDaysheet(),
+            'costing_bcc' => CostingSettings::bcc(),
+            'costing_subject' => CostingSettings::subject(),
+            'costing_text' => CostingSettings::text(),
         ]);
     }
 
@@ -243,6 +253,44 @@ class ManageVenue extends Page
                             ->rows(10)
                             ->helperText(Daysheets::PLACEHOLDER_HELP),
                     ]),
+                // Nur mit dem Modul Preislisten & Costing
+                Section::make('Costing')
+                    ->visible(fn (): bool => Module::PriceLists->isEnabled())
+                    ->description('Wer Costings sieht, ob die Ansicht für Externe und das Daysheet das zuletzt verschickte Costing zeigen, und die Vorbelegung beim Verschicken. Admins sehen Costings immer.')
+                    ->schema([
+                        Grid::make(['default' => 1, 'lg' => 2])
+                            ->schema([
+                                CheckboxList::make('costing_menu_roles')
+                                    ->label('Menüpunkt Costings')
+                                    ->helperText('Diese Rollen sehen die Liste aller Costings und darin jedes einzelne.')
+                                    ->options(fn (): array => CostingSettings::roleOptions()),
+                                CheckboxList::make('costing_event_roles')
+                                    ->label('Costing am Event')
+                                    ->helperText('Diese Rollen sehen das Costing im Event unter Buchung › Costing. Erstellen und verschicken darf davon, wer Events bearbeitet.')
+                                    ->options(fn (): array => CostingSettings::roleOptions()),
+                                Toggle::make('costing_extern')
+                                    ->label('In der Ansicht für Externe zeigen')
+                                    ->helperText('Beteiligte Freelancer und Gewerke sehen unter „Meine Events“ das zuletzt verschickte Costing als PDF.'),
+                                Toggle::make('costing_daysheet')
+                                    ->label('Im Daysheet zeigen')
+                                    ->helperText('Wer das Daysheet bekommt, sieht darin das zuletzt verschickte Costing als PDF.'),
+                            ]),
+                        TagsInput::make('costing_bcc')
+                            ->label('Immer in Kopie (BCC)')
+                            ->placeholder('E-Mail-Adresse und Enter')
+                            ->helperText('Bekommen jedes verschickte Costing, etwa die Buchhaltung. Wer verschickt, steht ohnehin in Kopie.')
+                            ->splitKeys(['Tab', ',', ' ', ';'])
+                            ->nestedRecursiveRules(['email']),
+                        TextInput::make('costing_subject')
+                            ->label('Betreff')
+                            ->required()
+                            ->maxLength(200),
+                        Textarea::make('costing_text')
+                            ->label('Text der Mail')
+                            ->required()
+                            ->rows(8)
+                            ->helperText(CostingSettings::PLACEHOLDER_HELP . ' Das Costing hängt als PDF an, der Eventmanager kann vor dem Versand alles ändern.'),
+                    ]),
             ]);
     }
 
@@ -333,6 +381,17 @@ class ManageVenue extends Page
         Setting::put(Setting::DAYSHEET_TO, implode(',', Daysheets::emails((array) ($data['daysheet_to'] ?? []))));
         Setting::put(Setting::DAYSHEET_SUBJECT, trim((string) $data['daysheet_subject']));
         Setting::put(Setting::DAYSHEET_TEXT, trim(str_replace(["\r\n", "\r"], "\n", (string) $data['daysheet_text'])));
+        if (Module::PriceLists->isEnabled()) {
+            CostingSettings::save(
+                array_map('intval', (array) ($data['costing_menu_roles'] ?? [])),
+                array_map('intval', (array) ($data['costing_event_roles'] ?? [])),
+                (bool) ($data['costing_extern'] ?? false),
+                (bool) ($data['costing_daysheet'] ?? false),
+                (string) $data['costing_subject'],
+                (string) $data['costing_text'],
+                (array) ($data['costing_bcc'] ?? []),
+            );
+        }
 
         Notification::make()->success()->title('Gespeichert')->send();
     }

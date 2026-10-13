@@ -7,6 +7,7 @@ use App\Models\Daysheet;
 use App\Models\Event;
 use App\Models\EventFile;
 use App\Models\Setting;
+use App\Support\CostingSettings;
 use App\Support\ExternSheet;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -44,6 +45,7 @@ class DaysheetController extends Controller
                     $daysheet->event,
                     fn (EventFile $file): string => route('daysheet.file', [$token, $file]),
                     fn (): string => route('daysheet.seating-plan', $token),
+                    CostingSettings::inDaysheet() ? fn (): string => route('daysheet.costing', $token) : null,
                 ),
                 'validUntil' => $daysheet->expires_at,
                 'preview' => false,
@@ -80,13 +82,30 @@ class DaysheetController extends Controller
         return $response;
     }
 
+    /** Costing über den Daysheet-Link, wenn die Halle es fürs Daysheet freigibt – die zuletzt verschickte Fassung */
+    public function costing(string $token): Response
+    {
+        $daysheet = Daysheet::findByToken($token);
+        $costing = $daysheet !== null && $daysheet->isValid() && Module::PriceLists->isEnabled() && CostingSettings::inDaysheet()
+            ? $daysheet->event->sentCosting()
+            : null;
+        abort_if($costing === null, 404);
+
+        return CostingController::pdfResponse($costing)->withHeaders(self::HEADERS);
+    }
+
     /** So sieht das Daysheet für die Empfänger aus – für alle, die das Event sehen dürfen. */
     public function preview(Event $event): Response
     {
         Gate::authorize('view', $event);
 
         return response()->view('daysheet', [
-            'sheet' => ExternSheet::make($event, fn (EventFile $file): string => $file->downloadUrl()),
+            'sheet' => ExternSheet::make(
+                $event,
+                fn (EventFile $file): string => $file->downloadUrl(),
+                null,
+                CostingSettings::inDaysheet() ? fn (Event $event): string => route('events.costing', $event) : null,
+            ),
             'validUntil' => null,
             'preview' => true,
             'documentTitle' => self::documentTitle($event),

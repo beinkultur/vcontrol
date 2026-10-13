@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ExternEvents\Pages;
 
 use App\Filament\Resources\ExternEvents\ExternEventResource;
+use App\Support\CostingSettings;
 use App\Support\ExternSheet;
 use Filament\Resources\Pages\ListRecords;
 
@@ -18,6 +19,6 @@ class ListExternEvents extends ListRecords
 
     public function getSubheading(): ?string
     {
-        return 'Events, an denen du beteiligt bist – ' . ExternSheet::contents() . '.';
+        return 'Events, an denen du beteiligt bist – ' . ExternSheet::contents(CostingSettings::inExtern()) . '.';
     }
 }

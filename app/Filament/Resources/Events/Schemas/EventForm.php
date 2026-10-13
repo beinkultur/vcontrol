@@ -138,8 +138,8 @@ class EventForm
                                 self::can(Area::Buchhaltung)
                                     ? self::tab('Buchhaltung', 'buchhaltung')->schema(self::accounting())
                                     : null,
-                                // Nur mit dem Modul Preislisten & Costing, für Eventmanager und Buchhaltung (CostingPolicy)
-                                CostingResource::canViewAny()
+                                // Nur mit dem Modul Preislisten & Costing, für die Rollen unter Verwaltung › Halle (CostingSettings)
+                                CostingResource::canAccess()
                                     ? self::tab('Costing', 'costing')->schema([self::embedded(CostingsRelationManager::class)])
                                     : null,
                                 self::tab('PR', 'pr')

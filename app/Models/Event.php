@@ -135,6 +135,12 @@ class Event extends Model
         return $this->hasMany(Costing::class)->orderByDesc('version');
     }
 
+    /** Zuletzt verschickte Fassung – die sehen Externe und das Daysheet, wenn die Halle es freigibt */
+    public function sentCosting(): ?Costing
+    {
+        return $this->costings()->whereNotNull('sent_at')->first();
+    }
+
     /** @return HasOne<EventFinance, $this> */
     public function finance(): HasOne
     {

@@ -74,10 +74,10 @@ class Costing extends Model
         return $this->isSent() ? 'verschickt am ' . $this->sent_at->format('d.m.Y') : 'Entwurf';
     }
 
-    /** Summe netto */
+    /** Summe netto der eingeschalteten Posten */
     public function net(): float
     {
-        return round($this->items->sum(fn (CostingItem $item): float => $item->amount() ?? 0.0), 2);
+        return round($this->items->sum(fn (CostingItem $item): float => $item->isActive() ? ($item->amount() ?? 0.0) : 0.0), 2);
     }
 
     public function vat(): float
@@ -100,8 +100,8 @@ class Costing extends Model
     }
 
     /**
-     * Was ins PDF kommt: Posten mit Faktor, nach Abschnitten in der Reihenfolge
-     * der Preisliste.
+     * Was ins PDF kommt: die eingeschalteten Posten, auch mit Faktor 0, nach den
+     * Abschnitten der Preisliste in ihrer Reihenfolge; ergänzte Posten am Ende.
      *
      * @return array<string, list<CostingItem>>
      */
@@ -109,9 +109,15 @@ class Costing extends Model
     {
         $sections = [];
         foreach ($this->items as $item) {
-            if ($item->factor != 0.0) {
+            if ($item->isActive()) {
                 $sections[filled($item->section) ? (string) $item->section : self::OTHER_SECTION][] = $item;
             }
+        }
+        // Ergänzte Posten ohne Abschnitt ans Ende
+        if (isset($sections[self::OTHER_SECTION])) {
+            $other = $sections[self::OTHER_SECTION];
+            unset($sections[self::OTHER_SECTION]);
+            $sections[self::OTHER_SECTION] = $other;
         }
 
         return $sections;
@@ -126,7 +132,7 @@ class Costing extends Model
     }
 
     /**
-     * Neues Costing aus der Preisliste: alle Kostenpunkte mit ihren
+     * Neues Costing aus der Preisliste: alle Kostenpunkte eingeschaltet, mit ihren
      * Vorgabe-Faktoren, Posten „Faktor = PAX erwartet“ mit den erwarteten PAX
      * des Events. Ohne Preisliste ein leeres Costing zum Ausfüllen.
      */
@@ -149,6 +155,7 @@ class Costing extends Model
                     'minimum' => $item->minimum,
                     'factor' => $item->factor_from_pax && $event->pax_expected > 0 ? $event->pax_expected : ($item->default_factor ?? 0),
                     'fixed_price' => $item->price !== null,
+                    'is_active' => true,
                     'sort_order' => $index + 1,
                 ]);
             }

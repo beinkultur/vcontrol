@@ -18,6 +18,7 @@ enum OptionField: string implements HasLabel
     case EmployeePosition = 'employee_position';
     case ContractStatus = 'contract_status';
     case AccountingStatus = 'accounting_status';
+    case CostUnit = 'cost_unit';
 
     public function getLabel(): string
     {
@@ -32,13 +33,18 @@ enum OptionField: string implements HasLabel
             self::EmployeePosition => 'Mitarbeiter-Position',
             self::ContractStatus => 'Vertragsstatus',
             self::AccountingStatus => 'FIBU-Status',
+            self::CostUnit => 'Einheit (Preislisten)',
         };
     }
 
     /** Feld eines Moduls (Verwaltung › System): Ohne das Modul gibt es hier nichts zu pflegen. */
     public function module(): ?Module
     {
-        return in_array($this, [self::ContractStatus, self::AccountingStatus], true) ? Module::Accounting : null;
+        return match ($this) {
+            self::ContractStatus, self::AccountingStatus => Module::Accounting,
+            self::CostUnit => Module::PriceLists,
+            default => null,
+        };
     }
 
     /** @return list<self> Felder ohne Modul und die freigegebener Module */

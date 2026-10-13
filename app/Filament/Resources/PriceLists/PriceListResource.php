@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\PriceLists;
 
+use App\Enums\OptionField;
+use App\Filament\Forms\MoneyInput;
 use App\Filament\Resources\PriceLists\Pages\CreatePriceList;
 use App\Filament\Resources\PriceLists\Pages\EditPriceList;
 use App\Filament\Resources\PriceLists\Pages\ListPriceLists;
 use App\Filament\Resources\PriceLists\Pages\ViewPriceList;
+use App\Filament\Support\OptionChoices;
 use App\Models\PriceList;
 use App\Models\PriceListItem;
 use BackedEnum;
@@ -17,6 +20,7 @@ use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -87,9 +91,9 @@ class PriceListResource extends Resource
                             ->default(true),
                     ]),
                 Section::make('Kostenpunkte')
-                    ->description('In der Reihenfolge der Preisliste, nach Abschnitten. Ohne Preis: nach Aufwand. Einheit „%“: Zuschlag in Prozent – '
-                        . 'im Costing ist der Faktor dann der Betrag in €, auf den er gilt. Faktor: Vorgabe für neue Costings (leer = 0, steht dann nicht im PDF); '
-                        . '„PAX“: stattdessen die erwarteten PAX des Events, etwa „pro verkauftem Ticket“.')
+                    ->description('In der Reihenfolge der Preisliste, nach Abschnitten. Einheiten kommen aus Verwaltung › Event-Feldoptionen › Einheit (Preislisten). '
+                        . 'Ohne Preis: nach Aufwand. Einheit „%“: Zuschlag in Prozent – im Costing ist der Faktor dann der Betrag in €, auf den er gilt. '
+                        . 'Faktor: Vorgabe für neue Costings (leer = 0); „PAX“: stattdessen die erwarteten PAX des Events, etwa „pro verkauftem Ticket“.')
                     ->schema([
                         Repeater::make('items')
                             ->hiddenLabel()
@@ -117,18 +121,15 @@ class PriceListResource extends Resource
                                 TextInput::make('description')
                                     ->label('Hinweis')
                                     ->maxLength(500),
-                                TextInput::make('unit')
+                                Select::make('unit')
                                     ->label('Einheit')
-                                    ->datalist(PriceListItem::UNITS)
-                                    ->maxLength(60)
-                                    ->live(onBlur: true),
-                                TextInput::make('price')
+                                    ->options(fn (Get $get): array => OptionChoices::forRows(OptionField::CostUnit, $get('unit')))
+                                    ->live(),
+                                MoneyInput::make('price')
                                     ->label('Preis')
-                                    ->numeric()
                                     ->suffix(fn (Get $get): string => PriceListItem::isPercent($get('unit')) ? '%' : '€'),
-                                TextInput::make('minimum')
+                                MoneyInput::make('minimum')
                                     ->label('Mindestbetrag')
-                                    ->numeric()
                                     ->minValue(0)
                                     ->suffix('€'),
                                 TextInput::make('default_factor')

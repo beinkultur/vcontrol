@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Kostenpunkt einer Preisliste: Preis je Einheit (leer: nach Aufwand), bei der
- * Einheit „%“ ein Zuschlag in Prozent. Mindestbetrag etwa für die Facility-Fee
- * („mind. 2.500 €“). Vorgabe-Faktor und „Faktor = PAX erwartet“ bestimmen, was
- * ein neues Costing einträgt (Costing::createFor()).
+ * Einheit „%“ ein Zuschlag in Prozent. Einheiten pflegt der Admin als
+ * Feldoption „Einheit (Preislisten)“ (OptionField::CostUnit). Mindestbetrag
+ * etwa für die Facility-Fee („mind. 2.500 €“). Vorgabe-Faktor und „Faktor =
+ * PAX erwartet“ bestimmen, was ein neues Costing einträgt (Costing::createFor()).
  */
 #[Fillable(['price_list_id', 'section', 'name', 'description', 'unit', 'price', 'minimum', 'default_factor', 'factor_from_pax', 'sort_order'])]
 class PriceListItem extends Model
@@ -20,9 +21,6 @@ class PriceListItem extends Model
 
     /** Was beim Kopieren der Preisliste mitkommt */
     public const COPIED = ['section', 'name', 'description', 'unit', 'price', 'minimum', 'default_factor', 'factor_from_pax', 'sort_order'];
-
-    /** Einheiten der Preislisten bisher, als Vorschläge im Formular */
-    public const UNITS = ['pauschal', 'je Stück', 'jeweils', 'pro verkauftem Ticket', 'pro Person/Stunde', 'pro Raum/Tag', 'je Anschluss', self::PERCENT];
 
     /**
      * @return array<string, string>
