@@ -97,6 +97,7 @@ class ManageSystem extends Page
                     ->description('Gilt für alle Benutzer dieser Halle, auch auf der Anmeldeseite und der Daysheet-Seite.')
                     ->schema([
                         Radio::make('color_scheme')
+                            ->label('Farbschema')
                             ->hiddenLabel()
                             ->options(collect(ColorScheme::cases())->mapWithKeys(fn (ColorScheme $scheme): array => [$scheme->value => $scheme->getLabel()])->all())
                             ->descriptions(collect(ColorScheme::cases())->mapWithKeys(fn (ColorScheme $scheme): array => [$scheme->value => new HtmlString(
@@ -112,11 +113,11 @@ class ManageSystem extends Page
                         . 'Eingegebenes bleibt erhalten und ist wieder da, sobald das Modul freigegeben ist.')
                     ->schema([
                         CheckboxList::make('modules')
+                            ->label('Module')
                             ->hiddenLabel()
                             ->options(collect(Module::cases())->mapWithKeys(fn (Module $module): array => [$module->value => $module->label()])->all())
                             ->descriptions(collect(Module::cases())->mapWithKeys(fn (Module $module): array => [$module->value => $module->description()])->all())
-                            ->columns(['default' => 1, 'md' => 2])
-                            ->bulkToggleable(),
+                            ->columns(['default' => 1, 'md' => 2]),
                     ]),
                 Section::make('Bereiche')
                     ->description(fn (): string => 'Angehakt = an. Abgeschaltete Bereiche sind für alle gesperrt, auch für Admins und System-Admins; '
