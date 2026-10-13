@@ -265,6 +265,22 @@ Freitermin, Sortierung
   Buchhaltung: Liste, Reiter, Finanz-Warnung und ihre Feldoptionen – die
   Fortschrittsprüfungen Vertrag und Preisliste entfallen dann. Gespeichertes
   bleibt und ist mit der Freigabe wieder da.
+- **Preislisten & Costing (13.10.2026, Modul):** Preislisten der Halle unter
+  Stammdaten › Preislisten (`price_lists`, `price_list_items`): Kostenpunkte nach
+  Abschnitten mit Hinweis, Einheit, Preis (leer: nach Aufwand; Einheit „%“:
+  Zuschlag, im Costing ist der Faktor dann der Betrag in €), Mindestbetrag,
+  Vorgabe-Faktor und „Faktor = PAX erwartet“. Pflegen mit Stammdaten-Recht, lesen
+  auch Buchhaltung und Eventmanager. Das Event wählt seine Preisliste unter
+  Buchung › Daten (`events.price_list_id`); bis 13.10.2026 war sie eine Feldoption
+  der Buchhaltung (`event_finances.price_list`) – die Migration hat jeden Wert zu
+  einer Preisliste ohne Kostenpunkte gemacht. Das Costing (`costings`,
+  `costing_items`, Buchung › Costing und Menüpunkt Costings) übernimmt
+  Kostenpunkte, Preise und Vorgabe-Faktoren, der Eventmanager passt Faktoren an
+  und ergänzt Posten; Preise der Liste bleiben fest (auch beim Speichern,
+  `fixed_price`). Verschickt wird per Mail mit PDF (Dompdf), danach bleibt die
+  Fassung, Änderungen gehen als neue Fassung. Alle Preise netto, 19 % MwSt.
+  kommen im PDF dazu, gerechnet in Cent (`Costing::percentOf`). Die Buchhaltung
+  sieht Preislisten und Costings lesend, andere Leserollen nicht.
 
 ## Offene Punkte
 

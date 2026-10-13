@@ -15,9 +15,14 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
 - **Lokal ist weder PHP noch Composer installiert, und das bleibt so.** Composer,
   Artisan und Tests laufen auf dem Server:
   `ssh allinkl-eventmanager 'cd /www/htdocs/w0219ff1/ipa.vcontrol.eu && php artisan …'`
-- `vendor/` und `.env` existieren nur auf dem Server. Pakete per `composer require`
-  auf dem Server installieren und `composer.json` und `composer.lock` sofort zurück
-  ins Repo holen – sonst überschreibt der nächste Deploy den neueren Stand.
+- `vendor/` und `.env` existieren nur auf dem Server. Neue Pakete: `composer.json`
+  im Repo ändern, in einer abgeschotteten Testkopie auf dem Server mit **echter**
+  Kopie von vendor (`cp -a`, nie `cp -al` – Composer schriebe sonst über die
+  Hardlinks in die Live-Installation) `composer update <paket> --with-dependencies`,
+  `composer.lock` zurück ins Repo holen, dort testen. Einspielen: `php artisan down`,
+  `scripts/deploy.sh`, `composer install` (umask 022), Migrationen, `php artisan up`,
+  erst dann die Tests (im Wartungsmodus antworten sie mit 503). So am 13.10.2026
+  mit dompdf.
 - Deploy: `scripts/deploy.sh` (Standard ipa.vcontrol.eu, sonst die Halle als
   Parameter; `--dry-run` zeigt nur an). Überträgt per rsync, löscht auf dem
   Server, was im Repo gelöscht oder umbenannt wurde – nur in app, config,
@@ -25,6 +30,10 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   vendor/ nie –, und leert die Caches. Bei mehr als 20 Löschungen bricht es vorher
   ab (`MAX_DELETE=n` hebt die Grenze). Neue Migrationen danach selbst mit
   `php artisan migrate --force` ausführen.
+- PDFs erzeugt Dompdf (`App\Support\CostingPdf`, Vorlage `costing-pdf`): nur CSS
+  2.1 – Tabellen statt Flex/Grid, Schrift DejaVu Sans (€, Umlaute), Bilder als
+  data-URI, fremde Adressen aus. Was zusammenbleiben soll, als eigene Tabelle in
+  einem Block mit `page-break-inside: avoid` – auf `tbody` wirkt es nicht.
 - Composer und `php artisan filament:assets` nie unter `umask 077` laufen lassen.
   Die Dateien unter `public/` liefert der Webserver als anderer Benutzer aus; nur
   für den Eigentümer lesbar heißt 403, und die Oberfläche lädt ohne CSS und JS
@@ -144,7 +153,7 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   Setting `disabled_areas`); bis dort zum ersten Mal gespeichert wird, gilt
   `VC_DISABLED_AREAS`. Benutzer, Rollen & Rechte und Halle bleiben immer an.
 - **Module** (`App\Access\Module`): was eine Halle bucht – Bühnenplan, Saalplan,
-  Gästeliste, Buchhaltung. Der System-Admin gibt sie unter Verwaltung › System
+  Gästeliste, Buchhaltung, Preislisten & Costing. Der System-Admin gibt sie unter Verwaltung › System
   frei (Setting `modules`; ohne Eintrag sind alle frei). Ohne Freigabe ist ein
   Modul für alle ausgeblendet, Gespeichertes bleibt. Jede Stelle, die ein Modul
   zeigt, fragt `Module::…->isEnabled()`: Reiter und Felder, Links und Knöpfe,
