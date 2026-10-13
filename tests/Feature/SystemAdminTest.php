@@ -18,6 +18,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -39,11 +40,49 @@ class SystemAdminTest extends TestCase
 
         $this->artisan('vc:system-admin', ['email' => 'betreiber@example.org'])->assertSuccessful();
         $this->artisan('vc:system-admin', ['email' => 'betreiber@example.org'])->expectsOutputToContain('schon System-Admin');
-        $this->artisan('vc:system-admin', ['email' => 'niemand@example.org'])->assertFailed();
+        $this->artisan('vc:system-admin', ['email' => 'niemand@example.org'])
+            ->expectsConfirmation('Kein Konto mit niemand@example.org. Anlegen?', 'no')
+            ->assertFailed();
+        $this->artisan('vc:system-admin', ['email' => 'niemand@example.org', '--no-interaction' => true])->assertFailed();
+        $this->assertNull(User::query()->where('email', 'niemand@example.org')->first());
 
         $this->assertTrue($user->fresh()->access()->isSystemAdmin());
         $this->assertTrue($user->fresh()->access()->isSuper());
         $this->assertSame(1, Role::query()->where('is_system_admin', true)->count());
+    }
+
+    public function test_befehl_legt_den_ersten_system_admin_an_passwort_verdeckt(): void
+    {
+        // Neue Installation ohne Import: das Konto entsteht über die Konsole
+        $this->artisan('vc:system-admin', ['email' => 'Betreiberin@Example.org'])
+            ->expectsConfirmation('Kein Konto mit betreiberin@example.org. Anlegen?', 'yes')
+            ->expectsQuestion('Vorname', 'Nina')
+            ->expectsQuestion('Nachname', 'Neu')
+            ->expectsQuestion('Passwort (mindestens 8 Zeichen)', 'lang-genug-2026')
+            ->expectsQuestion('Passwort wiederholen', 'lang-genug-2026')
+            ->expectsOutputToContain('Nina Neu ist jetzt System-Admin')
+            ->assertSuccessful();
+
+        $user = User::query()->where('email', 'betreiberin@example.org')->sole();
+        $this->assertTrue(Hash::check('lang-genug-2026', (string) $user->password));
+        $this->assertTrue($user->is_active);
+        $this->assertTrue($user->access()->isSystemAdmin());
+
+        // Zu kurz oder vertippt: kein Konto
+        $this->artisan('vc:system-admin', ['email' => 'kurz@example.org'])
+            ->expectsConfirmation('Kein Konto mit kurz@example.org. Anlegen?', 'yes')
+            ->expectsQuestion('Vorname', 'K')
+            ->expectsQuestion('Nachname', 'Urz')
+            ->expectsQuestion('Passwort (mindestens 8 Zeichen)', '1234567')
+            ->assertFailed();
+        $this->artisan('vc:system-admin', ['email' => 'vertippt@example.org'])
+            ->expectsConfirmation('Kein Konto mit vertippt@example.org. Anlegen?', 'yes')
+            ->expectsQuestion('Vorname', 'V')
+            ->expectsQuestion('Nachname', 'Ertippt')
+            ->expectsQuestion('Passwort (mindestens 8 Zeichen)', 'lang-genug-2026')
+            ->expectsQuestion('Passwort wiederholen', 'lang-genug-2027')
+            ->assertFailed();
+        $this->assertSame(0, User::query()->whereIn('email', ['kurz@example.org', 'vertippt@example.org'])->count());
     }
 
     public function test_hallen_admin_sieht_system_admins_nicht(): void
