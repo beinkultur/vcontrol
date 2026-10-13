@@ -140,9 +140,9 @@ class SystemAdminTest extends TestCase
 
         // Codes abschalten, Schichten (Vorgabe aus) anschalten
         $component = Livewire::test(ManageSystem::class);
-        $module = $component->get('data.areas_module');
+        $module = $component->get('data.areas_arbeitsbereiche');
         $this->assertNotContains('schichten', $module);
-        $component->fillForm(['areas_module' => [...array_values(array_diff($module, ['codes'])), 'schichten']])
+        $component->fillForm(['areas_arbeitsbereiche' => [...array_values(array_diff($module, ['codes'])), 'schichten']])
             ->call('save')
             ->assertHasNoFormErrors();
 
@@ -164,7 +164,7 @@ class SystemAdminTest extends TestCase
         $this->actingAs($this->systemAdmin());
 
         Livewire::test(ManageSystem::class)
-            ->fillForm(['areas_module' => [], 'areas_administration' => [], 'areas_extern' => []])
+            ->fillForm(['areas_arbeitsbereiche' => [], 'areas_administration' => [], 'areas_extern' => []])
             ->call('save');
 
         $this->assertTrue(Area::Events->isDisabled());

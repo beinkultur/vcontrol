@@ -253,6 +253,15 @@ Freitermin, Sortierung
   Saalplan mit den genutzten Bereichen und der Bestuhlung; ausgeliefert wird über
   `SeatingPlanController` (Rechte wie bei den Event-Dateien, Daysheet über den
   Schlüssel), angezeigt nur, was am Inhalt als PDF erkannt ist.
+- **Module (13.10.2026):** Bühnenplan, Saalplan, Gästeliste und Buchhaltung gibt
+  der System-Admin je Halle frei, je nachdem, was sie gebucht hat (Verwaltung ›
+  System, `App\Access\Module`). Ohne Freigabe fehlen sie für alle: Bühnenplan-Seite,
+  Druck und SVG (Maße und Podest-Rechnung unter Planung › Bühne bleiben);
+  Standard-Saalpläne, Auswahl oder Upload am Event und der Abschnitt Saalplan für
+  Externe (Bereiche und Bestuhlung am Event bleiben); Reiter Gästeliste und
+  Druckansicht; Buchhaltung mit Liste, Reiter, Finanz-Warnung und ihren
+  Feldoptionen – die Fortschrittsprüfungen Vertrag und Preisliste entfallen dann.
+  Gespeichertes bleibt und ist mit der Freigabe wieder da.
 
 ## Offene Punkte
 

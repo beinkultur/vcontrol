@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events\Pages\Concerns;
 
+use App\Access\Module;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\ExternEvents\ExternEventResource;
@@ -57,6 +58,7 @@ trait HasEventHeading
             ->label('Bühnenplan')
             ->icon(Heroicon::OutlinedMap)
             ->color('gray')
+            ->visible(fn (): bool => Module::StagePlan->isEnabled())
             ->url(fn (): string => EventResource::getUrl('stage-plan', ['record' => $this->getRecord()]));
     }
 }

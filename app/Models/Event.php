@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Access\Module;
 use App\Enums\RoomUsage;
 use App\Support\EventNumber;
 use App\Support\IncomingInvoices;
@@ -252,11 +253,13 @@ class Event extends Model
     /**
      * Finanz-Warnung wie in der PHP-Version: Das Event ist höchstens 14 Tage
      * entfernt (oder vorbei), aber der Vertrag ist nicht zurück (bzw. kein
-     * Rahmenvertrag) oder die 2. Rate ist nicht gezahlt.
+     * Rahmenvertrag) oder die 2. Rate ist nicht gezahlt. Nur mit dem Modul
+     * Buchhaltung – ohne lässt sich beides nicht eintragen.
      */
     public function hasFinanceAlert(): bool
     {
-        if ($this->starts_at === null || today()->diffInDays($this->starts_at->copy()->startOfDay(), false) > 14) {
+        if (!Module::Accounting->isEnabled()
+            || $this->starts_at === null || today()->diffInDays($this->starts_at->copy()->startOfDay(), false) > 14) {
             return false;
         }
 

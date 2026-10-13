@@ -9,10 +9,11 @@ use App\Models\User;
 /**
  * Was ein Benutzer darf. Mehrere Rollen addieren sich: je Bereich zählt die
  * höchste Stufe. Die Super-Rolle (Admin der Halle) darf alles – außer in
- * abgeschalteten Modulen. Darüber steht der System-Admin (Betreiber): Er hat
- * alle Rechte eines Admins und schaltet zusätzlich Module, ändert Rollen &
- * Rechte und verwaltet die System-Admin-Konten, die sonst niemand sieht.
- * Kalender-Rechte kommen aus den Rollen und zusätzlich vom Benutzer selbst.
+ * abgeschalteten Bereichen und nicht freigegebenen Modulen. Darüber steht der
+ * System-Admin (Betreiber): Er hat alle Rechte eines Admins, gibt zusätzlich
+ * Module frei, schaltet Bereiche, ändert Rollen & Rechte und verwaltet die
+ * System-Admin-Konten, die sonst niemand sieht. Kalender-Rechte kommen aus den
+ * Rollen und zusätzlich vom Benutzer selbst.
  */
 final class Access
 {
@@ -73,12 +74,12 @@ final class Access
 
     /**
      * Zugang zum internen Arbeitsbereich – alles außer den Extern-Ansichten. Der
-     * System-Admin kommt immer hinein, auch wenn alle Module aus sind: Er schaltet
+     * System-Admin kommt immer hinein, auch wenn alle Bereiche aus sind: Er schaltet
      * sie unter System wieder an.
      */
     public function canUseApp(): bool
     {
-        return $this->canAnyIn(Area::GROUP_MODULE) || $this->canAnyIn(Area::GROUP_ADMIN) || $this->isSystemAdmin();
+        return $this->canAnyIn(Area::GROUP_WORK) || $this->canAnyIn(Area::GROUP_ADMIN) || $this->isSystemAdmin();
     }
 
     /**

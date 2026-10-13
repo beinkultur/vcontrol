@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Events\Schemas;
 
 use App\Access\Area;
 use App\Access\Level;
+use App\Access\Module;
 use App\Enums\AssignmentRole;
 use App\Enums\OptionField;
 use App\Filament\Resources\Events\EventResource;
@@ -139,7 +140,7 @@ class EventForm
                             ]))),
                         ]),
                         self::phase('Planung', 'planung')->schema([
-                            self::sections('planung', [
+                            self::sections('planung', array_values(array_filter([
                                 self::tab('Zeiten', 'zeiten')->schema([self::times()]),
                                 self::tab('Checkliste', 'checkliste')->schema([self::checklist()]),
                                 self::tab('Bühne', 'buehne')->schema([
@@ -156,7 +157,11 @@ class EventForm
                                                 }
                                                 $livewire->redirect(EventResource::getUrl('stage-plan', ['record' => $record]), navigate: true);
                                             }),
-                                    ])->key('stagePlanActions')->alignEnd(),
+                                    ])
+                                        ->key('stagePlanActions')
+                                        ->alignEnd()
+                                        // Nur mit dem Modul Bühnenplan (Verwaltung › System), die Maße gibt es immer
+                                        ->visible(fn (): bool => Module::StagePlan->isEnabled()),
                                     self::stage(),
                                 ]),
                                 self::tab('Personal', 'personal')->schema([
@@ -169,7 +174,10 @@ class EventForm
                                         ->description('Wer die Leistung stellt, welches Gewerk oder welcher Anbieter. Leer heißt: nicht festgelegt.')
                                         ->schema(ServiceFields::all()),
                                 ]),
-                                self::tab('Gästeliste', 'gaeste')->schema([self::embedded(GuestsRelationManager::class)]),
+                                // Nur mit dem Modul Gästeliste (Verwaltung › System)
+                                Module::GuestList->isEnabled()
+                                    ? self::tab('Gästeliste', 'gaeste')->schema([self::embedded(GuestsRelationManager::class)])
+                                    : null,
                                 self::tab('Dateien', 'dateien')->schema([
                                     self::embedded(FilesRelationManager::class),
                                     // Übergreifende Dateien hängen an mehreren Events, gepflegt werden sie zentral
@@ -178,7 +186,7 @@ class EventForm
                                         ->visible(fn (Event $record): bool => $record->linkedFiles()->exists()),
                                 ]),
                                 self::tab('Sonstiges', 'sonstiges')->schema([self::other()]),
-                            ]),
+                            ]))),
                         ]),
                         self::phase('Durchführung', 'durchfuehrung')->schema([
                             self::sections('durchfuehrung', [
@@ -728,7 +736,7 @@ class EventForm
                     ]),
                 Textarea::make('stage_notes')
                     ->label('Anmerkungen Bühne')
-                    ->helperText('Erscheint kursiv im Bühnenplan.')
+                    ->helperText(fn (): ?string => Module::StagePlan->isEnabled() ? 'Erscheint kursiv im Bühnenplan.' : null)
                     ->rows(2),
                 // „sonst. Podeste“ aus AppSheet, wenn dort Text statt einer Anzahl steht.
                 // Anzahlen stehen in „Sonstige“, die Anmerkungen in „Anmerkungen Bühne“.
@@ -753,10 +761,11 @@ class EventForm
         return $live ? $field->live(onBlur: true) : $field;
     }
 
-    /** Versatz der Wings; leer heißt wie in der PHP-Version 1 m. */
+    /** Versatz der Wings; leer heißt wie in der PHP-Version 1 m. Nur für den Bühnenplan. */
     private static function offsetField(string $name): TextInput
     {
         return self::meterField($name, 'Versatz', live: false)
+            ->visible(fn (): bool => Module::StagePlan->isEnabled())
             ->hintIcon(Heroicon::OutlinedInformationCircle, tooltip: 'Abstand zur Bühnen-Vorderkante, Richtung Upstage (weg vom Publikum)')
             ->dehydrateStateUsing(fn (mixed $state): int => $state === null || $state === '' ? StagePlan::DEFAULT_WING_OFFSET : (int) $state);
     }

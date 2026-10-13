@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Access\Module;
 use App\Enums\AssignmentRole;
 use App\Enums\ServiceCode;
 use App\Filament\Resources\Events\Schemas\EventForm;
@@ -19,9 +20,9 @@ use Closure;
  * festgelegt und dann hier angepasst.
  *
  * Bewusst nicht dabei: Buchhaltung, Buchung (PAX, interne Notizen), Gäste,
- * Betrieb, WLAN. Dateien und Notizen ohne die „für Externe verborgenen“. Der
- * Saalplan (eigener oder Standard) mit den genutzten Bereichen und der
- * Bestuhlung gehört dazu.
+ * Betrieb, WLAN. Dateien und Notizen ohne die „für Externe verborgenen“. Mit
+ * ihrem Modul (Verwaltung › System) gehören der Bühnenplan und der Saalplan
+ * (eigener oder Standard) mit den genutzten Bereichen und der Bestuhlung dazu.
  */
 final class ExternSheet
 {
@@ -35,10 +36,10 @@ final class ExternSheet
      *     times: list<array{label: string, value: string}>,
      *     contacts: list<array{label: string, name: string, time: ?string}>,
      *     services: list<array{label: string, responsible: ?string, provider: ?string, note: ?string}>,
-     *     stage: array{summary: string, rows: array<string, string>, notes: ?string, svg: string}|null,
+     *     stage: array{summary: string, rows: array<string, string>, notes: ?string, svg: ?string}|null,
      *     files: array<string, list<array{name: string, stand: string, size: string, url: string}>>,
      *     notes: list<array{subject: string, body: string, date: ?string, author: ?string}>,
-     *     seating_plan: array{name: string, url: string}|null, areas: list<string>, seating: list<string>}
+     *     seating_plan: array{file: array{name: string, url: string}|null, areas: list<string>, seating: list<string>}|null}
      */
     public static function make(Event $event, Closure $fileUrl, ?Closure $seatingPlanUrl = null): array
     {
@@ -57,9 +58,20 @@ final class ExternSheet
             'stage' => self::stage($event),
             'files' => self::files($event, $fileUrl),
             'notes' => self::notes($event),
-            'seating_plan' => $event->hasSeatingPlan() ? [
+            'seating_plan' => Module::SeatingPlan->isEnabled() ? self::seatingPlan($event, $seatingPlanUrl) : null,
+        ];
+    }
+
+    /**
+     * @param  Closure(Event): string  $url
+     * @return array{file: array{name: string, url: string}|null, areas: list<string>, seating: list<string>}
+     */
+    private static function seatingPlan(Event $event, Closure $url): array
+    {
+        return [
+            'file' => $event->hasSeatingPlan() ? [
                 'name' => $event->hasCustomSeatingPlan() ? ($event->seating_plan_original_name ?: 'Saalplan') : (string) $event->seatingPlan?->name,
-                'url' => $seatingPlanUrl($event),
+                'url' => $url($event),
             ] : null,
             'areas' => array_values(array_filter(array_map('strval', (array) $event->areas))),
             'seating' => array_values(array_filter(array_map('strval', (array) $event->seating))),
@@ -144,7 +156,7 @@ final class ExternSheet
             ->all();
     }
 
-    /** @return array{summary: string, rows: array<string, string>, notes: ?string, svg: string}|null */
+    /** @return array{summary: string, rows: array<string, string>, notes: ?string, svg: ?string}|null  svg: Bühnenplan, nur mit seinem Modul */
     private static function stage(Event $event): ?array
     {
         $stage = $event->stage;
@@ -168,7 +180,7 @@ final class ExternSheet
             'summary' => $summary,
             'rows' => $rows,
             'notes' => filled($stage->stage_notes) ? (string) $stage->stage_notes : null,
-            'svg' => StagePlan::toSvg(StagePlan::build($stage, $event)),
+            'svg' => Module::StagePlan->isEnabled() ? StagePlan::toSvg(StagePlan::build($stage, $event)) : null,
         ];
     }
 

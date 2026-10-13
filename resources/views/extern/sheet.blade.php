@@ -117,29 +117,35 @@
         @endif
     </section>
 
-    <section>
-        <h2>Saalplan</h2>
-        @if ($sheet['seating_plan'] === null)
-            <p class="vc-sheet__empty">Kein Saalplan.</p>
-        @else
-            <p class="vc-sheet__seating-plan">
-                <a href="{{ $sheet['seating_plan']['url'] }}" target="_blank" rel="noopener">{{ $sheet['seating_plan']['name'] }}</a>
-                <span class="vc-sheet__muted">· PDF</span>
-            </p>
-        @endif
-        @if ($sheet['areas'] !== [] || $sheet['seating'] !== [])
-            <dl>
-                @if ($sheet['areas'] !== [])
-                    <dt>Bereiche</dt>
-                    <dd>{{ implode(', ', $sheet['areas']) }}</dd>
-                @endif
-                @if ($sheet['seating'] !== [])
-                    <dt>Bestuhlung</dt>
-                    <dd>{{ implode(', ', $sheet['seating']) }}</dd>
-                @endif
-            </dl>
-        @endif
-    </section>
+    {{-- Nur mit dem Modul Saalplan --}}
+    @if ($sheet['seating_plan'] !== null)
+        @php
+            $seatingPlan = $sheet['seating_plan'];
+        @endphp
+        <section>
+            <h2>Saalplan</h2>
+            @if ($seatingPlan['file'] === null)
+                <p class="vc-sheet__empty">Kein Saalplan.</p>
+            @else
+                <p class="vc-sheet__seating-plan">
+                    <a href="{{ $seatingPlan['file']['url'] }}" target="_blank" rel="noopener">{{ $seatingPlan['file']['name'] }}</a>
+                    <span class="vc-sheet__muted">· PDF</span>
+                </p>
+            @endif
+            @if ($seatingPlan['areas'] !== [] || $seatingPlan['seating'] !== [])
+                <dl>
+                    @if ($seatingPlan['areas'] !== [])
+                        <dt>Bereiche</dt>
+                        <dd>{{ implode(', ', $seatingPlan['areas']) }}</dd>
+                    @endif
+                    @if ($seatingPlan['seating'] !== [])
+                        <dt>Bestuhlung</dt>
+                        <dd>{{ implode(', ', $seatingPlan['seating']) }}</dd>
+                    @endif
+                </dl>
+            @endif
+        </section>
+    @endif
 
     <section>
         <h2>Bühne</h2>
@@ -155,15 +161,17 @@
             @if ($sheet['stage']['notes'])
                 <p class="vc-sheet__stage-notes">{{ $sheet['stage']['notes'] }}</p>
             @endif
-            {{-- Eingeklappt, erst auf Klick; zum Drucken klappt er von selbst auf (Skript unten) --}}
-            <details class="vc-sheet__plan-toggle">
-                <summary>
-                    <span class="vc-sheet__when-closed">Bühnenplan anzeigen</span>
-                    <span class="vc-sheet__when-open">Bühnenplan ausblenden</span>
-                </summary>
-                {{-- Vom Server erzeugt, alle Texte darin escaped (App\Support\StagePlan) --}}
-                <div class="vc-sheet__plan">{!! $sheet['stage']['svg'] !!}</div>
-            </details>
+            {{-- Nur mit dem Modul Bühnenplan. Eingeklappt, erst auf Klick; zum Drucken klappt er von selbst auf (Skript unten) --}}
+            @if ($sheet['stage']['svg'] !== null)
+                <details class="vc-sheet__plan-toggle">
+                    <summary>
+                        <span class="vc-sheet__when-closed">Bühnenplan anzeigen</span>
+                        <span class="vc-sheet__when-open">Bühnenplan ausblenden</span>
+                    </summary>
+                    {{-- Vom Server erzeugt, alle Texte darin escaped (App\Support\StagePlan) --}}
+                    <div class="vc-sheet__plan">{!! $sheet['stage']['svg'] !!}</div>
+                </details>
+            @endif
         @endif
     </section>
 

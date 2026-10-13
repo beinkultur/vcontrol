@@ -3,6 +3,7 @@
 namespace App\Filament\Support;
 
 use App\Access\Area;
+use App\Access\Module;
 use App\Filament\Forms\SafeFileUpload;
 use App\Models\Event;
 use App\Models\SeatingPlan;
@@ -26,6 +27,9 @@ use Illuminate\Support\Facades\Storage;
  * in die Felder „Bereiche“ (areas) und „Bestuhlung“ (seating) – danach lassen
  * sie sich anpassen, etwa wenn eine Tribüne gesperrt ist. Gespeicherte Dateien zeigt das Upload-Feld mit der Adresse
  * über die Rechteprüfung (SeatingPlanController), nicht mit einer öffentlichen.
+ *
+ * Alles nur mit dem Modul Saalplan (Verwaltung › System). Ohne bleiben am
+ * Event die Felder Bereiche und Bestuhlung.
  */
 final class SeatingPlanFields
 {
@@ -34,7 +38,8 @@ final class SeatingPlanFields
     {
         $user = Auth::user();
 
-        return $user instanceof User
+        return Module::SeatingPlan->isEnabled()
+            && $user instanceof User
             && ($user->access()->canEdit(Area::Events) || $user->access()->canEdit(Area::Buchhaltung));
     }
 
@@ -58,6 +63,10 @@ final class SeatingPlanFields
      */
     public static function forEvent(): array
     {
+        if (!Module::SeatingPlan->isEnabled()) {
+            return [];
+        }
+
         return [
             ToggleButtons::make('seating_plan_source')
                 ->label('Saalplan')

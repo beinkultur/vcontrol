@@ -2,6 +2,7 @@
 
 namespace App\Enums;
 
+use App\Access\Module;
 use Filament\Support\Contracts\HasLabel;
 
 /** Event-Felder mit pflegbaren Auswahlwerten (Tabelle field_options). */
@@ -34,6 +35,18 @@ enum OptionField: string implements HasLabel
             self::ContractStatus => 'Vertragsstatus',
             self::AccountingStatus => 'FIBU-Status',
         };
+    }
+
+    /** Feld eines Moduls (Verwaltung › System): Ohne das Modul gibt es hier nichts zu pflegen. */
+    public function module(): ?Module
+    {
+        return in_array($this, [self::PriceList, self::ContractStatus, self::AccountingStatus], true) ? Module::Accounting : null;
+    }
+
+    /** @return list<self> Felder ohne Modul und die freigegebener Module */
+    public static function available(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $field): bool => $field->module()?->isEnabled() ?? true));
     }
 
     /** Feld, dessen Wert als übergeordneter Wert gewählt wird (nur VA-Kategorie 2). */

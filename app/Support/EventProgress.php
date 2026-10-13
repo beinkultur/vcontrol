@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Access\Module;
 use App\Enums\AssignmentRole;
 use App\Models\Event;
 use App\Models\EventAssignment;
@@ -28,7 +29,8 @@ final class EventProgress
     }
 
     /**
-     * Planungsbereiche mit „begonnen“ wie auf dem Dashboard der PHP-Version.
+     * Planungsbereiche mit „begonnen“ wie auf dem Dashboard der PHP-Version. Die
+     * Gästeliste nur mit ihrem Modul.
      *
      * @return array<string, bool> Reiter-ID => begonnen
      */
@@ -37,17 +39,17 @@ final class EventProgress
         $s = $event->schedule;
         $c = $event->checklist;
 
-        return [
+        return array_filter([
             'zeiten' => filled($s?->admission) || filled($s?->start_time) || filled($s?->load_in),
             'checkliste' => collect(['hands', 'cleaning', 'chairs_ordered', 'pvc_setup', 'traffic'])
                 ->contains(fn (string $field): bool => self::answered($c?->{$field})),
             'buehne' => self::hasStageSize($event),
             'personal' => $event->assignments->contains(fn (EventAssignment $a): bool => $a->role !== AssignmentRole::ProjectLead),
             'gewerke' => self::filledServices($event) > 0,
-            'gaeste' => $guestCount > 0,
+            'gaeste' => Module::GuestList->isEnabled() ? $guestCount > 0 : null,
             'dateien' => $fileCount > 0,
             'sonstiges' => filled($event->wlan),
-        ];
+        ], fn (?bool $started): bool => $started !== null);
     }
 
     /** Leistungen, bei denen ein Gewerk, Anbieter oder eine Notiz eingetragen ist. */
@@ -59,10 +61,17 @@ final class EventProgress
             ->count();
     }
 
-    /** @return list<bool> */
+    /**
+     * Vertrag und Preisliste/Miete zählen nur mit dem Modul Buchhaltung – ohne
+     * lassen sie sich nicht eintragen.
+     *
+     * @return list<bool>
+     */
     private static function bookingChecks(Event $e): array
     {
-        return [
+        $accounting = Module::Accounting->isEnabled();
+
+        return array_values(array_filter([
             filled($e->title),
             $e->promoter_id !== null,
             $e->starts_at !== null,
@@ -71,11 +80,11 @@ final class EventProgress
             $e->pax_expected > 0,
             filled($e->seating),
             $e->assignments->contains('role', AssignmentRole::ProjectLead),
-            filled($e->finance?->contract_status),
-            filled($e->finance?->price_list) || $e->finance?->rent !== null,
+            $accounting ? filled($e->finance?->contract_status) : null,
+            $accounting ? (filled($e->finance?->price_list) || $e->finance?->rent !== null) : null,
             filled($e->pr?->pr_status) || $e->pr?->pr_date !== null,
             filled($e->areas) || filled($e->ticketing),
-        ];
+        ], fn (?bool $check): bool => $check !== null));
     }
 
     /** @return list<bool> */

@@ -68,7 +68,11 @@ class RoleForm
                 ->schema(array_map(
                     fn (Area $area) => AccessFields::level(
                         'permissions.' . $area->value,
-                        $area->label() . ($area->isDisabled() ? ' (Modul abgeschaltet)' : ''),
+                        $area->label() . match (true) {
+                            !$area->isDisabled() => '',
+                            $area->module() !== null => ' (Modul nicht freigegeben)',
+                            default => ' (abgeschaltet)',
+                        },
                     ),
                     // „Rollen & Rechte“ sieht nur der System-Admin (RolePolicy) – das Recht hätte hier keine Wirkung
                     array_values(array_filter(Area::inGroup($group), fn (Area $area): bool => $area !== Area::AdminRollen)),

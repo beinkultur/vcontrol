@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Access\Area;
+use App\Access\Module;
 use App\Access\Modules;
 use App\Enums\ColorScheme;
 use App\Filament\Concerns\BoxedPage;
@@ -32,9 +33,10 @@ use UnitEnum;
 
 /**
  * Einstellungen des Betreibers, nur für System-Admins: Farbschema
- * (App\Enums\ColorScheme), welche Module diese Halle hat und die nächtliche
- * Sicherung (App\Support\Backups). Alles, was die Halle selbst einstellt, steht
- * unter Verwaltung › Halle.
+ * (App\Enums\ColorScheme), welche Module die Halle gebucht hat, welche Bereiche
+ * aus sind (App\Access\Modules) und die nächtliche Sicherung
+ * (App\Support\Backups). Alles, was die Halle selbst einstellt, steht unter
+ * Verwaltung › Halle.
  *
  * @property-read Schema $form
  */
@@ -69,8 +71,14 @@ class ManageSystem extends Page
 
     public function mount(): void
     {
-        $disabled = Modules::current()->disabled();
-        $state = ['color_scheme' => ColorScheme::current()->value];
+        $disabled = Modules::current()->disabledAreas();
+        $state = [
+            'color_scheme' => ColorScheme::current()->value,
+            'modules' => array_values(array_map(
+                fn (Module $module): string => $module->value,
+                array_filter(Module::cases(), fn (Module $module): bool => $module->isEnabled()),
+            )),
+        ];
         foreach (Area::groups() as $group) {
             $state[self::field($group)] = array_values(array_map(
                 fn (Area $area): string => $area->value,
@@ -100,8 +108,20 @@ class ManageSystem extends Page
                             ->required(),
                     ]),
                 Section::make('Module')
+                    ->description('Was die Halle gebucht hat. Ein Modul ohne Haken ist für alle ausgeblendet, auch für Admins und System-Admins; '
+                        . 'Eingegebenes bleibt erhalten und ist wieder da, sobald das Modul freigegeben ist.')
+                    ->schema([
+                        CheckboxList::make('modules')
+                            ->hiddenLabel()
+                            ->options(collect(Module::cases())->mapWithKeys(fn (Module $module): array => [$module->value => $module->label()])->all())
+                            ->descriptions(collect(Module::cases())->mapWithKeys(fn (Module $module): array => [$module->value => $module->description()])->all())
+                            ->columns(['default' => 1, 'md' => 2])
+                            ->bulkToggleable(),
+                    ]),
+                Section::make('Bereiche')
                     ->description(fn (): string => 'Angehakt = an. Abgeschaltete Bereiche sind für alle gesperrt, auch für Admins und System-Admins; '
-                        . 'vergebene Rechte bleiben erhalten und wirken wieder, sobald der Bereich an ist. Benutzer, Rollen & Rechte und Halle bleiben immer an.'
+                        . 'vergebene Rechte bleiben erhalten und wirken wieder, sobald der Bereich an ist. Benutzer, Rollen & Rechte und Halle bleiben immer an, '
+                        . 'die Buchhaltung kommt mit ihrem Modul.'
                         . (Modules::current()->isStored() ? '' : ' Bisher gilt die Server-Konfiguration (VC_DISABLED_AREAS) – ab dem ersten Speichern diese Auswahl.'))
                     ->schema(array_map(
                         fn (string $group): CheckboxList => CheckboxList::make(self::field($group))
@@ -229,10 +249,11 @@ class ManageSystem extends Page
             $enabled = [...$enabled, ...array_map('strval', (array) ($data[self::field($group)] ?? []))];
         }
 
-        Modules::current()->disable(array_values(array_filter(
-            Area::cases(),
-            fn (Area $area): bool => $area->isSwitchable() && !in_array($area->value, $enabled, true),
-        )));
+        $modules = array_map('strval', (array) ($data['modules'] ?? []));
+        Modules::current()->store(
+            array_values(array_filter(Module::cases(), fn (Module $module): bool => in_array($module->value, $modules, true))),
+            array_values(array_filter(Area::cases(), fn (Area $area): bool => $area->isSwitchable() && !in_array($area->value, $enabled, true))),
+        );
 
         $scheme = ColorScheme::tryFrom((string) ($data['color_scheme'] ?? '')) ?? ColorScheme::VcBasic;
         $schemeChanged = $scheme !== ColorScheme::current();

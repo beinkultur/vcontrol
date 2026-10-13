@@ -34,7 +34,7 @@ class ManageFieldOptions extends ManageRecords
         $counts = FieldOption::query()->selectRaw('field_key, COUNT(*) AS n')->groupBy('field_key')->pluck('n', 'field_key');
 
         $tabs = [];
-        foreach (OptionField::cases() as $field) {
+        foreach (OptionField::available() as $field) {
             $tabs[$field->value] = Tab::make($field->getLabel())
                 ->badge($counts[$field->value] ?? 0)
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('field_key', $field->value));

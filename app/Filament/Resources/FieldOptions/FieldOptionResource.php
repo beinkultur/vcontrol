@@ -47,7 +47,7 @@ class FieldOptionResource extends Resource
             ->components([
                 Select::make('field_key')
                     ->label('Feld')
-                    ->options(OptionField::class)
+                    ->options(fn (): array => collect(OptionField::available())->mapWithKeys(fn (OptionField $field): array => [$field->value => $field->getLabel()])->all())
                     ->required()
                     ->live()
                     ->native(false),

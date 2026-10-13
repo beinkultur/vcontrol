@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events\Pages;
 
+use App\Access\Module;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use App\Support\EventDisplay;
@@ -41,11 +42,13 @@ class StagePlanPage extends Page
     /** @var array<string, mixed>|null */
     public ?array $data = [];
 
+    /** Nur mit dem Modul Bühnenplan (Verwaltung › System) */
     public static function canAccess(array $parameters = []): bool
     {
         $record = $parameters['record'] ?? null;
 
-        return $record instanceof Event ? EventResource::canView($record) : EventResource::canViewAny();
+        return Module::StagePlan->isEnabled()
+            && ($record instanceof Event ? EventResource::canView($record) : EventResource::canViewAny());
     }
 
     public function mount(int|string $record): void

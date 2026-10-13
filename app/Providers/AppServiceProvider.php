@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Bühnen-Stammdaten der Halle: einmal je Anfrage aus der Datenbank
         $this->app->scoped(StageSettings::class, fn (): StageSettings => StageSettings::load());
-        // Abgeschaltete Module ebenso – sie fallen bei jeder Rechteprüfung an
+        // Freigegebene Module und abgeschaltete Bereiche ebenso – sie fallen bei jeder Rechteprüfung an
         $this->app->scoped(Modules::class);
     }
 

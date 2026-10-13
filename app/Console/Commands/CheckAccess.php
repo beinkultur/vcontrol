@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Access\Area;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -48,6 +49,12 @@ class CheckAccess extends Command
     /** Bewusst strenger als die PHP-Version: Diese Seiten erreicht hier nur der System-Admin. */
     private const SYSTEM_ADMIN_ONLY = ['/rollen'];
 
+    /**
+     * Seiten eines Bereichs: Ist er abgeschaltet oder sein Modul nicht
+     * freigegeben (Verwaltung › System), erreicht sie niemand.
+     */
+    private const AREA_PAGES = ['/buchhaltung' => Area::Buchhaltung];
+
     public function handle(Kernel $kernel): int
     {
         // Ohne gespeicherte Sessions: Sonst stünde je Seite und Rolle eine Zeile mit
@@ -62,13 +69,16 @@ class CheckAccess extends Command
         $rows = [];
         $mismatches = 0;
         $roles = Role::query()->orderBy('sort_order')->get();
+        $off = array_keys(array_filter(self::AREA_PAGES, fn (Area $area): bool => $area->isDisabled()));
 
         foreach (self::PAGES as $legacyPage => $path) {
             foreach ($roles as $role) {
                 // Den System-Admin gibt es nur hier – er erreicht mindestens, was der Admin erreicht
-                $expected = in_array($path, self::SYSTEM_ADMIN_ONLY, true)
-                    ? ($role->is_system_admin ? 200 : 403)
-                    : $baseline[($role->is_system_admin ? 'admin' : $role->slug) . '|' . $legacyPage] ?? null;
+                $expected = match (true) {
+                    in_array($path, $off, true) => 403,
+                    in_array($path, self::SYSTEM_ADMIN_ONLY, true) => $role->is_system_admin ? 200 : 403,
+                    default => $baseline[($role->is_system_admin ? 'admin' : $role->slug) . '|' . $legacyPage] ?? null,
+                };
                 $actual = $this->status($kernel, $path, $this->userWithOnly($role));
                 $ok = $expected !== null && (($expected === 200) === ($actual === 200));
                 $mismatches += $ok ? 0 : 1;
@@ -89,7 +99,8 @@ class CheckAccess extends Command
 
             return self::FAILURE;
         }
-        $this->info(count($rows) . ' Vergleiche, alle wie in der PHP-Version (bewusst strenger: ' . implode(', ', self::SYSTEM_ADMIN_ONLY) . ' nur für System-Admins)');
+        $this->info(count($rows) . ' Vergleiche, alle wie in der PHP-Version (bewusst strenger: ' . implode(', ', self::SYSTEM_ADMIN_ONLY) . ' nur für System-Admins'
+            . ($off !== [] ? '; Bereich oder Modul aus, für niemanden: ' . implode(', ', $off) : '') . ')');
 
         return self::SUCCESS;
     }

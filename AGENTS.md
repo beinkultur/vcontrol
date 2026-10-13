@@ -139,13 +139,25 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
 
 - Bereiche und Stufen: `App\Access\Area`, `App\Access\Level`; was ein Benutzer darf:
   `$user->access()`. Mehrere Rollen addieren sich, je Bereich gilt die höchste
-  Stufe. Abgeschaltete Module sind für alle zu, auch für (System-)Admins.
+  Stufe. Abgeschaltete Bereiche sind für alle zu, auch für (System-)Admins.
   Geschaltet werden sie unter Verwaltung › System (`App\Access\Modules`,
   Setting `disabled_areas`); bis dort zum ersten Mal gespeichert wird, gilt
   `VC_DISABLED_AREAS`. Benutzer, Rollen & Rechte und Halle bleiben immer an.
+- **Module** (`App\Access\Module`): was eine Halle bucht – Bühnenplan, Saalplan,
+  Gästeliste, Buchhaltung. Der System-Admin gibt sie unter Verwaltung › System
+  frei (Setting `modules`; ohne Eintrag sind alle frei). Ohne Freigabe ist ein
+  Modul für alle ausgeblendet, Gespeichertes bleibt. Jede Stelle, die ein Modul
+  zeigt, fragt `Module::…->isEnabled()`: Reiter und Felder, Links und Knöpfe,
+  Policies, Druck- und Download-Routen (404), `ExternSheet`; `vc:smoke`
+  überspringt solche Seiten. Bringt ein Modul einen Bereich mit
+  (`Module::areas()`, die Buchhaltung), ist der ohne Freigabe zu wie ein
+  abgeschalteter und steht unter System nicht bei den Bereichen. Ein neues
+  Modul: Fall im Enum, dann jede Stelle der Funktion prüfen, auch Dashboard,
+  Fortschritt (`EventProgress`) und Daysheet.
 - **Zwei Admin-Stufen:** Admin (`roles.is_super`) ist der Admin der Halle – alle
   Bereiche, Kalender, Benutzer und Verwaltung › Halle. System-Admin
-  (`roles.is_system_admin`, nur der Betreiber) hat zusätzlich: Module schalten,
+  (`roles.is_system_admin`, nur der Betreiber) hat zusätzlich: Module
+  freigeben und Bereiche schalten,
   Rollen & Rechte (sieht und ändert nur er, seit 12.10.2026 auch nicht mehr zum
   Ansehen für Admins; zugewiesen werden Rollen unter Benutzer – `vc:check-access`
   führt `/rollen` deshalb als bewusst strenger als die PHP-Version),

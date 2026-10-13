@@ -34,6 +34,9 @@ class Setting extends Model
     /** Abgeschaltete Bereiche (mit Komma getrennt), nur der System-Admin ändert sie – siehe App\Access\Modules */
     public const DISABLED_AREAS = 'disabled_areas';
 
+    /** Freigegebene Module (mit Komma getrennt), nur der System-Admin ändert sie; ohne Eintrag sind alle frei – siehe App\Access\Modules */
+    public const MODULES = 'modules';
+
     /** Geheimer Schlüssel in der Adresse, die der KAS-Cronjob für die nächtliche Sicherung aufruft */
     public const BACKUP_CRON_KEY = 'backup_cron_key';
 

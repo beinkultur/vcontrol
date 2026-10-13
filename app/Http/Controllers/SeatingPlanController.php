@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Access\Area;
+use App\Access\Module;
 use App\Models\Event;
 use App\Models\SeatingPlan;
 use App\Models\User;
@@ -20,12 +21,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * DaysheetController selbst.
  *
  * Angezeigt wird nur, was am Inhalt als PDF erkannt ist; alles andere kommt als
- * Download in einer Sandbox (EventFileController::SANDBOX).
+ * Download in einer Sandbox (EventFileController::SANDBOX). Ohne das Modul
+ * Saalplan gibt es keine Saalpläne (404).
  */
 class SeatingPlanController extends Controller
 {
     public function standard(SeatingPlan $plan): StreamedResponse
     {
+        abort_unless(Module::SeatingPlan->isEnabled(), 404);
         $user = Auth::user();
         abort_unless($user instanceof User && ($user->access()->can(Area::Events) || $user->access()->can(Area::AdminStammdaten)), 403);
 
@@ -34,6 +37,7 @@ class SeatingPlanController extends Controller
 
     public function event(Event $event): StreamedResponse
     {
+        abort_unless(Module::SeatingPlan->isEnabled(), 404);
         abort_unless(self::canSee($event), 403);
 
         return self::stream($event);

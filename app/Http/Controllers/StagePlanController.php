@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Access\Module;
 use App\Models\Event;
 use App\Support\StagePlan;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
-/** Bühnenplan zum Drucken (A4 quer) und als SVG-Datei, wie in der PHP-Version. */
+/** Bühnenplan zum Drucken (A4 quer) und als SVG-Datei, wie in der PHP-Version – nur mit dem Modul Bühnenplan. */
 class StagePlanController extends Controller
 {
     public function print(Event $event): View
     {
+        abort_unless(Module::StagePlan->isEnabled(), 404);
         Gate::authorize('view', $event);
 
         return view('stage-plan-print', [
@@ -24,6 +26,7 @@ class StagePlanController extends Controller
 
     public function svg(Event $event): Response
     {
+        abort_unless(Module::StagePlan->isEnabled(), 404);
         Gate::authorize('view', $event);
 
         // Texte sind escaped (StagePlan); die Sandbox verhindert Skripte trotzdem,

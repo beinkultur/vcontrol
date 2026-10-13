@@ -3,10 +3,10 @@
 return [
 
     /*
-    | Abgeschaltete Module (Bereichs-Schlüssel aus App\Access\Area), gesperrt für
-    | alle; gespeicherte Rechte bleiben erhalten. Nur die Vorgabe: Der System-Admin
-    | schaltet Module unter Verwaltung › System – ab dem ersten Speichern dort gilt
-    | diese Einstellung nicht mehr (App\Access\Modules).
+    | Abgeschaltete Bereiche (Schlüssel aus App\Access\Area), gesperrt für alle;
+    | gespeicherte Rechte bleiben erhalten. Nur die Vorgabe: Der System-Admin
+    | schaltet Bereiche (und gibt Module frei) unter Verwaltung › System – ab dem
+    | ersten Speichern dort gilt diese Einstellung nicht mehr (App\Access\Modules).
     */
 
     'disabled_areas' => array_values(array_filter(array_map(

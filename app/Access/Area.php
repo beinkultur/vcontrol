@@ -8,7 +8,7 @@ namespace App\Access;
  */
 enum Area: string
 {
-    public const GROUP_MODULE = 'Module';
+    public const GROUP_WORK = 'Arbeitsbereiche';
     public const GROUP_ADMIN = 'Administration';
     public const GROUP_EXTERN = 'Extern';
 
@@ -72,24 +72,41 @@ enum Area: string
         return match (true) {
             str_starts_with($this->value, 'admin_') => self::GROUP_ADMIN,
             str_ends_with($this->value, '_extern') => self::GROUP_EXTERN,
-            default => self::GROUP_MODULE,
+            default => self::GROUP_WORK,
         };
     }
 
     /**
-     * Abgeschaltete Module (Verwaltung › System, siehe Modules) sind für alle
-     * gesperrt, auch für Admins und System-Admins. Gespeicherte Rechte bleiben
-     * erhalten.
+     * Abgeschaltete Bereiche und die Bereiche nicht freigegebener Module
+     * (Verwaltung › System, siehe Modules) sind für alle gesperrt, auch für
+     * Admins und System-Admins. Gespeicherte Rechte bleiben erhalten.
      */
     public function isDisabled(): bool
     {
         return Modules::current()->isDisabled($this);
     }
 
-    /** Benutzer, Rollen & Rechte und die Halle bleiben immer an – ohne sie ließe sich nichts mehr einrichten. */
+    /** Modul, das diesen Bereich mitbringt (Buchhaltung) */
+    public function module(): ?Module
+    {
+        foreach (Module::cases() as $module) {
+            if (in_array($this, $module->areas(), true)) {
+                return $module;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Unter System einzeln abschaltbar? Benutzer, Rollen & Rechte und die Halle
+     * bleiben immer an – ohne sie ließe sich nichts mehr einrichten. Bereiche
+     * eines Moduls kommen und gehen mit dem Modul.
+     */
     public function isSwitchable(): bool
     {
-        return !in_array($this, [self::AdminBenutzer, self::AdminRollen, self::AdminStammdaten], true);
+        return $this->module() === null
+            && !in_array($this, [self::AdminBenutzer, self::AdminRollen, self::AdminStammdaten], true);
     }
 
     /** @return list<self> */
@@ -101,6 +118,6 @@ enum Area: string
     /** @return list<string> */
     public static function groups(): array
     {
-        return [self::GROUP_MODULE, self::GROUP_ADMIN, self::GROUP_EXTERN];
+        return [self::GROUP_WORK, self::GROUP_ADMIN, self::GROUP_EXTERN];
     }
 }

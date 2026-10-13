@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Access\Module;
 use App\Models\Damage;
 use App\Models\Event;
 use App\Models\EventFile;
@@ -18,7 +19,8 @@ use Throwable;
  * echten Daten: Listen, Anlegen und je Resource einige Datensätze in Ansicht
  * und Bearbeitung. Findet Fehler, die erst mit Altwerten aus dem Import
  * auftreten und in den Tests (leere SQLite-Datenbank) nicht vorkommen. Liest
- * nur, schreibt nichts.
+ * nur, schreibt nichts. Seiten abgeschalteter Bereiche und nicht freigegebener
+ * Module (Verwaltung › System) gibt es nicht – sie werden übersprungen.
  */
 class SmokeRender extends Command
 {
@@ -27,6 +29,9 @@ class SmokeRender extends Command
         {--only= : nur Pfade, die diesen Text enthalten}';
 
     protected $description = 'Rendert alle Seiten als Admin mit echten Daten und meldet Fehler';
+
+    /** @var list<string> Seiten, die es wegen abgeschalteter Bereiche oder Module nicht gibt */
+    private array $skipped = [];
 
     public function handle(Kernel $kernel): int
     {
@@ -43,6 +48,9 @@ class SmokeRender extends Command
 
             return self::FAILURE;
         }
+
+        // Für canAccess() beim Zusammenstellen der Seiten; jede Anfrage setzt ihn neu
+        app('auth')->guard('web')->setUser($admin);
 
         $rows = [];
         $failures = 0;
@@ -66,7 +74,10 @@ class SmokeRender extends Command
 
             return self::FAILURE;
         }
-        $this->info(count($rows) . ' Seiten fehlerfrei');
+        if ($this->skipped !== []) {
+            $this->line('Übersprungen, Bereich oder Modul aus: ' . implode(', ', $this->skipped));
+        }
+        $this->info(count($rows) . ' Seiten fehlerfrei' . ($this->skipped !== [] ? ', ' . count($this->skipped) . ' übersprungen' : ''));
 
         return self::SUCCESS;
     }
@@ -76,26 +87,50 @@ class SmokeRender extends Command
     {
         $paths = [];
         foreach ($panel->getResources() as $resource) {
-            foreach (array_keys($resource::getPages()) as $name) {
+            if (!$resource::canAccess()) {
+                $this->skipped[] = $resource::getUrl(isAbsolute: false);
+
+                continue;
+            }
+            foreach ($resource::getPages() as $name => $registration) {
                 if (in_array($name, ['index', 'create'], true)) {
                     $paths[] = $resource::getUrl($name, isAbsolute: false);
 
                     continue;
                 }
                 foreach ($this->samples($resource::getModel()) as $record) {
-                    $paths[] = $resource::getUrl($name, ['record' => $record], isAbsolute: false);
+                    // Eigene Seiten wie der Bühnenplan prüfen hier auch ihr Modul
+                    $path = $resource::getUrl($name, ['record' => $record], isAbsolute: false);
+                    if ($registration->getPage()::canAccess(['record' => $record])) {
+                        $paths[] = $path;
+                    } else {
+                        $this->skipped[] = $path;
+                    }
                 }
             }
         }
         foreach ($panel->getPages() as $page) {
-            $paths[] = $page::getUrl(isAbsolute: false);
+            if ($page::canAccess()) {
+                $paths[] = $page::getUrl(isAbsolute: false);
+            } else {
+                $this->skipped[] = $page::getUrl(isAbsolute: false);
+            }
         }
         // Seiten außerhalb des Panels (routes/web.php)
         foreach ($this->samples(Event::class) as $event) {
-            $paths[] = route('events.guest-list-print', $event, absolute: false);
-            $paths[] = route('events.stage-plan-print', $event, absolute: false);
-            $paths[] = route('events.stage-plan-svg', $event, absolute: false);
-            $paths[] = route('events.daysheet-preview', $event, absolute: false);
+            $routes = [
+                'events.guest-list-print' => Module::GuestList->isEnabled(),
+                'events.stage-plan-print' => Module::StagePlan->isEnabled(),
+                'events.stage-plan-svg' => Module::StagePlan->isEnabled(),
+                'events.daysheet-preview' => true,
+            ];
+            foreach ($routes as $route => $available) {
+                if ($available) {
+                    $paths[] = route($route, $event, absolute: false);
+                } else {
+                    $this->skipped[] = route($route, $event, absolute: false);
+                }
+            }
         }
         foreach (EventFile::query()->orderBy('id')->limit(5)->get() as $file) {
             $paths[] = route('event-files.download', $file, absolute: false);

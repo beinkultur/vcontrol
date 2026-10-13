@@ -33,7 +33,7 @@ class LevelTest extends TestCase
     {
         $this->assertSame(Area::GROUP_ADMIN, Area::AdminRollen->group());
         $this->assertSame(Area::GROUP_EXTERN, Area::KalenderExtern->group());
-        $this->assertSame(Area::GROUP_MODULE, Area::EventsOperations->group());
+        $this->assertSame(Area::GROUP_WORK, Area::EventsOperations->group());
         $this->assertCount(24, Area::cases());
     }
 }

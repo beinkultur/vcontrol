@@ -163,9 +163,11 @@ class SeatingPlanTest extends TestCase
             'seating_plan_id' => $plan->id, 'areas' => ['Innenraum'], 'seating' => ['bestuhlt']]);
 
         $sheet = ExternSheet::make($event, fn (): string => '');
-        $this->assertSame(['name' => 'Konzert bestuhlt', 'url' => route('events.seating-plan', $event)], $sheet['seating_plan']);
-        $this->assertSame(['Innenraum'], $sheet['areas']);
-        $this->assertSame(['bestuhlt'], $sheet['seating']);
+        $this->assertSame([
+            'file' => ['name' => 'Konzert bestuhlt', 'url' => route('events.seating-plan', $event)],
+            'areas' => ['Innenraum'],
+            'seating' => ['bestuhlt'],
+        ], $sheet['seating_plan']);
 
         // Externe, die am Event beteiligt sind – sonst nicht
         $freelancer = $this->userWith($this->role('extern', ['events_extern' => 'read']));

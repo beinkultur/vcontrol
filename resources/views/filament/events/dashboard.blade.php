@@ -1,8 +1,11 @@
 {{-- Übersicht des Event-Workspace wie das Dashboard der PHP-Version. Stile: public/css/vcontrol.css --}}
 @php
     $progress = \App\Support\EventProgress::phases($event);
-    $guestCount = $event->guests()->count();
-    $guestTickets = (int) $event->guests()->sum('free_tickets');
+    // Gäste, Bühnenplan: nur mit ihrem Modul (Verwaltung › System)
+    $guestList = \App\Access\Module::GuestList->isEnabled();
+    $stagePlan = \App\Access\Module::StagePlan->isEnabled();
+    $guestCount = $guestList ? $event->guests()->count() : 0;
+    $guestTickets = $guestList ? (int) $event->guests()->sum('free_tickets') : 0;
     $services = \App\Support\EventProgress::filledServices($event);
     // Dateien direkt am Event und übergreifende, nach Tag gruppiert wie in der PHP-Version
     $files = $event->files()->with('tag')->get()->each(fn ($file) => $file->setAttribute('linked', false))
@@ -127,7 +130,9 @@
                     </li>
                 @endforeach
             </ul>
-            <a href="{{ \App\Filament\Resources\Events\EventResource::getUrl('stage-plan', ['record' => $event]) }}" wire:navigate class="vc-card__link">Bühnenplan anzeigen ›</a>
+            @if ($stagePlan)
+                <a href="{{ \App\Filament\Resources\Events\EventResource::getUrl('stage-plan', ['record' => $event]) }}" wire:navigate class="vc-card__link">Bühnenplan anzeigen ›</a>
+            @endif
         </section>
 
         <section class="vc-card vc-card--span">

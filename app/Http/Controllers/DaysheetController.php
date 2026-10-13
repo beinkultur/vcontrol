@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Access\Module;
 use App\Models\Daysheet;
 use App\Models\Event;
 use App\Models\EventFile;
@@ -69,7 +70,7 @@ class DaysheetController extends Controller
     public function seatingPlan(string $token): StreamedResponse
     {
         $daysheet = Daysheet::findByToken($token);
-        abort_unless($daysheet !== null && $daysheet->isValid() && $daysheet->event->hasSeatingPlan(), 404);
+        abort_unless(Module::SeatingPlan->isEnabled() && $daysheet !== null && $daysheet->isValid() && $daysheet->event->hasSeatingPlan(), 404);
 
         $response = SeatingPlanController::stream($daysheet->event);
         foreach (self::HEADERS as $name => $value) {
