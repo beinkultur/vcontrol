@@ -1270,7 +1270,8 @@ a.vc-card:hover {
 }
 
 /* ---------------------------------------------------------------------
- * Costing: Summen neben der Anmerkung (filament/costings/totals)
+ * Costing: Summen neben der Anmerkung (filament/costings/totals), wie im
+ * PDF: Gesamt netto hervorgehoben, mit Summenstrich darüber
  * ------------------------------------------------------------------ */
 
 .vc-costing-totals dl {
@@ -1294,14 +1295,14 @@ a.vc-card:hover {
     color: var(--gray-400);
 }
 
-.vc-costing-totals__gross {
+.vc-costing-totals__net {
     border-top: 1px solid var(--gray-300);
     padding-top: 0.35rem;
     font-weight: 600;
     font-size: 1.05rem;
 }
 
-.dark .vc-costing-totals__gross {
+.dark .vc-costing-totals__net {
     border-top-color: var(--gray-700);
 }
 

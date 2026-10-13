@@ -1,18 +1,22 @@
-{{-- Summen im Costing-Formular, live aus den Posten (App\Support\Costings::totals). Stil: public/css/vcontrol.css --}}
+{{--
+    Summen im Costing-Formular, live aus den Posten (App\Support\Costings::totals).
+    Wie im PDF: Gesamt netto hervorgehoben, brutto schlicht darunter. Stil:
+    public/css/vcontrol.css
+--}}
 @php
     $money = fn (float $amount): string => \App\Support\Costings::money($amount);
 @endphp
 <div class="vc-costing-totals">
     <dl>
-        <div>
-            <dt>Summe netto</dt>
+        <div class="vc-costing-totals__net">
+            <dt>Gesamt netto</dt>
             <dd>{{ $money($totals['net']) }}</dd>
         </div>
         <div>
             <dt>zzgl. {{ \App\Support\Costings::number($vatRate) }} % MwSt.</dt>
             <dd>{{ $money($totals['vat']) }}</dd>
         </div>
-        <div class="vc-costing-totals__gross">
+        <div>
             <dt>Gesamt brutto</dt>
             <dd>{{ $money($totals['gross']) }}</dd>
         </div>

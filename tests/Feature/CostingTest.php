@@ -152,6 +152,10 @@ class CostingTest extends TestCase
         $this->assertSame('Ein- und Ausbau Hausbühne anteilig.', $costing->note);
         // 1.400 + 3.000 + 114 + 1.800 – 250
         $this->assertSame(6064.0, $costing->net());
+
+        // Summen im Editor wie im PDF: Gesamt netto hervorgehoben, brutto schlicht
+        Livewire::test(EditCosting::class, ['record' => $costing->getRouteKey()])
+            ->assertSeeHtmlInOrder(['<div class="vc-costing-totals__net">', '<dt>Gesamt netto</dt>', '<dd>6.064,00 €</dd>', '<dt>Gesamt brutto</dt>', '<dd>7.216,16 €</dd>']);
     }
 
     public function test_verschicken_mit_pdf_danach_neue_fassung(): void
