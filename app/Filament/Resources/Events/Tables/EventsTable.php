@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Events\Tables;
 
+use App\Access\Module;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use App\Support\EventDisplay;
@@ -94,9 +95,11 @@ class EventsTable
                     ->state(fn (Event $record): ?string => EventDisplay::fullySeated($record) ? '🪑' : null)
                     ->tooltip(fn (Event $record): ?string => EventDisplay::fullySeated($record) ? 'Bestuhlt – Stühle extern anmieten' : null)
                     ->alignCenter(),
-                // Wie in der PHP-Version: gelb bei anderer Höhe als 1,4 m, rot bei mehr Podesten als im Bestand
+                // Wie in der PHP-Version: gelb bei anderer Höhe als 1,4 m, rot bei mehr Podesten als im Bestand.
+                // Nur mit dem Modul Bühnenplan (Verwaltung › System)
                 TextColumn::make('stage_summary')
                     ->label('Bühne')
+                    ->visible(fn (): bool => Module::StagePlan->isEnabled())
                     ->visibleFrom('lg')
                     ->state(fn (Event $record): string => StagePodests::summary($record->stage)['text'])
                     ->badge(fn (Event $record): bool => StagePodests::summary($record->stage)['alert'])

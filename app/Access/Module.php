@@ -29,7 +29,7 @@ enum Module: string
     public function description(): string
     {
         return match ($this) {
-            self::StagePlan => 'Plan mit Podest-Raster je Event, zum Drucken und als SVG, auch für Externe und im Daysheet. Die Bühnenmaße unter Planung › Bühne gibt es immer.',
+            self::StagePlan => 'Planung › Bühne je Event mit Maßen, Podest-Rechnung und dem Plan mit Podest-Raster (Drucken, SVG), die Bühnenwerte unter Verwaltung › Halle, die Bühne für Externe und im Daysheet.',
             self::SeatingPlan => 'Standard-Saalpläne der Halle und eigene Pläne je Event (PDF), auch für Externe und im Daysheet. Bereiche und Bestuhlung gibt es immer.',
             self::GuestList => 'Gäste mit Freikarten je Event und die Liste zum Drucken für den Einlass.',
             self::Accounting => 'Finanzen, FIBU-Status und Eingangsrechnungen je Event, die Buchhaltungsliste und die Finanz-Warnung.',

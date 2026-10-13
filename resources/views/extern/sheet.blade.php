@@ -147,22 +147,23 @@
         </section>
     @endif
 
-    <section>
-        <h2>Bühne</h2>
-        @if ($sheet['stage'] === null)
-            <p class="vc-sheet__empty">Noch keine Bühne eingetragen.</p>
-        @else
-            <dl>
-                @foreach ($sheet['stage']['rows'] as $label => $value)
-                    <dt>{{ $label }}</dt>
-                    <dd>{{ $value }}</dd>
-                @endforeach
-            </dl>
-            @if ($sheet['stage']['notes'])
-                <p class="vc-sheet__stage-notes">{{ $sheet['stage']['notes'] }}</p>
-            @endif
-            {{-- Nur mit dem Modul Bühnenplan. Eingeklappt, erst auf Klick; zum Drucken klappt er von selbst auf (Skript unten) --}}
-            @if ($sheet['stage']['svg'] !== null)
+    {{-- Nur mit dem Modul Bühnenplan --}}
+    @if ($sheet['stage'] !== null)
+        <section>
+            <h2>Bühne</h2>
+            @if ($sheet['stage']['rows'] === [])
+                <p class="vc-sheet__empty">Noch keine Bühne eingetragen.</p>
+            @else
+                <dl>
+                    @foreach ($sheet['stage']['rows'] as $label => $value)
+                        <dt>{{ $label }}</dt>
+                        <dd>{{ $value }}</dd>
+                    @endforeach
+                </dl>
+                @if ($sheet['stage']['notes'])
+                    <p class="vc-sheet__stage-notes">{{ $sheet['stage']['notes'] }}</p>
+                @endif
+                {{-- Eingeklappt, erst auf Klick; zum Drucken klappt er von selbst auf (Skript unten) --}}
                 <details class="vc-sheet__plan-toggle">
                     <summary>
                         <span class="vc-sheet__when-closed">Bühnenplan anzeigen</span>
@@ -172,11 +173,11 @@
                     <div class="vc-sheet__plan">{!! $sheet['stage']['svg'] !!}</div>
                 </details>
             @endif
-        @endif
-    </section>
+        </section>
 
-    {{-- Gedruckt (Daysheet, PDF) gehört der Bühnenplan dazu --}}
-    <script>
-        window.addEventListener('beforeprint', () => document.querySelectorAll('.vc-sheet__plan-toggle').forEach((plan) => { plan.open = true; }));
-    </script>
+        {{-- Gedruckt (Daysheet, PDF) gehört der Bühnenplan dazu --}}
+        <script>
+            window.addEventListener('beforeprint', () => document.querySelectorAll('.vc-sheet__plan-toggle').forEach((plan) => { plan.open = true; }));
+        </script>
+    @endif
 </div>

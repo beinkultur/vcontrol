@@ -8,8 +8,10 @@ use App\Access\Modules;
 use App\Enums\OptionField;
 use App\Filament\Pages\ManageSystem;
 use App\Filament\Pages\ManageVenue;
+use App\Filament\Resources\Accounting\Pages\ListAccounting;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Filament\Resources\Roles\RoleResource;
 use App\Filament\Resources\SeatingPlans\SeatingPlanResource;
@@ -126,8 +128,13 @@ class ModulesTest extends TestCase
         $this->assertFalse(Area::Buchhaltung->isDisabled());
     }
 
-    public function test_ohne_buehnenplan_bleiben_die_masse(): void
+    public function test_ohne_buehnenplan_keine_buehne(): void
     {
+        $this->assertSame(18, EventProgress::phases($this->event->fresh())['planung'], 'Bühnenmaße und Höhe: 2 von 11');
+        $this->assertSame('14 × 8 m', ExternSheet::make($this->event->fresh(), fn (): string => '')['stage']['rows']['Hauptbühne']);
+        Setting::put('stage_label', 'Halle 2 stage');
+        $token = $this->daysheetToken();
+
         $this->only(Module::SeatingPlan, Module::GuestList, Module::Accounting);
         $this->actingAs($this->admin());
 
@@ -135,32 +142,42 @@ class ModulesTest extends TestCase
         $this->get(route('events.stage-plan-print', $this->event))->assertNotFound();
         $this->get(route('events.stage-plan-svg', $this->event))->assertNotFound();
 
-        // Workspace: Planung › Bühne mit den Maßen, aber ohne Plan, Knopf und Versatz
+        // Workspace ohne Reiter Bühne; der Sold-Out-Award unter Durchführung › Betrieb bleibt
         $this->get(EventResource::getUrl('edit', ['record' => $this->event]))
             ->assertOk()
-            ->assertSee('Hauptbühne')
-            ->assertDontSee('Bühnenplan');
+            ->assertSee('Sold-Out-Award')
+            ->assertDontSee('Hauptbühne')
+            ->assertDontSee('Bühnenplan')
+            ->assertDontSee('bereich=buehne', false);
         Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
-            ->assertFormFieldExists('stage.width')
-            ->assertFormFieldHidden('stage.wing_sl_offset');
+            ->assertFormFieldDoesNotExist('stage.width')
+            ->assertFormFieldExists('sold_out_award');
+        $this->assertSame(0, EventProgress::phases($this->event->fresh())['planung'], 'ohne Bühne: 0 von 9');
+        $this->assertArrayNotHasKey('buehne', EventProgress::planningAreas($this->event->fresh(), 0, 0));
 
-        // Halle: Beschriftung und Raumbegrenzung gibt es nur für den Plan, sie bleiben beim Speichern
+        // Keine Spalte Bühne in der Event-Liste, keine Zusatzpodeste in der Buchhaltung
+        Livewire::test(ListEvents::class)->assertTableColumnHidden('stage_summary');
+        Livewire::test(ListAccounting::class)->assertTableColumnHidden('extra_podests');
+
+        // Halle ohne Abschnitt Bühne; die Werte bleiben beim Speichern
         Livewire::test(ManageVenue::class)
-            ->assertDontSee('Raumbegrenzung')
+            ->assertDontSee('Standardbühne')
             ->fillForm(['venue_name' => 'Inselpark Arena'])
             ->call('save')
             ->assertHasNoFormErrors();
-        $this->assertSame('IPA stage', StageSettings::load()->label);
+        $this->assertSame('Halle 2 stage', StageSettings::load()->label);
 
-        // Für Externe und im Daysheet: Bühne ja, Plan nein
-        $sheet = ExternSheet::make($this->event->fresh(), fn (): string => '');
-        $this->assertSame('14 × 8 m', $sheet['stage']['rows']['Hauptbühne']);
-        $this->assertNull($sheet['stage']['svg']);
-        $this->get('/daysheet/' . $this->daysheetToken())
+        // Für Externe und im Daysheet keine Bühne
+        $this->assertNull(ExternSheet::make($this->event->fresh(), fn (): string => '')['stage']);
+        $this->assertSame('Zeiten, Ansprechpartner, Gewerke, Dateien, Notizen und Saalplan', ExternSheet::contents());
+        $this->get('/daysheet/' . $token)
             ->assertOk()
-            ->assertSee('Hauptbühne')
-            ->assertDontSee('Bühnenplan anzeigen')
+            ->assertDontSee('Hauptbühne')
+            ->assertDontSee('Bühnenplan')
             ->assertDontSee('<svg', false);
+
+        // Die Maße bleiben gespeichert
+        $this->assertSame(14, (int) $this->event->stage()->firstOrFail()->width);
     }
 
     public function test_ohne_saalplan_bleiben_bereiche_und_bestuhlung(): void

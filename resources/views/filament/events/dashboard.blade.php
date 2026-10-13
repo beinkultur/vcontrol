@@ -1,7 +1,7 @@
 {{-- Übersicht des Event-Workspace wie das Dashboard der PHP-Version. Stile: public/css/vcontrol.css --}}
 @php
     $progress = \App\Support\EventProgress::phases($event);
-    // Gäste, Bühnenplan: nur mit ihrem Modul (Verwaltung › System)
+    // Gäste, Bühne und Bühnenplan: nur mit ihrem Modul (Verwaltung › System)
     $guestList = \App\Access\Module::GuestList->isEnabled();
     $stagePlan = \App\Access\Module::StagePlan->isEnabled();
     $guestCount = $guestList ? $event->guests()->count() : 0;
@@ -32,7 +32,7 @@
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
     $time = fn ($value): ?string => filled($value) ? substr((string) $value, 0, 5) : null;
-    $stage = \App\Support\StagePodests::summary($event->stage)['text'];
+    $stage = $stagePlan ? \App\Support\StagePodests::summary($event->stage)['text'] : '–';
     $link = fn (string $phase, ?string $section = null): string => $pageUrl . '?phase=' . $phase . ($section ? '&bereich=' . $section : '');
 
     $cards = [

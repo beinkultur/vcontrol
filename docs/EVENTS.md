@@ -255,13 +255,16 @@ Freitermin, Sortierung
   Schlüssel), angezeigt nur, was am Inhalt als PDF erkannt ist.
 - **Module (13.10.2026):** Bühnenplan, Saalplan, Gästeliste und Buchhaltung gibt
   der System-Admin je Halle frei, je nachdem, was sie gebucht hat (Verwaltung ›
-  System, `App\Access\Module`). Ohne Freigabe fehlen sie für alle: Bühnenplan-Seite,
-  Druck und SVG (Maße und Podest-Rechnung unter Planung › Bühne bleiben);
-  Standard-Saalpläne, Auswahl oder Upload am Event und der Abschnitt Saalplan für
-  Externe (Bereiche und Bestuhlung am Event bleiben); Reiter Gästeliste und
-  Druckansicht; Buchhaltung mit Liste, Reiter, Finanz-Warnung und ihren
-  Feldoptionen – die Fortschrittsprüfungen Vertrag und Preisliste entfallen dann.
-  Gespeichertes bleibt und ist mit der Freigabe wieder da.
+  System, `App\Access\Module`). Ohne Freigabe fehlen sie für alle. Bühnenplan:
+  der Reiter Planung › Bühne mit Maßen und Podest-Rechnung, die Bühnenplan-Seite
+  mit Druck und SVG, die Bühnenwerte unter Verwaltung › Halle, die Spalten Bühne
+  (Event-Liste) und Zus. Podeste (Buchhaltung) und die Bühne für Externe – der
+  Sold-Out-Award unter Betrieb bleibt. Saalplan: Standard-Saalpläne, Auswahl oder
+  Upload am Event und der Abschnitt Saalplan für Externe (Bereiche und
+  Bestuhlung am Event bleiben). Gästeliste: Reiter und Druckansicht.
+  Buchhaltung: Liste, Reiter, Finanz-Warnung und ihre Feldoptionen – die
+  Fortschrittsprüfungen Vertrag und Preisliste entfallen dann. Gespeichertes
+  bleibt und ist mit der Freigabe wieder da.
 
 ## Offene Punkte
 

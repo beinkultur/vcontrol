@@ -103,12 +103,14 @@ class ManageVenue extends Page
                             ->required()
                             ->maxLength(120),
                     ]),
+                // Nur mit dem Modul Bühnenplan (Verwaltung › System)
                 Section::make('Bühne')
+                    ->visible(fn (): bool => Module::StagePlan->isEnabled())
                     ->description(fn (): string => 'Grundlage für ' . collect([
                         'Podest-Rechnung',
                         'Event-Liste',
                         Module::Accounting->isEnabled() ? 'Buchhaltung' : null,
-                        Module::StagePlan->isEnabled() ? 'Bühnenplan' : null,
+                        'Bühnenplan',
                     ])->filter()->join(', ', ' und ') . '. Voreingestellt sind die Werte der Inselpark Arena.')
                     ->schema([
                         Grid::make(['default' => 1, 'lg' => 2])
@@ -182,7 +184,6 @@ class ManageVenue extends Page
                                     ]),
                                 Fieldset::make('Bühnenplan')
                                     ->columns(2)
-                                    ->visible(fn (): bool => Module::StagePlan->isEnabled())
                                     ->schema([
                                         TextInput::make('stage_label')
                                             ->label('Beschriftung')
@@ -302,27 +303,28 @@ class ManageVenue extends Page
         $data = $this->form->getState();
         Setting::put(Setting::VENUE_NAME, trim((string) $data['venue_name']));
 
-        $decimal = fn (mixed $value): float => round((float) str_replace(',', '.', (string) $value), 2);
-        // Ohne das Modul Bühnenplan fehlen Beschriftung und Raumbegrenzung im Formular: bleiben wie sie sind
-        $current = StageSettings::load();
-        $stage = [
-            Setting::PODEST_INVENTORY => (int) $data['podest_inventory'],
-            Setting::PODEST_INCLUDED => (int) $data['podest_included'],
-            'stage_base_width' => (int) $data['stage_base_width'],
-            'stage_base_depth' => (int) $data['stage_base_depth'],
-            'stage_house_2x1' => (int) $data['stage_house_2x1'],
-            'stage_house_1x1' => (int) $data['stage_house_1x1'],
-            'stage_roll_width' => (int) $data['stage_roll_width'],
-            'stage_roll_depth' => (int) $data['stage_roll_depth'],
-            'stage_height' => $decimal($data['stage_height']),
-            'stage_heights' => StageSettings::formatHeights(StageSettings::parseHeights(implode(';', (array) $data['stage_heights']))),
-            'stage_label' => trim((string) ($data['stage_label'] ?? $current->label)),
-            'stage_boundary' => $decimal($data['stage_boundary'] ?? $current->boundary),
-        ];
-        foreach ($stage as $key => $value) {
-            Setting::put($key, (string) $value);
+        // Ohne das Modul Bühnenplan fehlt der Abschnitt Bühne: die Werte bleiben, wie sie sind
+        if (Module::StagePlan->isEnabled()) {
+            $decimal = fn (mixed $value): float => round((float) str_replace(',', '.', (string) $value), 2);
+            $stage = [
+                Setting::PODEST_INVENTORY => (int) $data['podest_inventory'],
+                Setting::PODEST_INCLUDED => (int) $data['podest_included'],
+                'stage_base_width' => (int) $data['stage_base_width'],
+                'stage_base_depth' => (int) $data['stage_base_depth'],
+                'stage_house_2x1' => (int) $data['stage_house_2x1'],
+                'stage_house_1x1' => (int) $data['stage_house_1x1'],
+                'stage_roll_width' => (int) $data['stage_roll_width'],
+                'stage_roll_depth' => (int) $data['stage_roll_depth'],
+                'stage_height' => $decimal($data['stage_height']),
+                'stage_heights' => StageSettings::formatHeights(StageSettings::parseHeights(implode(';', (array) $data['stage_heights']))),
+                'stage_label' => trim((string) $data['stage_label']),
+                'stage_boundary' => $decimal($data['stage_boundary']),
+            ];
+            foreach ($stage as $key => $value) {
+                Setting::put($key, (string) $value);
+            }
+            StageSettings::forget();
         }
-        StageSettings::forget();
 
         $replyTo = mb_strtolower(trim((string) ($data['mail_reply_to'] ?? '')));
         Setting::put(Setting::MAIL_REPLY_TO, $replyTo !== '' ? $replyTo : null);

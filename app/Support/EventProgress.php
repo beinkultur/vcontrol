@@ -29,8 +29,8 @@ final class EventProgress
     }
 
     /**
-     * Planungsbereiche mit „begonnen“ wie auf dem Dashboard der PHP-Version. Die
-     * Gästeliste nur mit ihrem Modul.
+     * Planungsbereiche mit „begonnen“ wie auf dem Dashboard der PHP-Version.
+     * Bühne und Gästeliste nur mit ihrem Modul.
      *
      * @return array<string, bool> Reiter-ID => begonnen
      */
@@ -43,7 +43,7 @@ final class EventProgress
             'zeiten' => filled($s?->admission) || filled($s?->start_time) || filled($s?->load_in),
             'checkliste' => collect(['hands', 'cleaning', 'chairs_ordered', 'pvc_setup', 'traffic'])
                 ->contains(fn (string $field): bool => self::answered($c?->{$field})),
-            'buehne' => self::hasStageSize($event),
+            'buehne' => Module::StagePlan->isEnabled() ? self::hasStageSize($event) : null,
             'personal' => $event->assignments->contains(fn (EventAssignment $a): bool => $a->role !== AssignmentRole::ProjectLead),
             'gewerke' => self::filledServices($event) > 0,
             'gaeste' => Module::GuestList->isEnabled() ? $guestCount > 0 : null,
@@ -71,7 +71,7 @@ final class EventProgress
     {
         $accounting = Module::Accounting->isEnabled();
 
-        return array_values(array_filter([
+        return self::counted([
             filled($e->title),
             $e->promoter_id !== null,
             $e->starts_at !== null,
@@ -84,30 +84,36 @@ final class EventProgress
             $accounting ? (filled($e->finance?->price_list) || $e->finance?->rent !== null) : null,
             filled($e->pr?->pr_status) || $e->pr?->pr_date !== null,
             filled($e->areas) || filled($e->ticketing),
-        ], fn (?bool $check): bool => $check !== null));
+        ]);
     }
 
-    /** @return list<bool> */
+    /**
+     * Bühnenmaße und Höhe zählen nur mit dem Modul Bühnenplan – ohne gibt es
+     * den Reiter Bühne nicht.
+     *
+     * @return list<bool>
+     */
     private static function planningChecks(Event $e): array
     {
         $s = $e->schedule;
         $c = $e->checklist;
+        $stage = Module::StagePlan->isEnabled();
 
-        return [
+        return self::counted([
             filled($s?->admission) || filled($s?->start_time),
             filled($s?->end_time),
             filled($s?->load_in),
             self::answered($c?->hands),
             self::answered($c?->cleaning),
             self::answered($c?->chairs_ordered),
-            self::hasStageSize($e),
-            (float) $e->stage?->height > 0,
+            $stage ? self::hasStageSize($e) : null,
+            $stage ? (float) $e->stage?->height > 0 : null,
             // PHP: Durchführung (Freitext, nicht übernommen) oder Aufschließen – hier: eine Rolle außer PL
             $e->assignments->contains(fn (EventAssignment $a): bool => $a->role !== AssignmentRole::ProjectLead),
             self::filledServices($e) > 0,
             // „Briefing vollständig“ gibt es seit 12.10.2026 nicht mehr
             filled($e->wlan),
-        ];
+        ]);
     }
 
     /** @return list<bool> */
@@ -127,6 +133,17 @@ final class EventProgress
                 || $e->stage?->sold_out_award !== null,
             (bool) $e->closed,
         ];
+    }
+
+    /**
+     * Nur die Prüfungen, die zählen – die nicht freigegebener Module stehen als null darin.
+     *
+     * @param  list<bool|null>  $checks
+     * @return list<bool>
+     */
+    private static function counted(array $checks): array
+    {
+        return array_values(array_filter($checks, fn (?bool $check): bool => $check !== null));
     }
 
     private static function hasStageSize(Event $e): bool

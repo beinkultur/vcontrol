@@ -21,8 +21,9 @@ use Closure;
  *
  * Bewusst nicht dabei: Buchhaltung, Buchung (PAX, interne Notizen), Gäste,
  * Betrieb, WLAN. Dateien und Notizen ohne die „für Externe verborgenen“. Mit
- * ihrem Modul (Verwaltung › System) gehören der Bühnenplan und der Saalplan
- * (eigener oder Standard) mit den genutzten Bereichen und der Bestuhlung dazu.
+ * ihrem Modul (Verwaltung › System) gehören die Bühne mit dem Bühnenplan und
+ * der Saalplan (eigener oder Standard) mit den genutzten Bereichen und der
+ * Bestuhlung dazu.
  */
 final class ExternSheet
 {
@@ -36,7 +37,7 @@ final class ExternSheet
      *     times: list<array{label: string, value: string}>,
      *     contacts: list<array{label: string, name: string, time: ?string}>,
      *     services: list<array{label: string, responsible: ?string, provider: ?string, note: ?string}>,
-     *     stage: array{summary: string, rows: array<string, string>, notes: ?string, svg: ?string}|null,
+     *     stage: array{rows: array<string, string>, notes: ?string, svg: ?string}|null,
      *     files: array<string, list<array{name: string, stand: string, size: string, url: string}>>,
      *     notes: list<array{subject: string, body: string, date: ?string, author: ?string}>,
      *     seating_plan: array{file: array{name: string, url: string}|null, areas: list<string>, seating: list<string>}|null}
@@ -55,7 +56,7 @@ final class ExternSheet
             'times' => self::times($event),
             'contacts' => self::contacts($event),
             'services' => self::services($event),
-            'stage' => self::stage($event),
+            'stage' => Module::StagePlan->isEnabled() ? self::stage($event) : null,
             'files' => self::files($event, $fileUrl),
             'notes' => self::notes($event),
             'seating_plan' => Module::SeatingPlan->isEnabled() ? self::seatingPlan($event, $seatingPlanUrl) : null,
@@ -76,6 +77,16 @@ final class ExternSheet
             'areas' => array_values(array_filter(array_map('strval', (array) $event->areas))),
             'seating' => array_values(array_filter(array_map('strval', (array) $event->seating))),
         ];
+    }
+
+    /** Was die Ansicht zeigt, für Hinweistexte: „Zeiten, Ansprechpartner, …, Saalplan und Bühne“ – je nach Modulen */
+    public static function contents(): string
+    {
+        return collect([
+            'Zeiten', 'Ansprechpartner', 'Gewerke', 'Dateien', 'Notizen',
+            Module::SeatingPlan->isEnabled() ? 'Saalplan' : null,
+            Module::StagePlan->isEnabled() ? 'Bühne' : null,
+        ])->filter()->join(', ', ' und ');
     }
 
     /** „Fr, 09.10.2026“, mehrtägig mit Enddatum */
@@ -156,13 +167,12 @@ final class ExternSheet
             ->all();
     }
 
-    /** @return array{summary: string, rows: array<string, string>, notes: ?string, svg: ?string}|null  svg: Bühnenplan, nur mit seinem Modul */
-    private static function stage(Event $event): ?array
+    /** @return array{rows: array<string, string>, notes: ?string, svg: ?string}  ohne Zeilen: noch keine Bühne eingetragen */
+    private static function stage(Event $event): array
     {
         $stage = $event->stage;
-        $summary = StagePodests::summary($stage)['text'];
-        if ($stage === null || $summary === '–') {
-            return null;
+        if ($stage === null || StagePodests::summary($stage)['text'] === '–') {
+            return ['rows' => [], 'notes' => null, 'svg' => null];
         }
 
         $total = StagePodests::total($stage);
@@ -177,10 +187,9 @@ final class ExternSheet
         ]);
 
         return [
-            'summary' => $summary,
             'rows' => $rows,
             'notes' => filled($stage->stage_notes) ? (string) $stage->stage_notes : null,
-            'svg' => Module::StagePlan->isEnabled() ? StagePlan::toSvg(StagePlan::build($stage, $event)) : null,
+            'svg' => StagePlan::toSvg(StagePlan::build($stage, $event)),
         ];
     }
 

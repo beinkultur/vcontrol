@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ExternEvents\Pages;
 
 use App\Filament\Resources\ExternEvents\ExternEventResource;
+use App\Support\ExternSheet;
 use Filament\Resources\Pages\ListRecords;
 
 class ListExternEvents extends ListRecords
@@ -17,6 +18,6 @@ class ListExternEvents extends ListRecords
 
     public function getSubheading(): ?string
     {
-        return 'Events, an denen du beteiligt bist – Zeiten, Ansprechpartner, Gewerke, Bühne, Dateien und Notizen.';
+        return 'Events, an denen du beteiligt bist – ' . ExternSheet::contents() . '.';
     }
 }

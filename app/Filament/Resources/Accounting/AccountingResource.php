@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Accounting;
 
 use App\Access\Area;
+use App\Access\Module;
 use App\Filament\Resources\Accounting\Pages\ListAccounting;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
@@ -118,9 +119,11 @@ class AccountingResource extends Resource
                     ->color(fn (?int $state): string => $state > 0 ? 'warning' : 'gray')
                     ->alignEnd()
                     ->toggleable(),
-                // Wie in der PHP-Version aus der gespeicherten Summe; leer zählt 0.
+                // Wie in der PHP-Version aus der gespeicherten Summe; leer zählt 0. Podeste
+                // gibt es nur mit dem Modul Bühnenplan.
                 TextColumn::make('extra_podests')
                     ->label('Zus. Podeste')
+                    ->visible(fn (): bool => Module::StagePlan->isEnabled())
                     ->visibleFrom('lg')
                     ->state(fn (Event $record): int => StagePodests::billableExtra($record->stage?->podest_total))
                     ->color(fn (int $state): string => $state > 0 ? 'warning' : 'gray')

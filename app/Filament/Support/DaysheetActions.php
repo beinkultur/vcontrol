@@ -6,6 +6,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use App\Models\User;
 use App\Support\Daysheets;
+use App\Support\ExternSheet;
 use App\Support\MailIdentity;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TagsInput;
@@ -31,7 +32,7 @@ final class DaysheetActions
             ->icon(Heroicon::OutlinedPaperAirplane)
             ->color('gray')
             ->modalHeading('Daysheet versenden')
-            ->modalDescription(fn ($livewire): string => 'Die Empfänger bekommen einen Link auf Zeiten, Ansprechpartner, Gewerke, Bühne, Dateien und Notizen – '
+            ->modalDescription(fn ($livewire): string => 'Die Empfänger bekommen einen Link auf ' . ExternSheet::contents() . ' – '
                 . self::validity(self::event($livewire)) . ', zum Drucken oder als PDF. Für Externe verborgene Dateien und Notizen fehlen darin. '
                 . 'Antworten gehen an ' . (MailIdentity::replyTo()?->address ?? 'dich') . '.')
             ->modalSubmitActionLabel('Versenden')

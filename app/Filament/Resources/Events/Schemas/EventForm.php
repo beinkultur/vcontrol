@@ -143,27 +143,26 @@ class EventForm
                             self::sections('planung', array_values(array_filter([
                                 self::tab('Zeiten', 'zeiten')->schema([self::times()]),
                                 self::tab('Checkliste', 'checkliste')->schema([self::checklist()]),
-                                self::tab('Bühne', 'buehne')->schema([
-                                    Actions::make([
-                                        Action::make('stagePlan')
-                                            ->label('Bühnenplan anzeigen')
-                                            ->icon(Heroicon::OutlinedMap)
-                                            // Erst speichern, damit der Plan die eben eingetragenen Maße zeigt.
-                                            // Scheitert die Prüfung, bleibt man im Formular und sieht den Fehler.
-                                            // In der Lese-Ansicht (ViewEvent) gibt es nichts zu speichern.
-                                            ->action(function (Component $livewire, Event $record): void {
-                                                if ($livewire instanceof EditEvent) {
-                                                    $livewire->save(shouldRedirect: false, shouldSendSavedNotification: false);
-                                                }
-                                                $livewire->redirect(EventResource::getUrl('stage-plan', ['record' => $record]), navigate: true);
-                                            }),
+                                // Nur mit dem Modul Bühnenplan (Verwaltung › System)
+                                Module::StagePlan->isEnabled()
+                                    ? self::tab('Bühne', 'buehne')->schema([
+                                        Actions::make([
+                                            Action::make('stagePlan')
+                                                ->label('Bühnenplan anzeigen')
+                                                ->icon(Heroicon::OutlinedMap)
+                                                // Erst speichern, damit der Plan die eben eingetragenen Maße zeigt.
+                                                // Scheitert die Prüfung, bleibt man im Formular und sieht den Fehler.
+                                                // In der Lese-Ansicht (ViewEvent) gibt es nichts zu speichern.
+                                                ->action(function (Component $livewire, Event $record): void {
+                                                    if ($livewire instanceof EditEvent) {
+                                                        $livewire->save(shouldRedirect: false, shouldSendSavedNotification: false);
+                                                    }
+                                                    $livewire->redirect(EventResource::getUrl('stage-plan', ['record' => $record]), navigate: true);
+                                                }),
+                                        ])->key('stagePlanActions')->alignEnd(),
+                                        self::stage(),
                                     ])
-                                        ->key('stagePlanActions')
-                                        ->alignEnd()
-                                        // Nur mit dem Modul Bühnenplan (Verwaltung › System), die Maße gibt es immer
-                                        ->visible(fn (): bool => Module::StagePlan->isEnabled()),
-                                    self::stage(),
-                                ]),
+                                    : null,
                                 self::tab('Personal', 'personal')->schema([
                                     Section::make()
                                         ->columns(2)
@@ -736,7 +735,7 @@ class EventForm
                     ]),
                 Textarea::make('stage_notes')
                     ->label('Anmerkungen Bühne')
-                    ->helperText(fn (): ?string => Module::StagePlan->isEnabled() ? 'Erscheint kursiv im Bühnenplan.' : null)
+                    ->helperText('Erscheint kursiv im Bühnenplan.')
                     ->rows(2),
                 // „sonst. Podeste“ aus AppSheet, wenn dort Text statt einer Anzahl steht.
                 // Anzahlen stehen in „Sonstige“, die Anmerkungen in „Anmerkungen Bühne“.
@@ -761,11 +760,10 @@ class EventForm
         return $live ? $field->live(onBlur: true) : $field;
     }
 
-    /** Versatz der Wings; leer heißt wie in der PHP-Version 1 m. Nur für den Bühnenplan. */
+    /** Versatz der Wings; leer heißt wie in der PHP-Version 1 m. */
     private static function offsetField(string $name): TextInput
     {
         return self::meterField($name, 'Versatz', live: false)
-            ->visible(fn (): bool => Module::StagePlan->isEnabled())
             ->hintIcon(Heroicon::OutlinedInformationCircle, tooltip: 'Abstand zur Bühnen-Vorderkante, Richtung Upstage (weg vom Publikum)')
             ->dehydrateStateUsing(fn (mixed $state): int => $state === null || $state === '' ? StagePlan::DEFAULT_WING_OFFSET : (int) $state);
     }
