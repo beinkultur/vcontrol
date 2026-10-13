@@ -77,9 +77,13 @@ final class AuditPresenter
         'articles' => 'Artikel',
         'article_categories' => 'Artikel-Kategorie',
         'calendars' => 'Kalender-Ebene',
+        'calendar_entries' => 'Kalender-Eintrag',
+        'inquiries' => 'Anfrage',
+        'inquiry_dates' => 'Wunschtermin',
         'settings' => 'Einstellung',
         'daysheets' => 'Daysheet',
         'import' => 'Import',
+        'demo' => 'Demodaten',
     ];
 
     /**
@@ -136,6 +140,9 @@ final class AuditPresenter
         'articles' => [Area::AdminInventar],
         'article_categories' => [Area::AdminInventar],
         'calendars' => [Area::AdminKalender],
+        'calendar_entries' => [Area::Kalender],
+        'inquiries' => [Area::Anfragen],
+        'inquiry_dates' => [Area::Anfragen],
         'settings' => [Area::AdminStammdaten],
         'daysheets' => [Area::Events],
     ];
@@ -248,6 +255,9 @@ final class AuditPresenter
         'costings' => ['version' => 'Fassung', 'note' => 'Anmerkung'],
         'price_list_items' => ['name' => 'Kostenpunkt', 'description' => 'Hinweis'],
         'costing_items' => ['name' => 'Posten', 'description' => 'Hinweis'],
+        'inquiries' => ['option_deadline' => 'Optionsfrist', 'comment' => 'Kommentar', 'confirmed_date_id' => 'Bestätigter Termin'],
+        'inquiry_dates' => ['option_date' => 'Termin'],
+        'calendar_entries' => ['calendar_key' => 'Ebene', 'all_day' => 'Ganztägig'],
         'promoter_contacts' => ['role' => 'Funktion'],
     ];
 

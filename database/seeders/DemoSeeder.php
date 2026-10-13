@@ -12,6 +12,7 @@ use App\Models\AccessCode;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\Calendar;
+use App\Models\CalendarEntry;
 use App\Models\Costing;
 use App\Models\Damage;
 use App\Models\Daysheet;
@@ -19,6 +20,7 @@ use App\Models\Employee;
 use App\Models\Event;
 use App\Models\EventFileTag;
 use App\Models\FieldOption;
+use App\Models\Inquiry;
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\PriceList;
@@ -45,9 +47,11 @@ use Random\Randomizer;
 /**
  * Demodaten einer erfundenen Halle („Be-In Arena“) für demo.vcontrol.eu:
  * Rollen und Konten, Feldoptionen, Räume, Gewerke, Veranstalter, Preislisten,
- * Saalpläne und rund 45 Events vom Sommer bis ins Frühjahr – relativ zum Tag,
+ * Saalpläne und rund 35 Events vom Sommer bis ins Frühjahr – relativ zum Tag,
  * an dem der Befehl läuft. Vergangene sind abgeschlossen (Betrieb, Protokolle,
- * Schäden), kommende in allen Ständen: bestätigt, Option, fraglich, storniert.
+ * Schäden), kommende bestätigt, fraglich oder storniert. Optionen sind Anfragen
+ * mit Wunschterminen (calendarData), dazu eigene Einträge auf den Ebenen
+ * Wartung und Technik.
  *
  * Nur über `php artisan vc:demo-data` und nur in einer leeren Installation.
  * Alle Namen sind erfunden, Mailadressen enden auf .example (gehen nirgends
@@ -113,6 +117,7 @@ final class DemoSeeder extends Seeder
         foreach (self::EVENTS as $row) {
             $this->event(...$row);
         }
+        $this->calendarData($this->today);
         $this->accessCodes();
         Damage::create(['recorded_at' => $this->today->copy()->subDays(9)->setTime(11, 20), 'description' => 'Notausgangsleuchte im Treppenhaus Nord flackert.', 'recorded_by_name' => 'Jonas Becker', 'is_fixed' => false]);
     }
@@ -137,7 +142,7 @@ final class DemoSeeder extends Seeder
     private function options(): void
     {
         $values = [
-            OptionField::VaStatus->value => ['bestätigt', 'Option', 'fraglich', 'storniert'],
+            OptionField::VaStatus->value => ['bestätigt', 'fraglich', 'storniert'],
             OptionField::Areas->value => ['Innenraum', 'Unterrang Nord', 'Unterrang Süd', 'Oberrang', 'Logen'],
             OptionField::Seating->value => ['unbestuhlt', 'teilbestuhlt', 'bestuhlt', 'tba.'],
             OptionField::Ticketing->value => ['freie Platzwahl', 'Innenraum/Rang', 'platzgenau', 'tba.'],
@@ -446,30 +451,22 @@ final class DemoSeeder extends Seeder
         [13, 'Fachmesse Veranstaltungstechnik', 'M&M', 'Messe', 'Fachmesse', 3000, 'unbestuhlt', null, null, '09:00', 2, 'bestätigt'],
         [17, 'Hafenstadt Lions vs. Riverside Rockets', 'HL', 'Sport', 'Basketball', 3300, 'teilbestuhlt', null, 'sport', '19:00', 1, 'bestätigt'],
         [20, 'Schlager-Herbstfest', 'ESS', 'Konzert', 'Schlager', 4200, 'teilbestuhlt', [14, 8, 1.4], 'konzert', '18:30', 1, 'bestätigt'],
-        [24, 'Iron Saints – Zusatzshow', 'TPN', 'Konzert', 'Hard Rock / Metal', 5000, 'unbestuhlt', [16, 10, 1.6], 'konzert', '19:30', 1, 'Option'],
         [27, '100 Jahre Nordwerk AG', 'GDV', 'Gala', 'Firmenfeier', 1400, 'bestuhlt', [12, 6, 0.8], 'konzert', '18:00', 1, 'bestätigt'],
         [31, 'Hafenstadt Lions vs. Bay City Hawks', 'HL', 'Sport', 'Basketball', 3400, 'teilbestuhlt', null, 'sport', '19:00', 1, 'bestätigt'],
         [34, 'Podcast live: Zwei Stühle, ein Mikro', 'CK', 'Comedy', 'Podcast live', 1600, 'bestuhlt', [8, 4, 1.0], 'konzert', '20:00', 1, 'fraglich'],
-        [38, 'Weihnachtscircus Funkelstern', 'BRT', 'Show', 'Zirkus / Artistik', 2600, 'bestuhlt', null, 'konzert', '15:00', 4, 'Option'],
         [42, 'Hafenstadt Lions vs. Lakeside Lynx', 'HL', 'Sport', 'Basketball', 3500, 'teilbestuhlt', null, 'sport', '19:00', 1, 'bestätigt'],
         [45, 'Adventskonzert der Kantorei', 'KR', 'Konzert', 'Klassik', 2100, 'bestuhlt', [14, 8, 1.0], 'konzert', '18:00', 1, 'bestätigt'],
-        [49, 'Electro Winter Rave', 'KAN', 'Konzert', 'EDM / Electro', 6500, 'unbestuhlt', [16, 10, 1.6], 'konzert', '21:00', 1, 'Option'],
         [52, 'Weihnachtsgala des Sports', 'GDV', 'Gala', 'Ball', 1200, 'bestuhlt', [10, 6, 0.8], 'konzert', '19:00', 1, 'fraglich'],
         [59, 'Hafenstadt Lions – Weihnachtsspiel', 'HL', 'Sport', 'Basketball', 3500, 'teilbestuhlt', null, 'sport', '18:00', 1, 'bestätigt'],
         [66, 'Silvester: Arena Countdown', 'KAN', 'Konzert', 'EDM / Electro', 7000, 'unbestuhlt', [16, 10, 1.6], 'konzert', '21:00', 1, 'bestätigt'],
         [80, 'Neujahrskonzert: Strauß & Co.', 'KR', 'Konzert', 'Klassik', 3200, 'bestuhlt', [18, 12, 1.0], 'konzert', '18:00', 1, 'bestätigt'],
         [87, 'Hafenstadt Lions vs. Northern Stars', 'HL', 'Sport', 'Basketball', 3300, 'teilbestuhlt', null, 'sport', '19:00', 1, 'bestätigt'],
-        [94, 'MC Polarstern – Zusatzkonzert', 'TPN', 'Konzert', 'Hip Hop / R\'n\'B', 5800, 'unbestuhlt', [14, 8, 1.6], 'konzert', '20:00', 1, 'Option'],
         [101, 'Hauptversammlung Nordwerk AG', 'M&M', 'Versammlung', 'Hauptversammlung', 1800, 'bestuhlt', [12, 6, 0.8], null, '10:00', 1, 'bestätigt'],
         [108, 'Hafenstadt Lions vs. Riverside Rockets', 'HL', 'Sport', 'Basketball', 3400, 'teilbestuhlt', null, 'sport', '19:00', 1, 'bestätigt'],
-        [115, 'Comedy Kontor: Frühjahrs-Mixed-Show', 'CK', 'Comedy', 'Stand-up', 2300, 'bestuhlt', [10, 6, 1.0], 'konzert', '20:00', 1, 'Option'],
-        [122, 'Musical: Die Leuchtturmwärterin kehrt zurück', 'BRT', 'Konzert', 'Musical', 2800, 'bestuhlt', [16, 10, 1.4], 'konzert', '19:30', 3, 'Option'],
         [129, 'Hafenstadt Lions vs. Bay City Hawks', 'HL', 'Sport', 'Basketball', 3500, 'teilbestuhlt', null, 'sport', '19:00', 1, 'bestätigt'],
         [136, 'Indie-Festival Hafenklang', 'KAN', 'Konzert', 'Pop / Rock', 4000, 'unbestuhlt', [18, 12, 1.6], 'konzert', '16:00', 2, 'fraglich'],
         [143, 'Verbrauchermesse Frühling', 'M&M', 'Messe', 'Verbrauchermesse', 6000, 'unbestuhlt', null, null, '10:00', 3, 'bestätigt'],
         [150, 'Harbour Fight Night', 'TPN', 'Sport', 'Kampfsport', 3800, 'teilbestuhlt', [8, 8, 0.6], 'sport', '19:00', 1, 'storniert'],
-        [157, 'The Velvet Engines – Akustik', 'KAN', 'Konzert', 'Pop / Rock', 3000, 'bestuhlt', [12, 8, 1.0], 'konzert', '20:00', 1, 'Option'],
-        [171, 'Abiball Hafenstadt', 'GDV', 'Gala', 'Ball', 1500, 'bestuhlt', [10, 6, 0.8], 'konzert', '18:00', 1, 'Option'],
     ];
 
     /** @param  array{0: int, 1: int, 2: float}|null  $stage */
@@ -479,7 +476,7 @@ final class DemoSeeder extends Seeder
         $lastDay = $start->copy()->addDays($days - 1);
         $past = $lastDay->lt($this->today);
         $soon = !$past && $start->lte($this->today->copy()->addDays(21));
-        $tentative = in_array($status, ['Option', 'fraglich', 'storniert'], true);
+        $tentative = in_array($status, ['fraglich', 'storniert'], true);
         // Wie weit die Planung ist: 3 komplett, 2 weit, 1 Eckdaten, 0 nur angelegt
         $fill = match (true) {
             $tentative => 1,
@@ -516,7 +513,6 @@ final class DemoSeeder extends Seeder
             'onsite_contact' => $fill >= 2 ? $promoter->contacts->last()?->first_name . ' ' . $promoter->contacts->last()?->last_name . ' (' . $promoter->short_name . ')' : null,
             'wlan' => $fill >= 2 ? 'BIA-Production' : null,
             'wlan_password' => $fill >= 2 ? 'Hafenblick-' . $this->random->getInt(1000, 9999) : null,
-            'booking_notes' => $status === 'Option' ? 'Option bis ' . $start->copy()->subDays(45)->format('d.m.Y') . ', danach Freigabe an andere Anfragen.' : null,
             'closed' => $past && $offset < -7,
         ]);
 
@@ -727,6 +723,97 @@ final class DemoSeeder extends Seeder
             'expires_at' => Daysheets::validUntil($event),
         ]);
         $daysheet->forceFill(['created_at' => $sentAt, 'updated_at' => $sentAt])->saveQuietly();
+    }
+
+    /**
+     * Anfragen (Optionen) und eigene Kalendereinträge, relativ zu $anchor – beim
+     * Befüllen heute, für eine schon befüllte Demo der Tag, an dem sie befüllt
+     * wurde. Manche Anfragen teilen sich einen Tag (1. und 2. Option), eine fällt
+     * auf ein bestätigtes Event (nicht verfügbar), eine ist zurückgezogen, eine
+     * bestätigt.
+     */
+    public function calendarData(Carbon $anchor): void
+    {
+        $this->today = $anchor->copy()->startOfDay();
+        $this->random ??= new Randomizer(new Mt19937(2027));
+        $promoters = Promoter::query()->get()->keyBy('short_name');
+        $author = User::query()->whereHas('roles', fn ($roles) => $roles->where('slug', 'eventmanager'))->orderBy('id')->first();
+
+        // Titel, Veranstalter, Kategorie 1 und 2, Bestuhlung, Tage ab $anchor, Eingang vor … Tagen, Status
+        $rows = [
+            ['Iron Saints – Zusatzshow', 'TPN', 'Konzert', 'Hard Rock / Metal', 'unbestuhlt', [24, 25], 21, Inquiry::OPEN],
+            ['Weihnachtscircus Funkelstern', 'BRT', 'Show', 'Zirkus / Artistik', 'bestuhlt', [38, 39, 40, 41], 30, Inquiry::OPEN],
+            ['Electro Winter Rave', 'KAN', 'Konzert', 'EDM / Electro', 'unbestuhlt', [49, 50], 18, Inquiry::OPEN],
+            ['Hochzeitsmesse Hafenstadt', 'M&M', 'Messe', 'Verbrauchermesse', 'unbestuhlt', [49], 9, Inquiry::OPEN],
+            ['MC Polarstern – Zusatzkonzert', 'TPN', 'Konzert', 'Hip Hop / R\'n\'B', 'unbestuhlt', [94, 95], 12, Inquiry::OPEN],
+            ['Comedy Kontor: Frühjahrs-Mixed-Show', 'CK', 'Comedy', 'Stand-up', 'bestuhlt', [115], 25, Inquiry::OPEN],
+            ['Harbour Fight Night – Revanche', 'TPN', 'Sport', 'Kampfsport', 'teilbestuhlt', [115, 116], 6, Inquiry::OPEN],
+            ['Musical: Die Leuchtturmwärterin kehrt zurück', 'BRT', 'Konzert', 'Musical', 'bestuhlt', [122, 123, 124], 40, Inquiry::OPEN],
+            ['The Velvet Engines – Akustik', 'KAN', 'Konzert', 'Pop / Rock', 'bestuhlt', [157, 164], 15, Inquiry::OPEN],
+            ['Abiball Hafenstadt', 'GDV', 'Gala', 'Ball', 'bestuhlt', [171], 33, Inquiry::OPEN],
+            ['Schlagerparty XXL', 'ESS', 'Konzert', 'Schlager', 'teilbestuhlt', [20, 62], 5, Inquiry::OPEN],
+            ['Logistik-Gala Nord', 'GDV', 'Gala', 'Firmenfeier', 'bestuhlt', [33], 45, Inquiry::WITHDRAWN],
+        ];
+        foreach ($rows as [$title, $promoter, $type1, $type2, $seating, $days, $received, $status]) {
+            $inquiry = Inquiry::create([
+                'title' => $title,
+                'promoter_id' => $promoters->get($promoter)?->id,
+                'option_deadline' => $this->today->copy()->subDays($received)->addDays(Inquiry::DEADLINE_DAYS),
+                'comment' => $status === Inquiry::WITHDRAWN ? 'Veranstalter hat sich für eine andere Halle entschieden.' : null,
+                'event_type1' => $type1,
+                'event_type2' => $type2,
+                'seating' => [$seating],
+                'areas' => ($this->plans[$seating] ?? SeatingPlan::query()->whereJsonContains('seating', $seating)->first())?->areas ?? [],
+                'status' => $status,
+            ]);
+            foreach ($days as $day) {
+                $inquiry->dates()->create(['option_date' => $this->today->copy()->addDays($day)->toDateString()]);
+            }
+            $received = $this->today->copy()->subDays($received)->setTime(10, 30);
+            $inquiry->forceFill(['created_at' => $received, 'updated_at' => $received, 'created_by' => $author?->id, 'created_by_name' => $author?->getFilamentName()])->saveQuietly();
+        }
+
+        // Bestätigt: aus einer Anfrage wurde das Adventskonzert
+        $advent = Event::query()->where('title', 'Adventskonzert der Kantorei')->first();
+        if ($advent !== null) {
+            $inquiry = Inquiry::create(['title' => $advent->title, 'promoter_id' => $advent->promoter_id, 'event_type1' => $advent->event_type1,
+                'event_type2' => $advent->event_type2, 'seating' => $advent->seating, 'areas' => $advent->areas, 'status' => Inquiry::CONFIRMED,
+                'event_id' => $advent->id, 'option_deadline' => $this->today->copy()->subDays(70)]);
+            $date = $inquiry->dates()->create(['option_date' => $advent->starts_at->toDateString()]);
+            $inquiry->forceFill(['confirmed_date_id' => $date->id, 'created_at' => $this->today->copy()->subDays(98), 'updated_at' => $this->today->copy()->subDays(80)])->saveQuietly();
+        }
+
+        // Eigene Einträge: Ebene, Titel, Tage ab $anchor, bis Tag, Beginn, Ende, Beschreibung
+        $entries = [
+            ['wartung', 'Brandschutzbegehung', -20, null, '10:00', '12:00', 'Mit der Feuerwehr, alle Notausgänge offen halten.'],
+            ['wartung', 'Wartung Lüftungsanlage', 8, null, null, null, 'Halle ab 7 Uhr ohne Lüftung, keine Belegung.'],
+            ['wartung', 'Prüfung Rigging-Punkte', 15, null, '08:00', '12:00', 'Sachverständiger vor Ort, Hallendecke gesperrt.'],
+            ['wartung', 'Aufzug: TÜV', 30, null, '09:00', '10:00', null],
+            ['wartung', 'Hallenboden versiegeln', 56, 58, null, null, 'Drei Tage keine Belegung im Innenraum.'],
+            ['technik', 'Update Lichtpult', 5, null, '14:00', '16:00', null],
+            ['technik', 'Inventur Kabel und Funk', 22, null, null, null, null],
+            ['technik', 'Einmessung Beschallung', 61, null, '10:00', '15:00', 'Neue Delay-Line unter dem Oberrang.'],
+        ];
+        $layers = Calendar::query()->pluck('key')->all();
+        foreach ($entries as [$layer, $title, $from, $until, $start, $end, $description]) {
+            if (!in_array($layer, $layers, true)) {
+                continue;
+            }
+            $day = $this->today->copy()->addDays($from);
+            $entry = CalendarEntry::create([
+                'calendar_key' => $layer,
+                'title' => $title,
+                'description' => $description,
+                'all_day' => $start === null,
+                'starts_at' => $start === null ? $day->copy()->startOfDay() : $day->copy()->setTimeFromTimeString($start),
+                'ends_at' => match (true) {
+                    $until !== null => $this->today->copy()->addDays($until)->startOfDay(),
+                    $end !== null => $day->copy()->setTimeFromTimeString($end),
+                    default => null,
+                },
+            ]);
+            $entry->forceFill(['created_by' => $author?->id, 'created_by_name' => $author?->getFilamentName()])->saveQuietly();
+        }
     }
 
     /** Codes Tageszugang: eine Woche zurück, zwei Monate voraus */

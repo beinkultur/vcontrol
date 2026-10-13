@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Access\Access;
+use App\Access\Area;
 use App\Enums\AccountType;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -92,10 +93,10 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // Externe kommen ins selbe Panel; dort sehen sie nur „Meine Events“, alles
-        // andere sperren die Policies
+        // Externe kommen ins selbe Panel; dort sehen sie nur „Meine Events“ und
+        // ihren Kalender, alles andere sperren die Policies
         return $this->is_active && match ($panel->getId()) {
-            'app' => $this->access()->canUseApp() || $this->access()->canUseExtern(),
+            'app' => $this->access()->canUseApp() || $this->access()->canUseExtern() || $this->access()->can(Area::KalenderExtern),
             default => false,
         };
     }

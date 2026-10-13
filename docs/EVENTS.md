@@ -126,6 +126,47 @@ Bedienbar:
   lesen, Operationen bearbeiten) – wie in der PHP-Version. Wer die
   Bearbeiten-Seite eines Events ohne Schreibrecht aufruft (z. B. über den Link
   in der Schadensmail), landet in der Ansicht, Phase und Bereich bleiben.
+- **Kalender** (`/kalender`, Recht „Kalender“, 13.10.2026) wie in der
+  PHP-Version: Monat, Woche, Tag, 4 Wochen; die Ebenen aus Verwaltung ›
+  Kalender als Chips in ihrer Farbe zum Ein- und Ausblenden, Auswahl in der
+  Adresse (`?view=month&date=2026-11-01&cal[]=events`). Inhalt je Ebene
+  (`App\Support\CalendarItems`): **Events** (alle; fragliche blass, stornierte
+  durchgestrichen – in der PHP-Version ohne Kennzeichnung), **Anfragen** (offene,
+  je Wunschtermin mit Rang „1️⃣ Titel (1. Opt.)“; Tage, die ein bestätigtes Event
+  belegt, fehlen), **Veranstaltungsleitung** und **Technik** (die Dienste aus dem
+  Personal aller Events – Auf-/Abschließen und House Rep. bzw. VfV, „🔗 Person ·
+  Rolle (Event)“, Link auf Planung › Personal – dazu eigene Einträge),
+  **Persönlich** (nur die eigenen Dienste: als Konto, über den verknüpften
+  Mitarbeiter oder das Gewerk; sieht jeder mit Kalender-Recht), alle anderen
+  Ebenen (Wartung, Towers …) eigene Einträge. Eigene Einträge
+  (`CalendarEntry`, ganztägig oder mit Uhrzeit, Ende einschließlich) legt an,
+  ändert und löscht, wer die Ebene bearbeiten darf (`CalendarEntryPolicy`); auf
+  Events, Anfragen und Persönlich gibt es keine. Rechte je Ebene an Rolle und
+  Konto (das Höchste gilt), Admins alles. Anders als in der PHP-Version: je Tag
+  Events zuerst; Monat und 4 Wochen zeigen je Woche höchstens vier Bahnen, der
+  Rest steht als „+n weitere“ da und führt zum Tag. Zeitraster 6–22 Uhr, länger,
+  wenn ein Eintrag früher beginnt oder später endet. Am Handy eine Liste der
+  Tage. Die Freitermin-Suche (`/anfragen/freitermin`) fehlt noch.
+- **Kalender für Externe** (`/extern/kalender`, Recht „Kalender (extern)“):
+  dieselben lesbaren Ebenen, nur lesen; Links nur zu Events, an denen das Konto
+  beteiligt ist (dann „Meine Events“, fett mit ↗), alles andere ohne Link. Das
+  Recht allein öffnet das Panel – ohne „Meine Events“.
+- **Anfragen** (`/anfragen`, Recht „Anfragen“, 13.10.2026) wie in der
+  PHP-Version: Titel, Veranstalter, Optionsfrist (Vorgabe 28 Tage, überschritten
+  rot), Kommentar, ein oder mehrere Wunschtermine und Eckdaten fürs Event
+  (Kategorien, Bereiche, Bestuhlung). Je Tag zählt der Eingang der offenen
+  Anfragen: 1. Option, 2. Option … (`App\Support\Inquiries`, jedes Mal neu
+  berechnet); belegt ein bestätigtes, nicht abgeschlossenes Event den Tag, heißt
+  der Termin „Nicht verfügbar“. Bestätigen (nur offene, verlangt zusätzlich
+  „Events bearbeiten“) macht aus einem freien Termin ein bestätigtes,
+  ganztägiges Event mit den Eckdaten und führt hinein; Zurückziehen archiviert.
+  Wie in der PHP-Version hat die 1. Option beim Bestätigen keinen Vorrang – eine
+  2. Option lässt sich bestätigen und belegt dann den Tag (offen zur
+  Entscheidung). Ändern nur, solange offen. Liste nach erstem Termin, Filter
+  Status (Vorgabe offen), Zeitraum (Vorgabe zukünftige), Veranstalter. Anders als
+  in der PHP-Version (dort Recht der Events) ein eigener Bereich „Anfragen“; das
+  Kürzen des Titels um ein Veranstalter-Kürzel beim Bestätigen
+  (PromoterPrefix) fehlt.
 - **Kalender-Feed** `/kalender/events.ics` wie in der PHP-Version: alle
   bestätigten Events ganztägig, Zugriff mit geheimem Schlüssel (Einstellung der
   Halle) oder angemeldet mit Kalender-Recht. Adresse unter Events › „Kalender
@@ -204,7 +245,8 @@ Bedienbar:
   (`App\Support\ExternSheet`). Dateien und Notizen sind sichtbar, bis jemand
   „Für Externe verbergen“ anhakt. Externe kommen ins selbe Panel und sehen nur
   „Meine Events“ und „Profil“; intern zeigt „Ansicht Extern“ im Event-Kopf, was
-  Externe sehen. Kalender und Schichten extern fehlen noch.
+  Externe sehen. Den Kalender für Externe gibt es seit 13.10.2026 (siehe
+  Kalender), Schichten extern fehlen noch.
 - **Daysheet** (02.10.2026): „Daysheet“ im Event-Kopf bzw. Durchführung ›
   Daysheets, nur mit Schreibrecht auf Events. Vorbelegt: „An“ mit dem
   Standard-Empfänger der Halle, BCC mit den E-Mail-Adressen der beteiligten
@@ -225,8 +267,7 @@ Bedienbar:
 
 Noch nicht: Leistungsgruppen
 bearbeiten, Datei-Bibliothek (übergreifende Dateien verknüpfen),
-Kalender (auch extern), Anfragen und
-Freitermin, Sortierung
+Freitermin-Suche, Sortierung
 „Finanz-Warnung zuerst“.
 
 - **Leistungen:** Die PHP-Version legt je Event alle 19 Leistungen an

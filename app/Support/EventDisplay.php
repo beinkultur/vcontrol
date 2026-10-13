@@ -27,8 +27,27 @@ final class EventDisplay
     /** Mehrtägig ab mehr als einem Kalendertag (Ende = Beginn + 1 zählt nicht, Ganztags-Import). */
     public static function isMultiDay(Event $event): bool
     {
-        return $event->starts_at !== null && $event->ends_at !== null
-            && $event->starts_at->copy()->startOfDay()->diffInDays($event->ends_at->copy()->startOfDay()) > 1;
+        return $event->starts_at !== null && self::lastDay($event)->greaterThan($event->starts_at->copy()->startOfDay());
+    }
+
+    /**
+     * Letzter Veranstaltungstag. Das Ende ist exklusiv gespeichert (00:00 des
+     * Folgetags, so der Import) oder liegt nach Mitternacht – beides zählt zum
+     * Vortag. Ein Ende ab 6 Uhr ist ein echter letzter Tag. Ohne Beginn: null.
+     */
+    public static function lastDay(Event $event): ?CarbonInterface
+    {
+        if ($event->starts_at === null) {
+            return null;
+        }
+        $start = $event->starts_at->copy()->startOfDay();
+        $end = $event->ends_at;
+        if ($end === null || $end->lessThanOrEqualTo($start)) {
+            return $start;
+        }
+        $day = $end->hour < 6 ? $end->copy()->subDay()->startOfDay() : $end->copy()->startOfDay();
+
+        return $day->greaterThan($start) ? $day : $start;
     }
 
     /** @return 'fraglich'|'cancelled'|null */

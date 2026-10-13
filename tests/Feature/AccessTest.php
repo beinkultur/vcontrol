@@ -75,9 +75,17 @@ class AccessTest extends TestCase
             $this->get($path)->assertForbidden();
         }
 
-        // Kalender oder Schichten extern allein öffnen (noch) nichts
+        // Kalender extern allein: nur der Kalender für Externe, nicht „Meine Events“
         $nurKalender = $this->userWith($this->role('kalender_extern', ['kalender_extern' => 'read']));
-        $this->actingAs($nurKalender)->get('/')->assertForbidden();
+        $this->actingAs($nurKalender)->get('/')->assertRedirect('/extern/kalender');
+        $this->get('/extern/kalender')->assertOk();
+        foreach (['/extern/events', '/kalender', '/events', '/anfragen'] as $path) {
+            $this->get($path)->assertForbidden();
+        }
+
+        // Schichten extern allein öffnen (noch) nichts
+        $nurSchichten = $this->userWith($this->role('schichten_extern', ['schichten_extern' => 'read']));
+        $this->actingAs($nurSchichten)->get('/')->assertForbidden();
     }
 
     public function test_inaktive_konten_kommen_nicht_hinein(): void

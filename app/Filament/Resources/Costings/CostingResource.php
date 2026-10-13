@@ -60,7 +60,7 @@ class CostingResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalculator;
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 5;
 
     /** Seiten eines Costings: wer Costings sieht; die Liste prüft ListCostings selbst (Menüpunkt) */
     public static function canAccess(): bool

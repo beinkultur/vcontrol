@@ -117,6 +117,12 @@ class SmokeRender extends Command
         foreach ($panel->getPages() as $page) {
             if ($page::canAccess()) {
                 $paths[] = $page::getUrl(isAbsolute: false);
+                // Kalender: jede Ansicht
+                if (is_a($page, \App\Filament\Pages\Calendar::class, true)) {
+                    foreach (['week', 'day', '4weeks'] as $view) {
+                        $paths[] = $page::getUrl(['view' => $view], isAbsolute: false);
+                    }
+                }
             } else {
                 $this->skipped[] = $page::getUrl(isAbsolute: false);
             }

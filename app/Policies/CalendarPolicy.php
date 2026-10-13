@@ -15,12 +15,13 @@ class CalendarPolicy extends AreaPolicy
         return Area::AdminKalender;
     }
 
-    /** System-Kalender bleiben. Sobald der Kalender portiert ist: nur ohne Einträge. */
+    /** System-Kalender bleiben, die anderen nur ohne eigene Einträge. */
     public function delete(User $user, Model $record): bool
     {
         return $record instanceof Calendar
             && $user->access()->canEdit($this->area())
-            && !$record->is_system;
+            && !$record->is_system
+            && !$record->entries()->exists();
     }
 
     public function reorder(User $user): bool

@@ -72,24 +72,7 @@ final class Daysheets
             return null;
         }
 
-        return self::lastDay($event)->addDay()->endOfDay();
-    }
-
-    /**
-     * Letzter Veranstaltungstag. Das Ende ist exklusiv gespeichert (00:00 des
-     * Folgetags, so der Import) oder liegt nach Mitternacht – beides zählt zum
-     * Vortag. Ein Ende ab 6 Uhr ist ein echter letzter Tag.
-     */
-    private static function lastDay(Event $event): CarbonInterface
-    {
-        $start = $event->starts_at->copy()->startOfDay();
-        $end = $event->ends_at;
-        if ($end === null || $end->lessThanOrEqualTo($start)) {
-            return $start;
-        }
-        $day = $end->hour < 6 ? $end->copy()->subDay()->startOfDay() : $end->copy()->startOfDay();
-
-        return $day->greaterThan($start) ? $day : $start;
+        return EventDisplay::lastDay($event)->addDay()->endOfDay();
     }
 
     /**

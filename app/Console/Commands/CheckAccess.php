@@ -44,10 +44,23 @@ class CheckAccess extends Command
         'GET /codes' => '/codes',
         'GET /audit' => '/audit',
         'GET /extern/events' => '/extern/events',
+        'GET /kalender?view=month' => '/kalender?view=month',
+        'GET /kalender?view=week' => '/kalender?view=week',
+        'GET /kalender?view=day' => '/kalender?view=day',
+        'GET /kalender?view=4weeks' => '/kalender?view=4weeks',
+        'GET /extern/kalender?view=month' => '/extern/kalender?view=month',
+        'GET /extern/kalender?view=week' => '/extern/kalender?view=week',
+        'GET /anfragen' => '/anfragen',
     ];
 
     /** Bewusst strenger als die PHP-Version: Diese Seiten erreicht hier nur der System-Admin. */
     private const SYSTEM_ADMIN_ONLY = ['/rollen'];
+
+    /**
+     * Bewusst eigener Bereich: Die PHP-Version ließ Anfragen jeden sehen, der
+     * Events sehen darf; hier gilt der Bereich „Anfragen“ aus Rollen & Rechte.
+     */
+    private const OWN_AREA = ['/anfragen' => Area::Anfragen];
 
     /**
      * Seiten eines Bereichs: Ist er abgeschaltet oder sein Modul nicht
@@ -77,6 +90,8 @@ class CheckAccess extends Command
                 $expected = match (true) {
                     in_array($path, $off, true) => 403,
                     in_array($path, self::SYSTEM_ADMIN_ONLY, true) => $role->is_system_admin ? 200 : 403,
+                    isset(self::OWN_AREA[$path]) => $role->is_super || $role->is_system_admin
+                        || in_array($role->permissions[self::OWN_AREA[$path]->value] ?? 'none', ['read', 'edit'], true) ? 200 : 403,
                     default => $baseline[($role->is_system_admin ? 'admin' : $role->slug) . '|' . $legacyPage] ?? null,
                 };
                 $actual = $this->status($kernel, $path, $this->userWithOnly($role));
@@ -99,7 +114,8 @@ class CheckAccess extends Command
 
             return self::FAILURE;
         }
-        $this->info(count($rows) . ' Vergleiche, alle wie in der PHP-Version (bewusst strenger: ' . implode(', ', self::SYSTEM_ADMIN_ONLY) . ' nur für System-Admins'
+        $this->info(count($rows) . ' Vergleiche, alle wie in der PHP-Version (bewusst strenger: ' . implode(', ', self::SYSTEM_ADMIN_ONLY) . ' nur für System-Admins, '
+            . implode(', ', array_keys(self::OWN_AREA)) . ' nach eigenem Bereich'
             . ($off !== [] ? '; Bereich oder Modul aus, für niemanden: ' . implode(', ', $off) : '') . ')');
 
         return self::SUCCESS;

@@ -1318,6 +1318,508 @@ a.vc-card:hover {
 }
 
 /* ---------------------------------------------------------------------
+ * Kalender (filament/pages/calendar) wie in der PHP-Version: Balken in der
+ * hellen Farbe der Ebene mit Streifen links, Schrift schwarz (dunkel: getönt,
+ * Schrift hell); heute bläulich.
+ * Monat und 4 Wochen: alles als Balken in Bahnen je Woche; Woche und Tag:
+ * Ganztägig-Leiste und Zeitraster. Am Handy statt Raster eine Liste.
+ * ------------------------------------------------------------------ */
+
+.vc-cal {
+    --vc-cal-line: var(--gray-200);
+    --vc-cal-muted: var(--gray-50);
+    --vc-cal-today: rgb(0 120 212 / 0.07);
+    /* Zeitspalte in Woche und Tag */
+    --vc-cal-gutter: 3.5rem;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.dark .vc-cal {
+    --vc-cal-line: var(--gray-700);
+    --vc-cal-muted: rgb(255 255 255 / 0.03);
+    --vc-cal-today: rgb(96 165 250 / 0.12);
+}
+
+.vc-cal__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.vc-cal__nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.vc-cal__btn,
+.vc-cal__view,
+.vc-cal__layer {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--vc-cal-line);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: inherit;
+    background: var(--gray-50);
+}
+
+.dark .vc-cal__btn,
+.dark .vc-cal__view,
+.dark .vc-cal__layer {
+    background: rgb(255 255 255 / 0.05);
+}
+
+.vc-cal__btn:hover,
+.vc-cal__view:hover,
+.vc-cal__layer:hover {
+    border-color: var(--gray-400);
+}
+
+.vc-cal__title {
+    margin-left: 0.4rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.vc-cal__views {
+    display: inline-flex;
+    gap: 0.25rem;
+}
+
+.vc-cal__view.is-active {
+    background: var(--primary-600);
+    border-color: var(--primary-600);
+    color: #fff;
+}
+
+.vc-cal__layers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+/* Ebenen-Chip: Punkt in der Farbe der Ebene; ausgeblendete blass */
+.vc-cal__layer {
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    opacity: 0.45;
+}
+
+.vc-cal__layer::before {
+    content: "";
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: var(--vc-cal-color);
+}
+
+.vc-cal__layer.is-active {
+    opacity: 1;
+    font-weight: 600;
+    border-color: var(--gray-500);
+}
+
+/* Dunkle Ebenenfarben (z. B. Schwarz) bleiben auf dunklem Grund sichtbar */
+.dark .vc-cal__layer::before {
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.4);
+}
+
+.vc-cal__grid {
+    border: 1px solid var(--vc-cal-line);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #fff;
+}
+
+.dark .vc-cal__grid {
+    background: rgb(255 255 255 / 0.02);
+}
+
+.vc-cal__head,
+.vc-cal__bg,
+.vc-cal__dates,
+.vc-cal__lane,
+.vc-cal__columns {
+    display: grid;
+    grid-template-columns: repeat(var(--vc-cal-columns), minmax(0, 1fr));
+}
+
+.vc-cal__head {
+    border-bottom: 1px solid var(--vc-cal-line);
+}
+
+.vc-cal__headday {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+}
+
+.vc-cal__headday span {
+    margin-left: 0.25rem;
+    color: var(--gray-700);
+}
+
+.dark .vc-cal__headday span {
+    color: var(--gray-300);
+}
+
+.vc-cal__headday.is-today {
+    background: var(--vc-cal-today);
+}
+
+.vc-cal__week {
+    position: relative;
+    min-height: 7.5rem;
+    border-bottom: 1px solid var(--vc-cal-line);
+}
+
+.vc-cal__week:last-child {
+    border-bottom: 0;
+}
+
+/* Hintergrund je Tag (Linien, heute, Randtage), unter Datum und Balken */
+.vc-cal__bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.vc-cal__cell + .vc-cal__cell {
+    border-left: 1px solid var(--vc-cal-line);
+}
+
+.vc-cal__cell.is-outside {
+    background: var(--vc-cal-muted);
+}
+
+.vc-cal .vc-cal__bg .vc-cal__cell.is-today {
+    background: var(--vc-cal-today);
+}
+
+.vc-cal--week .vc-cal__cell.is-weekend,
+.vc-cal--day .vc-cal__cell.is-weekend {
+    background: var(--vc-cal-muted);
+}
+
+.vc-cal__dates {
+    position: relative;
+}
+
+.vc-cal__date {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gray-600);
+}
+
+.dark .vc-cal__date {
+    color: var(--gray-300);
+}
+
+.vc-cal__date.is-today {
+    color: var(--primary-600);
+}
+
+.vc-cal__lanes {
+    position: relative;
+    display: grid;
+    gap: 2px;
+    padding: 0 0 0.4rem;
+}
+
+.vc-cal__lanes--allday {
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--vc-cal-line);
+}
+
+/* In der Zeitspalte links neben den ganztägigen Balken (Woche, Tag) */
+.vc-cal__allday-label {
+    position: absolute;
+    top: 0.35rem;
+    left: 0;
+    width: var(--vc-cal-gutter);
+    padding: 0 0.3rem;
+    font-size: 0.65rem;
+    line-height: 1.45rem;
+    color: var(--gray-500);
+}
+
+/* Balken: helle Farbe der Ebene, Streifen links (fortgesetzte Balken ohne) */
+.vc-cal__bar,
+.vc-cal__block,
+.vc-cal__row {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    font-size: 0.72rem;
+    line-height: 1.45rem;
+    color: #111;
+    background: color-mix(in srgb, var(--vc-cal-color) 18%, white);
+    border-left: 4px solid var(--vc-cal-color);
+}
+
+.vc-cal__bar {
+    height: 1.45rem;
+    margin: 0 2px;
+    padding: 0 0.35rem;
+    border-radius: 0.25rem;
+}
+
+.vc-cal__bar--from-before {
+    border-left-width: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 0;
+}
+
+.vc-cal__bar--goes-on {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: 0;
+}
+
+a.vc-cal__bar:hover,
+button.vc-cal__bar:hover,
+a.vc-cal__block:hover,
+button.vc-cal__block:hover,
+a.vc-cal__row:hover,
+button.vc-cal__row:hover {
+    background: color-mix(in srgb, var(--vc-cal-color) 30%, white);
+}
+
+.dark .vc-cal__bar,
+.dark .vc-cal__block,
+.dark .vc-cal__row {
+    color: var(--gray-100);
+    background: color-mix(in srgb, var(--vc-cal-color) 28%, var(--gray-900));
+}
+
+.dark a.vc-cal__bar:hover,
+.dark button.vc-cal__bar:hover,
+.dark a.vc-cal__block:hover,
+.dark button.vc-cal__block:hover,
+.dark a.vc-cal__row:hover,
+.dark button.vc-cal__row:hover {
+    background: color-mix(in srgb, var(--vc-cal-color) 42%, var(--gray-900));
+}
+
+/* Mehr als Calendar::MAX_LANES Bahnen: „+n weitere“ führt zum Tag */
+.vc-cal__more {
+    margin: 0 2px;
+    padding: 0 0.35rem;
+    font-size: 0.72rem;
+    line-height: 1.45rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    border-radius: 0.25rem;
+}
+
+.vc-cal__more:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+}
+
+.dark .vc-cal__more {
+    color: var(--gray-300);
+}
+
+.dark .vc-cal__more:hover {
+    background: rgb(255 255 255 / 0.08);
+    color: #fff;
+}
+
+/* Status der Events: fraglich blass, storniert durchgestrichen */
+.vc-cal .is-fraglich {
+    opacity: 0.55;
+    border-left-style: dashed;
+}
+
+.vc-cal .is-cancelled {
+    opacity: 0.55;
+    text-decoration: line-through;
+}
+
+/* Extern: eigene Events fett mit ↗, fremde gedämpft */
+.vc-cal .is-linked {
+    font-weight: 700;
+}
+
+.vc-cal .is-linked::before {
+    content: "↗ ";
+}
+
+.vc-cal .is-unlinked {
+    opacity: 0.72;
+    cursor: default;
+}
+
+/* Zeitraster: Stunden links, Blöcke in Prozent der Höhe */
+.vc-cal__time {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--vc-cal-gutter) minmax(0, 1fr);
+    height: calc(var(--vc-cal-hours) * 3rem);
+}
+
+.vc-cal__hours {
+    display: grid;
+    grid-template-rows: repeat(var(--vc-cal-hours), 1fr);
+    border-right: 1px solid var(--vc-cal-line);
+    font-size: 0.65rem;
+    color: var(--gray-500);
+}
+
+.vc-cal__hours span {
+    padding: 0.1rem 0.3rem;
+    border-top: 1px solid var(--vc-cal-line);
+}
+
+.vc-cal__columns {
+    position: relative;
+}
+
+/* Stundenlinien je Spalte; heute und Wochenende tönt der Hintergrund darunter (.vc-cal__bg) */
+.vc-cal__column {
+    position: relative;
+    background-image: linear-gradient(to bottom, var(--vc-cal-line) 1px, transparent 1px);
+    background-size: 100% calc(100% / var(--vc-cal-hours));
+}
+
+.vc-cal__column + .vc-cal__column {
+    border-left: 1px solid var(--vc-cal-line);
+}
+
+.vc-cal__block {
+    position: absolute;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+    line-height: 1.2;
+    white-space: normal;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.6);
+}
+
+.dark .vc-cal__block {
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.4);
+}
+
+/* Woche und Tag: die Zeitspalte links braucht auch über dem Raster Platz */
+.vc-cal--week .vc-cal__head,
+.vc-cal--week .vc-cal__bg,
+.vc-cal--week .vc-cal__lane,
+.vc-cal--day .vc-cal__bg,
+.vc-cal--day .vc-cal__lane {
+    margin-left: var(--vc-cal-gutter);
+}
+
+.vc-cal--week .vc-cal__week,
+.vc-cal--day .vc-cal__week {
+    min-height: 0;
+}
+
+/* Eintrag zum Ansehen */
+.vc-cal-entry {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.35rem 1rem;
+    font-size: 0.875rem;
+}
+
+.vc-cal-entry dt {
+    color: var(--gray-500);
+}
+
+/* Liste am Handy (statt Raster) */
+.vc-cal__agenda {
+    display: none;
+}
+
+.vc-cal__agenda-day {
+    display: grid;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.vc-cal__agenda-day h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.vc-cal__agenda-day h3.is-today {
+    color: var(--primary-600);
+}
+
+.vc-cal__row {
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+@media (max-width: 47.99rem) {
+    .vc-cal--month .vc-cal__grid,
+    .vc-cal--4weeks .vc-cal__grid,
+    .vc-cal--week .vc-cal__grid {
+        display: none;
+    }
+
+    .vc-cal--month .vc-cal__agenda,
+    .vc-cal--4weeks .vc-cal__agenda,
+    .vc-cal--week .vc-cal__agenda {
+        display: block;
+    }
+}
+
+/* Anfragen: Wunschtermine mit Rang (filament/inquiries/dates) */
+.vc-inquiry-dates {
+    display: grid;
+    gap: 0.2rem;
+    font-size: 0.875rem;
+}
+
+.vc-inquiry-dates li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.vc-inquiry-dates__day {
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-inquiry-dates__label {
+    color: var(--gray-600);
+}
+
+.dark .vc-inquiry-dates__label {
+    color: var(--gray-300);
+}
+
+.vc-inquiry-dates__blocked {
+    color: var(--gray-400);
+    text-decoration: line-through;
+}
+
+.vc-inquiry-dates__confirmed .vc-inquiry-dates__label {
+    color: var(--success-600);
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------
  * Handy und Tablet. Breiten wie Filament: sm 40rem (640 px), md 48rem
  * (768 px), lg 64rem (1024 px). Welche Tabellenspalten auf dem Handy
  * fehlen, steht bei den Spalten (visibleFrom).

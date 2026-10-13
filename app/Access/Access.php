@@ -83,8 +83,10 @@ final class Access
     }
 
     /**
-     * Extern-Bereich (Freelancer, Gewerke): „Meine Events“. Kalender und Schichten
-     * extern gibt es in Laravel noch nicht – sie allein öffnen nichts.
+     * Extern-Bereich (Freelancer, Gewerke): „Meine Events“ und was daran hängt
+     * (Dateien, Saalplan, Costing). Der Kalender für Externe (Bereich
+     * „Kalender (extern)“) öffnet das Panel, aber nicht diese Inhalte;
+     * Schichten extern gibt es noch nicht.
      */
     public function canUseExtern(): bool
     {

@@ -4,13 +4,16 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Events\EventResource;
 use App\Models\AuditLog;
+use App\Models\CalendarEntry;
 use App\Models\Costing;
 use App\Models\Daysheet;
 use App\Models\Event;
+use App\Models\Inquiry;
 use App\Models\Promoter;
 use App\Models\SeatingPlan;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Inquiries;
 use App\Support\StagePodests;
 use Database\Seeders\DemoSeeder;
 use Filament\Facades\Filament;
@@ -33,11 +36,22 @@ class DemoDataTest extends TestCase
 
         $this->assertSame('Be-In Arena', Setting::lookup(Setting::VENUE_NAME));
         $this->assertSame(DemoSeeder::eventCount(), Event::query()->count());
-        // Alle Stände: vergangen und abgeschlossen, bestätigt, Option, fraglich, storniert
+        // Alle Stände: vergangen und abgeschlossen, bestätigt, fraglich, storniert
         $this->assertTrue(Event::query()->where('closed', true)->whereDate('starts_at', '<', today())->exists());
-        foreach (['bestätigt', 'Option', 'fraglich', 'storniert'] as $status) {
+        foreach (['bestätigt', 'fraglich', 'storniert'] as $status) {
             $this->assertTrue(Event::query()->where('status', $status)->whereDate('starts_at', '>', today())->exists(), $status);
         }
+
+        // Optionen sind Anfragen: am selben Tag 1. und 2. Option, ein Tag durch ein Event belegt
+        $rave = Inquiry::query()->where('title', 'Electro Winter Rave')->sole();
+        $fair = Inquiry::query()->where('title', 'Hochzeitsmesse Hafenstadt')->sole();
+        $this->assertSame(1, Inquiries::slots($rave)[$rave->dates->first()->id]['rank']);
+        $this->assertSame(2, Inquiries::slots($fair)[$fair->dates->first()->id]['rank']);
+        $party = Inquiry::query()->where('title', 'Schlagerparty XXL')->sole();
+        $this->assertFalse(Inquiries::slots($party)[$party->dates->first()->id]['available'], 'fällt auf das Schlager-Herbstfest');
+        $this->assertTrue(Inquiry::query()->where('status', Inquiry::CONFIRMED)->whereNotNull('event_id')->exists());
+        $this->assertTrue(Inquiry::query()->where('status', Inquiry::WITHDRAWN)->exists());
+        $this->assertTrue(CalendarEntry::query()->where('calendar_key', 'wartung')->exists());
         $this->assertSame(3, SeatingPlan::query()->count());
         foreach (SeatingPlan::all() as $plan) {
             Storage::disk(SeatingPlan::DISK)->assertExists($plan->path);
@@ -57,7 +71,8 @@ class DemoDataTest extends TestCase
 
         // Die Seiten laufen mit den Daten
         $this->actingAs($this->admin());
-        $this->get('/events')->assertOk()->assertSee('Hafenstadt Lions')->assertSee('Option');
+        $this->get('/events')->assertOk()->assertSee('Hafenstadt Lions');
+        $this->get('/anfragen')->assertOk()->assertSee('Electro Winter Rave');
         $this->get(EventResource::getUrl('edit', ['record' => Event::query()->where('closed', true)->first()]))->assertOk();
         $this->get(EventResource::getUrl('edit', ['record' => Event::query()->where('title', 'Rock im Herbst: The Velvet Engines')->sole()]))->assertOk();
     }
