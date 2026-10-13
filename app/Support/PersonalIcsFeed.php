@@ -12,7 +12,7 @@ use Carbon\CarbonImmutable;
 /**
  * Persönlicher Kalender eines Kontos als ICS-Feed (/kalender/persoenlich.ics,
  * Adresse im Profil): die eigenen Dienste wie auf der Ebene „Persönlich“ –
- * als Konto, über den verknüpften Mitarbeiter oder das Gewerk
+ * als Konto selbst oder über das verknüpfte Gewerk
  * (CalendarItems::ownAssignments). Mit Uhrzeit der Zuordnung in UTC, ohne
  * ganztägig am ersten Tag des Events; Ende vor dem Beginn = am Folgetag.
  * Zeitraum: 90 Tage zurück bis 18 Monate voraus.

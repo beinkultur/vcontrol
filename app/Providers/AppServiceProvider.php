@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Access\Modules;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Trade;
 use App\Models\User;
 use App\Support\Audit;
@@ -56,10 +56,10 @@ class AppServiceProvider extends ServiceProvider
         // dort in der Konfiguration stehen
         Validator::extend('upload_inhalt', fn (string $attribute, mixed $value): bool => ! Uploads::hasBlockedContent($value), Uploads::BLOCKED_MESSAGE);
 
-        // Kurznamen statt Klassennamen in polymorphen Spalten – dieselben Werte
-        // wie assignee_type in der PHP-Version
+        // Kurznamen statt Klassennamen in polymorphen Spalten – wie assignee_type in
+        // der PHP-Version; „contact“ ersetzt seit 14.10.2026 „employee“
         Relation::enforceMorphMap([
-            'employee' => Employee::class,
+            'contact' => Contact::class,
             'trade' => Trade::class,
             'user' => User::class,
         ]);

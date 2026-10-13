@@ -2,11 +2,9 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use App\Access\Area;
 use App\Enums\AccountType;
-use App\Filament\Resources\Employees\EmployeeResource;
+use App\Filament\Resources\Contacts\ContactResource;
 use App\Filament\Support\AccessFields;
-use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Trade;
 use App\Models\User;
@@ -16,7 +14,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -54,6 +51,15 @@ class UserForm
                             ->helperText(fn (string $operation): ?string => $operation === 'edit'
                                 ? 'Leer lassen, um das Passwort nicht zu ändern.'
                                 : null),
+                        TextInput::make('initials')
+                            ->label('Kürzel')
+                            ->helperText('Für die Projektleitung in der Event-Liste.')
+                            ->maxLength(20),
+                        TextInput::make('phone')
+                            ->label('Telefon')
+                            ->helperText('Steht im Daysheet, wenn die Person im Personal eines Events eingetragen ist.')
+                            ->tel()
+                            ->maxLength(50),
                     ]),
                 Section::make('Zugang')
                     ->columns(2)
@@ -83,26 +89,12 @@ class UserForm
                             ->helperText('Inaktive Konten können sich nicht anmelden.')
                             ->default(true)
                             ->inline(false),
-                        Select::make('employee_id')
-                            ->label('Mitarbeiter')
-                            ->helperText('Verknüpft das Konto mit den Mitarbeiter-Stammdaten: Wo dieser Mitarbeiter im Personal eines Events steht (House Rep., VfV …), ist es ein eigener Dienst – im persönlichen Kalender und unter „Meine Events“.')
-                            ->options(fn (?User $record): array => self::employeeOptions($record))
-                            ->searchable()
-                            ->unique(ignoreRecord: true)
-                            ->validationMessages(['unique' => 'Dieser Mitarbeiter ist schon mit einem anderen Konto verknüpft.'])
-                            ->live()
-                            ->afterStateUpdated(fn (Set $set, mixed $state) => $set('employee_positions', Employee::query()->find($state)?->positions ?? []))
-                            ->visible(fn (Get $get): bool => self::type($get)?->linksEmployee() ?? false),
-                        CheckboxList::make('employee_positions')
+                        CheckboxList::make('positions')
                             ->label('Positionen')
-                            ->helperText(fn (): string => 'Für welche Dienste der Mitarbeiter zur Wahl steht (VfV …). Gespeichert beim Mitarbeiter unter Stammdaten › Mitarbeiter'
-                                . (self::mayEditEmployees() ? '.' : ' – ändern darf sie, wer Mitarbeiter bearbeiten darf.'))
-                            ->options(fn (Get $get): array => EmployeeResource::positionOptions(Employee::query()->find($get('employee_id'))))
+                            ->helperText('Für welche Dienste die Person im Personal der Events zur Wahl steht: House Rep. braucht VL, VfV die Position VfV. Werte pflegen unter Stammdaten › Feldoptionen › Position.')
+                            ->options(fn (?User $record): array => ContactResource::positionOptions($record?->positions))
                             ->columns(3)
-                            ->afterStateHydrated(fn (CheckboxList $component, ?User $record) => $component->state($record?->employee?->positions ?? []))
-                            ->dehydrated(false)
-                            ->disabled(fn (): bool => !self::mayEditEmployees())
-                            ->visible(fn (Get $get): bool => (self::type($get)?->linksEmployee() ?? false) && filled($get('employee_id')))
+                            ->visible(fn (Get $get): bool => self::type($get)?->hasPositions() ?? false)
                             ->columnSpanFull(),
                         Select::make('trade_id')
                             ->label('Gewerk')
@@ -120,9 +112,9 @@ class UserForm
     }
 
     /**
-     * Verknüpfung passend zum Kontotyp: Personen-Konten mit einem Mitarbeiter,
-     * Gewerk-Accounts mit einem Gewerk; die andere wird gelöst (ausgeblendete
-     * Felder speichert Filament nicht mit).
+     * Passend zum Kontotyp: Personen-Konten tragen Positionen, Gewerk-Accounts
+     * ein Gewerk; das jeweils andere wird geleert (ausgeblendete Felder speichert
+     * Filament nicht mit).
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -131,29 +123,11 @@ class UserForm
     {
         $type = $data['account_type'] ?? null;
         $type = $type instanceof AccountType ? $type : AccountType::tryFrom((string) $type);
-        $data['employee_id'] = ($type?->linksEmployee() ?? false) && filled($data['employee_id'] ?? null) ? (int) $data['employee_id'] : null;
+        $positions = array_values(array_filter(array_map(fn (mixed $value): string => trim((string) $value), (array) ($data['positions'] ?? []))));
+        $data['positions'] = ($type?->hasPositions() ?? false) && $positions !== [] ? $positions : null;
         $data['trade_id'] = ($type?->linksTrade() ?? false) && filled($data['trade_id'] ?? null) ? (int) $data['trade_id'] : null;
 
         return $data;
-    }
-
-    /**
-     * Positionen beim verknüpften Mitarbeiter speichern – nur wer Mitarbeiter
-     * bearbeiten darf, und nur Werte, die zur Wahl stehen.
-     *
-     * @param  array<string, mixed>  $state  Formularzustand (data)
-     */
-    public static function savePositions(User $user, array $state): void
-    {
-        $employee = $user->linkedEmployeeId() !== null ? Employee::query()->find($user->linkedEmployeeId()) : null;
-        if ($employee === null || !self::mayEditEmployees() || !array_key_exists('employee_positions', $state)) {
-            return;
-        }
-        $allowed = array_keys(EmployeeResource::positionOptions($employee));
-        $positions = array_values(array_intersect($allowed, array_map('strval', (array) $state['employee_positions'])));
-        if ($positions !== array_values((array) ($employee->positions ?? []))) {
-            $employee->update(['positions' => $positions]);
-        }
     }
 
     private static function type(Get $get): ?AccountType
@@ -161,23 +135,6 @@ class UserForm
         $type = $get('account_type');
 
         return $type instanceof AccountType ? $type : AccountType::tryFrom((string) $type);
-    }
-
-    /**
-     * Mitarbeiter zur Wahl: nicht archiviert und noch mit keinem anderen Konto
-     * verknüpft; der aktuelle bleibt wählbar.
-     *
-     * @return array<int, string>
-     */
-    private static function employeeOptions(?User $record): array
-    {
-        $taken = User::query()->whereNotNull('employee_id')->when($record !== null, fn (Builder $query): Builder => $query->whereKeyNot($record->getKey()))->pluck('employee_id');
-
-        return Employee::query()
-            ->where(fn (Builder $query): Builder => $query->where('is_archived', false)->whereNotIn('id', $taken)->orWhere('id', $record?->employee_id))
-            ->orderBy('last_name')->orderBy('first_name')->get()
-            ->mapWithKeys(fn (Employee $employee): array => [$employee->id => $employee->fullName() . (filled($employee->positions) ? ' (' . implode(', ', $employee->positions) . ')' : '')])
-            ->all();
     }
 
     /** @return array<int, string> nicht archivierte Gewerke, das aktuelle bleibt wählbar */
@@ -188,11 +145,6 @@ class UserForm
             ->orderBy('name')->get()
             ->mapWithKeys(fn (Trade $trade): array => [$trade->id => trim(($trade->short_name ? $trade->short_name . ' — ' : '') . $trade->name)])
             ->all();
-    }
-
-    private static function mayEditEmployees(): bool
-    {
-        return self::actor()?->access()->canEdit(Area::AdminMitarbeiter) ?? false;
     }
 
     private static function actor(): ?User

@@ -2,13 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AccountType;
 use App\Enums\AssignmentRole;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Room;
 use App\Models\Trade;
+use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Livewire\Livewire;
@@ -65,11 +68,11 @@ class EventPlanningTest extends TestCase
 
     public function test_rollen_vergeben_aendern_und_leeren(): void
     {
-        $anna = Employee::create(['first_name' => 'Anna', 'last_name' => 'Leitung']);
+        $anna = Contact::create(['name' => 'Anna Leitung']);
         $sidi = Trade::create(['name' => 'Sicherheitsdienst', 'categories' => ['Sicherheit', 'VfV']]);
 
         Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
-            ->fillForm(['role_pl' => 'employee:' . $anna->id, 'role_safety_1' => 'trade:' . $sidi->id])
+            ->fillForm(['role_pl' => 'contact:' . $anna->id, 'role_safety_1' => 'trade:' . $sidi->id])
             ->call('save')
             ->assertHasNoFormErrors();
 
@@ -78,7 +81,7 @@ class EventPlanningTest extends TestCase
         $this->assertSame('Sicherheitsdienst', $roles['safety_1']->assigneeName());
 
         Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
-            ->assertSchemaStateSet(['role_pl' => 'employee:' . $anna->id])
+            ->assertSchemaStateSet(['role_pl' => 'contact:' . $anna->id])
             ->fillForm(['role_pl' => null])
             ->call('save');
 
@@ -86,10 +89,35 @@ class EventPlanningTest extends TestCase
         $this->assertNotNull($this->event->assignments()->where('role', AssignmentRole::SafetyEarly->value)->first());
     }
 
+    public function test_neuer_kontakt_direkt_im_personal(): void
+    {
+        Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
+            ->callAction(TestAction::make('createOption')->schemaComponent('role_house_rep_1', 'form'), data: ['name' => '  Hallenmeister ', 'phone' => '040 123 45'])
+            ->assertHasNoActionErrors()
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $contact = Contact::query()->where('name', 'Hallenmeister')->sole();
+        $this->assertSame('040 123 45', $contact->phone);
+        $unlock = $this->event->assignments()->where('role', AssignmentRole::Unlock->value)->sole();
+        $this->assertSame(['contact', $contact->id], [$unlock->assignee_type, (int) $unlock->assignee_id]);
+
+        // Ohne Recht auf Kontakte: auswählen ja, anlegen nicht
+        $this->actingAs($this->userWith($this->role('eventmanager', ['events' => 'edit'])));
+        Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
+            ->assertActionDoesNotExist(TestAction::make('createOption')->schemaComponent('role_house_rep_1', 'form'));
+    }
+
     public function test_vfv_und_house_rep_nur_mit_passender_position(): void
     {
-        $vfv = Employee::create(['first_name' => 'Vera', 'last_name' => 'Fach', 'positions' => ['VfV']]);
-        $vl = Employee::create(['first_name' => 'Volker', 'last_name' => 'Leitung', 'positions' => ['VL']]);
+        $vfv = Contact::create(['name' => 'Vera Fach', 'positions' => ['VfV']]);
+        $vl = Contact::create(['name' => 'Volker Leitung', 'positions' => ['VL']]);
+        $archived = Contact::create(['name' => 'Alt', 'positions' => ['VL', 'VfV'], 'is_archived' => true]);
+        // Konten: Personen mit Positionen; ein Gewerk-Account kommt nur für die Projektleitung in Frage
+        $hr = User::factory()->create(['first_name' => 'Hanna', 'last_name' => 'Rep', 'account_type' => AccountType::VenueEmployee, 'positions' => ['VL']]);
+        $frei = User::factory()->create(['first_name' => 'Fritz', 'last_name' => 'Frei', 'account_type' => AccountType::Freelancer, 'positions' => ['VfV']]);
+        $ohne = User::factory()->create(['first_name' => 'Olga', 'last_name' => 'Ohne', 'account_type' => AccountType::VenueEmployee]);
+        $firma = User::factory()->create(['first_name' => 'Firma', 'last_name' => 'Konto', 'account_type' => AccountType::TradeAccount, 'positions' => ['VL']]);
         $sidi = Trade::create(['name' => 'Sicherheitsdienst', 'categories' => ['Sicherheit', 'vfv']]);
         $catering = Trade::create(['name' => 'Catering Nord', 'categories' => ['Catering']]);
         $kollege = $this->userWith($this->role('technik', ['events' => 'edit']));
@@ -98,18 +126,22 @@ class EventPlanningTest extends TestCase
         $keys = fn (Select $field): array => array_keys(array_merge(...array_values($field->getOptions())));
 
         Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
-            ->assertFormFieldExists('role_safety_1', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'trade:' . $sidi->id])
+            // VfV: Konten und Kontakte mit Position VfV, Gewerke mit diesem Leistungsbereich
+            ->assertFormFieldExists('role_safety_1', fn (Select $field): bool => $keys($field) === ['user:' . $frei->id, 'contact:' . $vfv->id, 'trade:' . $sidi->id])
             ->assertFormFieldExists('role_safety_2', fn (Select $field): bool => in_array('user:' . $kollege->id, $keys($field), true)
-                && !in_array('employee:' . $vl->id, $keys($field), true))
-            // Auf-/Abschließen: nur Mitarbeiter, alle Positionen; House Rep. früh/spät nur mit VL
-            ->assertFormFieldExists('role_house_rep_1', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
-            ->assertFormFieldExists('role_house_rep_2', fn (Select $field): bool => $keys($field) === ['employee:' . $vl->id])
-            ->assertFormFieldExists('role_house_rep_3', fn (Select $field): bool => $keys($field) === ['employee:' . $vl->id])
-            ->assertFormFieldExists('role_house_rep_4', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
-            // Projektleitung weiter mit allen
-            ->assertFormFieldExists('role_pl', fn (Select $field): bool => in_array('employee:' . $vl->id, $keys($field), true)
+                && !in_array('contact:' . $vl->id, $keys($field), true))
+            // Auf-/Abschließen: alle Personen (Konten mit Personen-Typ, Kontakte); House Rep. früh/spät nur mit VL
+            ->assertFormFieldExists('role_house_rep_1', fn (Select $field): bool => array_diff(['user:' . $frei->id, 'user:' . $ohne->id, 'user:' . $hr->id, 'contact:' . $vfv->id, 'contact:' . $vl->id], $keys($field)) === []
+                && !in_array('user:' . $firma->id, $keys($field), true) && !in_array('contact:' . $archived->id, $keys($field), true))
+            ->assertFormFieldExists('role_house_rep_2', fn (Select $field): bool => $keys($field) === ['user:' . $hr->id, 'contact:' . $vl->id])
+            ->assertFormFieldExists('role_house_rep_3', fn (Select $field): bool => $keys($field) === ['user:' . $hr->id, 'contact:' . $vl->id])
+            ->assertFormFieldExists('role_house_rep_4', fn (Select $field): bool => !in_array('contact:' . $archived->id, $keys($field), true)
+                && !in_array('user:' . $firma->id, $keys($field), true))
+            // Projektleitung weiter mit allen, auch Gewerk-Accounts
+            ->assertFormFieldExists('role_pl', fn (Select $field): bool => in_array('contact:' . $vl->id, $keys($field), true)
                 && in_array('trade:' . $catering->id, $keys($field), true)
-                && in_array('user:' . $kollege->id, $keys($field), true))
+                && in_array('user:' . $kollege->id, $keys($field), true)
+                && in_array('user:' . $firma->id, $keys($field), true))
             // Nicht Angebotenes lässt sich nicht unterschieben
             ->fillForm(['role_safety_1' => 'trade:' . $catering->id])
             ->call('save')

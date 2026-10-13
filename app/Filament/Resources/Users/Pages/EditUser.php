@@ -40,11 +40,4 @@ class EditUser extends EditRecord
     {
         return UserForm::withLinks($data);
     }
-
-    protected function afterSave(): void
-    {
-        /** @var User $user */
-        $user = $this->getRecord();
-        UserForm::savePositions($user, $this->data);
-    }
 }

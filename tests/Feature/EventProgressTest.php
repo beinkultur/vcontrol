@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\AssignmentRole;
 use App\Filament\Resources\Events\EventResource;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Promoter;
 use App\Support\EventProgress;
@@ -19,12 +19,12 @@ class EventProgressTest extends TestCase
         $this->assertSame(['buchung' => 17, 'planung' => 0, 'durchfuehrung' => 0], EventProgress::phases($event->fresh()));
 
         $promoter = Promoter::create(['name' => 'Agentur']);
-        $lead = Employee::create(['first_name' => 'Anna', 'last_name' => 'Leitung']);
+        $lead = Contact::create(['name' => 'Anna Leitung']);
         $event->update([
             'promoter_id' => $promoter->id, 'event_type1' => 'Konzert', 'event_type2' => 'Pop / Rock',
             'pax_expected' => 3000, 'seating' => ['teilbestuhlt'], 'areas' => ['Innenraum'], 'pax' => 2800, 'closed' => true,
         ]);
-        $event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $lead->id]);
+        $event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'contact', 'assignee_id' => $lead->id]);
         $event->finance()->create(['contract_status' => 'Vertrag zurück', 'rent' => 9000]);
         $event->pr()->create(['pr_status' => 'angekündigt']);
         $event->schedule()->create(['admission' => '18:00:00', 'end_time' => '23:00:00', 'load_in' => '08:00:00']);

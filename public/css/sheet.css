@@ -114,6 +114,20 @@
     color: var(--sheet-muted);
 }
 
+/* Telefon und E-Mail der Ansprechpartner, unter dem Namen */
+.vc-sheet__contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.9rem;
+    font-weight: 400;
+    font-size: 0.85rem;
+}
+
+.vc-sheet__contact a {
+    color: inherit;
+    overflow-wrap: anywhere;
+}
+
 .vc-sheet__empty {
     margin: 0;
     font-style: italic;

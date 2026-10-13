@@ -8,7 +8,7 @@ use App\Filament\Pages\Calendar as CalendarPage;
 use App\Filament\Resources\ExternEvents\ExternEventResource;
 use App\Models\Calendar;
 use App\Models\CalendarEntry;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Inquiry;
 use App\Models\Promoter;
@@ -187,15 +187,13 @@ class CalendarTest extends TestCase
 
     public function test_dienste_auf_technik_veranstaltungsleitung_und_persoenlich(): void
     {
-        $anna = Employee::create(['first_name' => 'Anna', 'last_name' => 'Koch', 'initials' => 'AK']);
-        $tom = Employee::create(['first_name' => 'Tom', 'last_name' => 'Meyer', 'initials' => 'TM']);
-        $early = $this->concert->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'employee', 'assignee_id' => $anna->id, 'starts_at' => '08:00', 'ends_at' => '16:00']);
-        $late = $this->concert->assignments()->create(['role' => AssignmentRole::SafetyLate, 'assignee_type' => 'employee', 'assignee_id' => $tom->id, 'starts_at' => '16:00', 'ends_at' => '01:00']);
-        $this->concert->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $anna->id]);
-
         $user = $this->userWith($this->role('team', ['kalender' => 'read', 'events' => 'read'], calendars: ['technik' => 'read', 'veranstaltungsleitung' => 'read']));
-        $user->update(['account_type' => AccountType::VenueEmployee, 'employee_id' => $anna->id]);
+        $user->update(['first_name' => 'Anna', 'last_name' => 'Koch', 'account_type' => AccountType::VenueEmployee, 'positions' => ['VL']]);
         $user = $user->fresh();
+        $tom = Contact::create(['name' => 'Tom Meyer', 'positions' => ['VfV']]);
+        $early = $this->concert->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'user', 'assignee_id' => $user->id, 'starts_at' => '08:00', 'ends_at' => '16:00']);
+        $late = $this->concert->assignments()->create(['role' => AssignmentRole::SafetyLate, 'assignee_type' => 'contact', 'assignee_id' => $tom->id, 'starts_at' => '16:00', 'ends_at' => '01:00']);
+        $this->concert->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'user', 'assignee_id' => $user->id]);
         $items = collect(CalendarItems::for($user, CarbonImmutable::parse('2026-10-19'), CarbonImmutable::parse('2026-10-25')));
 
         // Der eigene Dienst einmal, auf Veranstaltungsleitung und Persönlich; die Projektleitung zählt nicht

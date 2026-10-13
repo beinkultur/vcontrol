@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\OptionField;
 use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Calendars\Pages\ManageCalendars;
-use App\Filament\Resources\Employees\Pages\ManageEmployees;
+use App\Filament\Resources\Contacts\Pages\ManageContacts;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\FieldOptions\Pages\ManageFieldOptions;
 use App\Filament\Resources\InventoryCategories\Pages\ManageInventoryCategories;
@@ -13,7 +13,7 @@ use App\Filament\Resources\InventoryItems\Pages\ManageInventoryItems;
 use App\Filament\Resources\Rooms\Pages\ManageRooms;
 use App\Filament\Resources\Trades\Pages\ManageTrades;
 use App\Models\Calendar;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\FieldOption;
 use App\Models\InventoryCategory;
@@ -127,38 +127,39 @@ class MasterDataTest extends TestCase
         $this->assertTrue($trade->fresh()->is_archived);
     }
 
-    public function test_mitarbeiter_positionen_aus_feldoptionen(): void
+    public function test_kontakte_mit_positionen_aus_feldoptionen(): void
     {
         FieldOption::create(['field_key' => 'employee_position', 'value' => 'VL']);
         FieldOption::create(['field_key' => 'employee_position', 'value' => 'VfV']);
-        $employee = Employee::create(['last_name' => 'Muster', 'positions' => ['VL']]);
+        $contact = Contact::create(['name' => 'Hallenmeister', 'positions' => ['VL']]);
 
-        Livewire::test(ManageEmployees::class)
-            ->callTableAction('edit', $employee, ['positions' => ['VL', 'VfV']])
+        $this->get('/kontakte')->assertOk()->assertSee('Hallenmeister');
+        $this->get('/mitarbeiter')->assertNotFound();
+        Livewire::test(ManageContacts::class)
+            ->callTableAction('edit', $contact, ['name' => 'Hallenmeister', 'phone' => '040 123 45', 'positions' => ['VL', 'VfV']])
             ->assertHasNoTableActionErrors();
 
-        $this->assertSame(['VL', 'VfV'], $employee->fresh()->positions);
+        $contact->refresh();
+        $this->assertSame(['VL', 'VfV'], $contact->positions);
+        $this->assertSame('040 123 45', $contact->phone);
     }
 
-    public function test_mitarbeiter_archivieren_und_unbenutzte_loeschen(): void
+    public function test_kontakte_archivieren_und_unbenutzte_loeschen(): void
     {
-        $frei = Employee::create(['last_name' => 'Frei']);
-        $imEinsatz = Employee::create(['first_name' => 'Anna', 'last_name' => 'Einsatz']);
-        $mitKonto = Employee::create(['last_name' => 'Konto']);
+        $frei = Contact::create(['name' => 'Frei']);
+        $imEinsatz = Contact::create(['name' => 'Anna Einsatz']);
         $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
-        $event->assignments()->create(['role' => 'pl', 'assignee_type' => 'employee', 'assignee_id' => $imEinsatz->id]);
-        User::factory()->create(['employee_id' => $mitKonto->id]);
+        $event->assignments()->create(['role' => 'pl', 'assignee_type' => 'contact', 'assignee_id' => $imEinsatz->id]);
 
-        Livewire::test(ManageEmployees::class)
+        Livewire::test(ManageContacts::class)
             ->assertTableActionVisible('delete', $frei)
             ->assertTableActionHidden('delete', $imEinsatz)
-            ->assertTableActionHidden('delete', $mitKonto)
             ->callTableAction('delete', $frei)
             ->callTableAction('archive', $imEinsatz);
 
         $this->assertModelMissing($frei);
         $this->assertTrue($imEinsatz->fresh()->is_archived);
-        Livewire::test(ManageEmployees::class)
+        Livewire::test(ManageContacts::class)
             ->assertCanNotSeeTableRecords([$imEinsatz])
             ->set('activeTab', 'archiv')
             ->assertCanSeeTableRecords([$imEinsatz])
@@ -167,10 +168,10 @@ class MasterDataTest extends TestCase
 
         // Archiviert nicht mehr wählbar – am Event bleibt er stehen
         $imEinsatz->update(['is_archived' => true]);
-        $mitarbeiter = fn (Select $field): array => $field->getOptions()['Mitarbeiter'] ?? [];
+        $kontakte = fn (Select $field): array => $field->getOptions()['Kontakte'] ?? [];
         Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
-            ->assertFormFieldExists('role_house_rep_1', fn (Select $field): bool => !array_key_exists('employee:' . $imEinsatz->id, $mitarbeiter($field)))
-            ->assertFormFieldExists('role_pl', fn (Select $field): bool => array_key_exists('employee:' . $imEinsatz->id, $mitarbeiter($field)));
+            ->assertFormFieldExists('role_house_rep_1', fn (Select $field): bool => !array_key_exists('contact:' . $imEinsatz->id, $kontakte($field)))
+            ->assertFormFieldExists('role_pl', fn (Select $field): bool => array_key_exists('contact:' . $imEinsatz->id, $kontakte($field)));
     }
 
     public function test_schadensmeldungen_an_aus_der_halle(): void

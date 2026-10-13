@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Promoter;
 use App\Models\Trade;
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Füllt eine leere Installation mit Demodaten (Database\Seeders\DemoSeeder),
  * gedacht für demo.vcontrol.eu. Bricht ab, sobald es Events, Veranstalter,
- * Gewerke oder Mitarbeiter gibt – echte Daten überschreibt der Befehl nie.
+ * Gewerke oder Kontakte gibt – echte Daten überschreibt der Befehl nie.
  * Ins Änderungsprotokoll kommt ein Eintrag statt Tausender einzelner.
  */
 class DemoData extends Command
@@ -25,7 +25,7 @@ class DemoData extends Command
 
     public function handle(): int
     {
-        if (Event::query()->exists() || Promoter::query()->exists() || Trade::query()->exists() || Employee::query()->exists()) {
+        if (Event::query()->exists() || Promoter::query()->exists() || Trade::query()->exists() || Contact::query()->exists()) {
             $this->error('Hier gibt es schon Daten – Demodaten nur in einer leeren Installation.');
 
             return self::FAILURE;

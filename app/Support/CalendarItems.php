@@ -9,7 +9,7 @@ use App\Filament\Resources\ExternEvents\ExternEventResource;
 use App\Filament\Resources\Inquiries\InquiryResource;
 use App\Models\Calendar;
 use App\Models\CalendarEntry;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\EventAssignment;
 use App\Models\Inquiry;
@@ -28,7 +28,7 @@ use Illuminate\Support\Collection;
  * - „anfragen“: offene Anfragen je Wunschtermin mit Rang (1️⃣ Option …), Tage,
  *   die ein bestätigtes Event belegt, fehlen;
  * - „personal“: die eigenen Dienste (House Rep., Auf-/Abschließen, VfV) – als
- *   Konto, über den verknüpften Mitarbeiter (Personen-Konten) oder das Gewerk;
+ *   Konto selbst oder über das verknüpfte Gewerk;
  * - „veranstaltungsleitung“ und „technik“: dieselben Dienste aller Events
  *   (House Rep. bzw. VfV), dazu eigene Einträge. Ein eigener Dienst erscheint
  *   nur einmal, mit beiden Ebenen (CalendarItem::$layers, im Raster gestreift);
@@ -218,15 +218,11 @@ final class CalendarItems
      */
     public static function ownAssignments(User $user, CarbonImmutable $from, CarbonImmutable $until): Collection
     {
-        $employeeId = $user->linkedEmployeeId();
         $tradeId = $user->linkedTradeId();
 
         return self::assignments(array_merge(...array_values(self::MIRRORS)), $from, $until)
-            ->where(function (Builder $query) use ($user, $employeeId, $tradeId): void {
+            ->where(function (Builder $query) use ($user, $tradeId): void {
                 $query->where(fn (Builder $own): Builder => $own->where('assignee_type', 'user')->where('assignee_id', $user->id));
-                if ($employeeId !== null) {
-                    $query->orWhere(fn (Builder $own): Builder => $own->where('assignee_type', 'employee')->where('assignee_id', $employeeId));
-                }
                 if ($tradeId !== null) {
                     $query->orWhere(fn (Builder $own): Builder => $own->where('assignee_type', 'trade')->where('assignee_id', $tradeId));
                 }
@@ -278,12 +274,11 @@ final class CalendarItems
         );
     }
 
-    /** Eigener Dienst: als Konto, als verknüpfter Mitarbeiter (Personen-Konten) oder als verknüpftes Gewerk */
+    /** Eigener Dienst: als Konto selbst oder als verknüpftes Gewerk */
     private static function isOwn(User $user, EventAssignment $assignment): bool
     {
         return match ($assignment->assignee_type) {
             'user' => (int) $assignment->assignee_id === (int) $user->id,
-            'employee' => $user->linkedEmployeeId() !== null && (int) $assignment->assignee_id === $user->linkedEmployeeId(),
             'trade' => $user->linkedTradeId() !== null && (int) $assignment->assignee_id === $user->linkedTradeId(),
             default => false,
         };
@@ -295,7 +290,8 @@ final class CalendarItems
 
         return match (true) {
             $assignee instanceof Trade => trim(($assignee->short_name ? $assignee->short_name . ' — ' : '') . $assignee->name),
-            $assignee instanceof Employee, $assignee instanceof User => trim($assignee->first_name . ' ' . $assignee->last_name) ?: '–',
+            $assignee instanceof Contact => trim((string) $assignee->name) ?: '–',
+            $assignee instanceof User => trim($assignee->first_name . ' ' . $assignee->last_name) ?: '–',
             default => '–',
         };
     }

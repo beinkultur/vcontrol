@@ -104,7 +104,7 @@ class AccessTest extends TestCase
             'Benutzer' => ['/benutzer', 'admin_benutzer'],
             // Rollen & Rechte: nur für System-Admins, siehe UserSafetyTest
             'Gewerke' => ['/gewerke', 'admin_gewerke'],
-            'Mitarbeiter' => ['/mitarbeiter', 'admin_mitarbeiter'],
+            'Kontakte' => ['/kontakte', 'admin_mitarbeiter'],
             'Räume' => ['/raeume', 'admin_raeume'],
             'Feldoptionen' => ['/feldoptionen', 'admin_feldoptionen'],
             'Inventar' => ['/inventar', 'admin_inventar'],

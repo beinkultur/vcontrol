@@ -3,15 +3,16 @@
 namespace App\Policies;
 
 use App\Access\Area;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Mitarbeiter werden archiviert; löschen nur, solange kein Event und kein
- * Benutzerkonto auf sie verweist.
+ * Kontakte: Bereich „Kontakte“ (Schlüssel admin_mitarbeiter wie bisher die
+ * Mitarbeiter, damit die Rechte der Rollen bleiben). Archivieren; löschen nur,
+ * solange kein Event auf den Kontakt verweist.
  */
-class EmployeePolicy extends AreaPolicy
+class ContactPolicy extends AreaPolicy
 {
     protected function area(): Area
     {
@@ -20,7 +21,7 @@ class EmployeePolicy extends AreaPolicy
 
     public function delete(User $user, Model $record): bool
     {
-        return $record instanceof Employee
+        return $record instanceof Contact
             && $user->access()->canEdit($this->area())
             && !$record->isInUse();
     }

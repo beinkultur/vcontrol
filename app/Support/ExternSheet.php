@@ -29,8 +29,8 @@ use Closure;
  */
 final class ExternSheet
 {
-    /** Ansprechpartner aus dem Personal */
-    private const CONTACT_ROLES = [AssignmentRole::ProjectLead, AssignmentRole::HouseRepEarly, AssignmentRole::HouseRepLate];
+    /** Ansprechpartner aus dem Personal, mit Telefon und E-Mail (Auf-/Abschließen seit 14.10.2026, etwa der Hallenmeister) */
+    private const CONTACT_ROLES = [AssignmentRole::ProjectLead, AssignmentRole::Unlock, AssignmentRole::HouseRepEarly, AssignmentRole::HouseRepLate, AssignmentRole::Lock];
 
     /**
      * @param  Closure(EventFile): string  $fileUrl  Download-Adresse je nach Zugang (Konto oder Daysheet-Link)
@@ -38,7 +38,7 @@ final class ExternSheet
      * @param  (Closure(Event): string)|null  $costingUrl  Costing-PDF; ohne: kein Costing in der Ansicht
      * @return array{title: string, date: string, promoter: ?string, venue: string, cancelled: bool,
      *     times: list<array{label: string, value: string}>,
-     *     contacts: list<array{label: string, name: string, time: ?string}>,
+     *     contacts: list<array{label: string, name: string, time: ?string, phone: ?string, email: ?string}>,
      *     services: list<array{label: string, responsible: ?string, provider: ?string, note: ?string}>,
      *     stage: array{rows: array<string, string>, notes: ?string, svg: ?string}|null,
      *     files: array<string, list<array{name: string, stand: string, size: string, url: string}>>,
@@ -143,7 +143,7 @@ final class ExternSheet
         return $rows;
     }
 
-    /** @return list<array{label: string, name: string, time: ?string}> */
+    /** @return list<array{label: string, name: string, time: ?string, phone: ?string, email: ?string}> */
     private static function contacts(Event $event): array
     {
         $rows = [];
@@ -162,11 +162,12 @@ final class ExternSheet
                             $until !== null => 'bis ' . $until,
                             default => null,
                         },
+                        ...$assignment->assigneeContact(),
                     ];
                 });
         }
         if (filled($event->onsite_contact)) {
-            $rows[] = ['label' => 'Ansprechpartner vor Ort', 'name' => (string) $event->onsite_contact, 'time' => null];
+            $rows[] = ['label' => 'Ansprechpartner vor Ort', 'name' => (string) $event->onsite_contact, 'time' => null, 'phone' => null, 'email' => null];
         }
 
         return $rows;

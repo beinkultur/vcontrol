@@ -20,7 +20,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['first_name', 'last_name', 'email', 'password', 'account_type', 'employee_id', 'trade_id', 'is_active', 'calendar_permissions', 'calendar_view'])]
+#[Fillable(['first_name', 'last_name', 'initials', 'email', 'phone', 'password', 'account_type', 'positions', 'trade_id', 'is_active', 'calendar_permissions', 'calendar_view'])]
 #[Hidden(['password', 'remember_token', 'calendar_token', 'calendar_token_hash'])]
 class User extends Authenticatable implements FilamentUser, HasName
 {
@@ -42,20 +42,10 @@ class User extends Authenticatable implements FilamentUser, HasName
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
             'account_type' => AccountType::class,
+            'positions' => 'array',
             'calendar_permissions' => 'array',
             'calendar_token' => 'encrypted',
         ];
-    }
-
-    /**
-     * Mitarbeiter der Stammdaten, als der dieses Konto gilt (nur Personen-Konten,
-     * AccountType::linksEmployee).
-     *
-     * @return BelongsTo<Employee, $this>
-     */
-    public function employee(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class);
     }
 
     /** @return BelongsTo<Trade, $this> */
@@ -64,10 +54,15 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->belongsTo(Trade::class);
     }
 
-    /** Verknüpfter Mitarbeiter, sofern der Kontotyp ihn vorsieht – sonst zählt die Verknüpfung nicht */
-    public function linkedEmployeeId(): ?int
+    /**
+     * Positionen (VL, VfV …) für Dienste im Personal der Events – nur bei
+     * Personen-Konten (AccountType::hasPositions), sonst leer.
+     *
+     * @return list<string>
+     */
+    public function positionList(): array
     {
-        return ($this->account_type?->linksEmployee() ?? false) && $this->employee_id !== null ? (int) $this->employee_id : null;
+        return ($this->account_type?->hasPositions() ?? false) ? array_values((array) ($this->positions ?? [])) : [];
     }
 
     /** Verknüpftes Gewerk, sofern der Kontotyp es vorsieht (Gewerk-Account) */

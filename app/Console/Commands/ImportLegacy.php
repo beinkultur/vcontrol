@@ -54,7 +54,8 @@ class ImportLegacy extends Command
             DB::table('event_room')->delete();
             $this->importCalendars($legacy);
             $this->importSettings($legacy);
-            // Vor den Benutzern: users.employee_id und users.trade_id verweisen darauf
+            // Vor den Benutzern: users.trade_id verweist darauf. Die Mitarbeiter der
+            // PHP-Version werden Kontakte (seit 14.10.2026, gleiche IDs)
             $this->importEmployees($legacy);
             $this->importTrades($legacy);
             $this->importRooms($legacy);
@@ -144,8 +145,7 @@ class ImportLegacy extends Command
     {
         $rows = $legacy->table('vc_employees')->orderBy('id')->get()->map(fn (object $e): array => [
             'id' => $e->id,
-            'first_name' => $e->first_name,
-            'last_name' => $e->last_name,
+            'name' => trim($e->first_name . ' ' . $e->last_name) ?: ($e->initials ?: 'Kontakt ' . $e->id),
             'initials' => $e->initials,
             'phone' => $e->phone,
             'email' => $e->email,
@@ -154,7 +154,7 @@ class ImportLegacy extends Command
             'updated_at' => $e->updated_at,
         ])->all();
 
-        $this->sync('employees', $rows);
+        $this->sync('contacts', $rows);
     }
 
     private function importTrades(Connection $legacy): void
@@ -357,9 +357,9 @@ class ImportLegacy extends Command
                 'split_setup_teardown' => (bool) $g->split_setup_teardown,
             ])->values()->all());
 
-        // Rollen: nur Zuordnungen, deren Mitarbeiter, Gewerk oder Benutzer existiert
+        // Rollen: nur Zuordnungen, deren Kontakt (früher Mitarbeiter), Gewerk oder Benutzer existiert
         $known = [
-            'employee' => DB::table('employees')->pluck('id')->flip(),
+            'employee' => DB::table('contacts')->pluck('id')->flip(),
             'trade' => $tradeIds,
             'user' => DB::table('users')->pluck('id')->flip(),
         ];
@@ -368,7 +368,7 @@ class ImportLegacy extends Command
             ->map(fn (object $a): array => [
                 'event_id' => $a->event_id,
                 'role' => $a->role_key,
-                'assignee_type' => $a->assignee_type,
+                'assignee_type' => $a->assignee_type === 'employee' ? 'contact' : $a->assignee_type,
                 'assignee_id' => $a->assignee_id,
                 'starts_at' => $a->starts_at,
                 'ends_at' => $a->ends_at,
@@ -779,7 +779,6 @@ class ImportLegacy extends Command
             // bcrypt aus password_hash() – Laravel prüft den Hash unverändert
             'password' => $u->password_hash,
             'account_type' => $u->account_type,
-            'employee_id' => $u->employee_id,
             'trade_id' => $u->trade_id,
             'is_active' => (bool) $u->is_active,
             'calendar_permissions' => json_encode((object) ($calendars[$u->id] ?? [])),

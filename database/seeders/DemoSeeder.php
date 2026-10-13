@@ -16,7 +16,7 @@ use App\Models\CalendarEntry;
 use App\Models\Costing;
 use App\Models\Damage;
 use App\Models\Daysheet;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\EventFileTag;
 use App\Models\FieldOption;
@@ -65,11 +65,8 @@ final class DemoSeeder extends Seeder
 
     private Randomizer $random;
 
-    /** @var array<string, Employee> Kürzel => Mitarbeiter */
+    /** @var array<string, User|Contact> Kürzel => Konto mit Positionen oder Kontakt ohne Anmeldung */
     private array $staff = [];
-
-    /** @var array<int, User> Mitarbeiter-ID => Konto */
-    private array $accounts = [];
 
     /** @var array<string, Promoter> */
     private array $promoters = [];
@@ -254,14 +251,22 @@ final class DemoSeeder extends Seeder
 
     private function people(): void
     {
-        $employees = [
-            ['AK', 'Anna', 'Koch', ['VL']], ['TM', 'Tom', 'Meyer', ['VfV', 'VL']], ['JS', 'Jana', 'Schulz', ['VL']],
-            ['OP', 'Ole', 'Peters', ['VfV', 'VL']], ['LH', 'Lena', 'Hoffmann', ['VL']], ['MA', 'Mehmet', 'Aydın', ['VL']],
-            ['SW', 'Sophie', 'Wagner', []], ['JB', 'Jonas', 'Becker', ['VL']], ['PR', 'Paula', 'Richter', []], ['DS', 'David', 'Schmitz', ['VfV']],
+        // Personen mit Konto (Positionen am Konto) – mit Zufallspasswort: Daten für Rollen, Verlauf
+        // und Extern-Bereich, anmelden kann sich damit niemand. Ohne Konto: Kontakte.
+        $roles = Role::query()->pluck('id', 'slug');
+        $accounts = [
+            ['MA', 'Mehmet', 'Aydın', ['VL'], 'admin'], ['AK', 'Anna', 'Koch', ['VL'], 'eventmanager'], ['JS', 'Jana', 'Schulz', ['VL'], 'eventmanager'],
+            ['SW', 'Sophie', 'Wagner', [], 'buchhaltung'], ['JB', 'Jonas', 'Becker', ['VL'], 'hausmeister'], ['PR', 'Paula', 'Richter', [], 'catering'],
         ];
-        foreach ($employees as [$initials, $first, $last, $positions]) {
-            $this->staff[$initials] = Employee::create(['first_name' => $first, 'last_name' => $last, 'initials' => $initials, 'positions' => $positions,
-                'email' => Str::lower(Str::ascii($first . '.' . $last)) . '@' . self::DOMAIN]);
+        foreach ($accounts as [$initials, $first, $last, $positions, $role]) {
+            $user = User::create(['first_name' => $first, 'last_name' => $last, 'initials' => $initials, 'email' => Str::lower(Str::ascii($first . '.' . $last)) . '@' . self::DOMAIN,
+                'password' => Str::random(40), 'account_type' => AccountType::VenueEmployee, 'positions' => $positions ?: null, 'is_active' => true]);
+            $user->roles()->attach($roles[$role]);
+            $this->staff[$initials] = $user;
+        }
+        foreach ([['TM', 'Tom Meyer', ['VfV', 'VL']], ['OP', 'Ole Peters', ['VfV', 'VL']], ['LH', 'Lena Hoffmann', ['VL']]] as [$initials, $name, $positions]) {
+            $this->staff[$initials] = Contact::create(['name' => $name, 'initials' => $initials, 'positions' => $positions,
+                'email' => Str::lower(Str::ascii(str_replace(' ', '.', $name))) . '@' . self::DOMAIN]);
         }
 
         $trades = [
@@ -280,24 +285,13 @@ final class DemoSeeder extends Seeder
             $this->trades[$short] = Trade::create(['short_name' => $short, 'name' => $name, 'categories' => $categories, 'email' => $email, 'city' => 'Hafenstadt']);
         }
 
-        // Konten mit Zufallspasswort: Daten für Rollen, Verlauf und Extern-Bereich, anmelden kann sich damit niemand
-        $roles = Role::query()->pluck('id', 'slug');
-        $accounts = [
-            ['MA', 'admin'], ['AK', 'eventmanager'], ['JS', 'eventmanager'], ['SW', 'buchhaltung'], ['JB', 'hausmeister'], ['PR', 'catering'],
-        ];
-        foreach ($accounts as [$initials, $role]) {
-            $employee = $this->staff[$initials];
-            $user = User::create(['first_name' => $employee->first_name, 'last_name' => $employee->last_name, 'email' => $employee->email,
-                'password' => Str::random(40), 'account_type' => AccountType::VenueEmployee, 'employee_id' => $employee->id, 'is_active' => true]);
-            $user->roles()->attach($roles[$role]);
-            $this->accounts[$employee->id] = $user;
-        }
         $trade = User::create(['first_name' => 'Max', 'last_name' => 'Brenner', 'email' => 'max.brenner@lichtwerk.example', 'password' => Str::random(40),
             'account_type' => AccountType::TradeAccount, 'trade_id' => $this->trades['LW']->id, 'is_active' => true]);
         $trade->roles()->attach($roles['extern']);
-        $freelancer = User::create(['first_name' => 'David', 'last_name' => 'Schmitz', 'email' => 'david.schmitz@freelance.example', 'password' => Str::random(40),
-            'account_type' => AccountType::Freelancer, 'employee_id' => $this->staff['DS']->id, 'is_active' => true]);
+        $freelancer = User::create(['first_name' => 'David', 'last_name' => 'Schmitz', 'initials' => 'DS', 'email' => 'david.schmitz@freelance.example', 'password' => Str::random(40),
+            'account_type' => AccountType::Freelancer, 'positions' => ['VfV'], 'is_active' => true]);
         $freelancer->roles()->attach($roles['extern']);
+        $this->staff['DS'] = $freelancer;
     }
 
     private function promoters(): void
@@ -516,7 +510,7 @@ final class DemoSeeder extends Seeder
             'closed' => $past && $offset < -7,
         ]);
 
-        $event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $lead->id]);
+        $event->assignments()->create(['role' => AssignmentRole::ProjectLead, ...$this->assignee($lead)]);
         $this->finance($event, $fill, $past, $mark, $offset);
         if ($fill >= 1) {
             $event->pr()->create(['pr_status' => $tentative ? 'n.b.' : '✓', 'pr_date' => $tentative ? null : $start->copy()->subDays(120)]);
@@ -592,14 +586,14 @@ final class DemoSeeder extends Seeder
         $early = $this->staff[$this->random->pickArrayKeys(['TM' => 1, 'OP' => 1, 'LH' => 1], 1)[0]];
         $late = $this->staff[$this->random->pickArrayKeys(['JB' => 1, 'OP' => 1, 'LH' => 1], 1)[0]];
         foreach ([
-            [AssignmentRole::Unlock, 'employee', $early->id, '07:30', null],
-            [AssignmentRole::HouseRepEarly, 'employee', $early->id, '08:00', '16:00'],
-            [AssignmentRole::HouseRepLate, 'employee', $late->id, '16:00', $sport ? '22:30' : '01:00'],
-            [AssignmentRole::Lock, 'employee', $late->id, null, $sport ? '23:00' : '01:30'],
-            [AssignmentRole::SafetyEarly, 'employee', $this->staff['TM']->id, '08:00', '16:00'],
-            [AssignmentRole::SafetyLate, 'trade', $this->trades['SDH']->id, '16:00', '00:30'],
-        ] as [$role, $type, $id, $from, $until]) {
-            $event->assignments()->create(['role' => $role, 'assignee_type' => $type, 'assignee_id' => $id, 'starts_at' => $from, 'ends_at' => $until]);
+            [AssignmentRole::Unlock, $this->assignee($early), '07:30', null],
+            [AssignmentRole::HouseRepEarly, $this->assignee($early), '08:00', '16:00'],
+            [AssignmentRole::HouseRepLate, $this->assignee($late), '16:00', $sport ? '22:30' : '01:00'],
+            [AssignmentRole::Lock, $this->assignee($late), null, $sport ? '23:00' : '01:30'],
+            [AssignmentRole::SafetyEarly, $this->assignee($this->staff['TM']), '08:00', '16:00'],
+            [AssignmentRole::SafetyLate, ['assignee_type' => 'trade', 'assignee_id' => $this->trades['SDH']->id], '16:00', '00:30'],
+        ] as [$role, $assignee, $from, $until]) {
+            $event->assignments()->create(['role' => $role, ...$assignee, 'starts_at' => $from, 'ends_at' => $until]);
         }
 
         $services = [
@@ -639,7 +633,7 @@ final class DemoSeeder extends Seeder
         }
     }
 
-    private function costing(Event $event, Employee $lead, bool $sent, Carbon $start): void
+    private function costing(Event $event, User $lead, bool $sent, Carbon $start): void
     {
         $costing = Costing::createFor($event, $this->lists[$event->event_type1 === 'Sport' ? 'sport' : 'konzert']);
         foreach ($costing->items as $item) {
@@ -660,7 +654,7 @@ final class DemoSeeder extends Seeder
         }
     }
 
-    private function execution(Event $event, Carbon $start, Employee $lead, bool $sport, string $mark): void
+    private function execution(Event $event, Carbon $start, User $lead, bool $sport, string $mark): void
     {
         $consumption = $this->random->getInt($sport ? 900 : 2400, $sport ? 1600 : 5200);
         $event->operation()->create([
@@ -684,7 +678,7 @@ final class DemoSeeder extends Seeder
             'remarks' => $mark === 'damage' ? 'Schaden aufgenommen, siehe Schäden.' : null]), $lead);
 
         $protocol = $this->stamp($event->handoverProtocols()->create(['handed_to' => $sport ? 'Kai Neumann (HL)' : 'Max Brenner (Lichtwerk)', 'handed_at' => $start->copy()->setTime(9, 0),
-            'signature' => $this->signature(3), 'status' => 'returned', 'returned_at' => $end, 'returned_by' => $this->accounts[$lead->id]?->id]), $lead);
+            'signature' => $this->signature(3), 'status' => 'returned', 'returned_at' => $end, 'returned_by' => $lead->id]), $lead);
         foreach (array_slice($this->inventory, 0, 5) as $index => $item) {
             $protocol->items()->create(['inventory_item_id' => $item->id, 'category_id' => $item->category_id, 'category_name' => $item->category?->name,
                 'item_name' => $item->name, 'sort_order' => $index + 1]);
@@ -834,11 +828,17 @@ final class DemoSeeder extends Seeder
      * @param  T  $model
      * @return T
      */
-    private function stamp(Model $model, Employee $by): Model
+    private function stamp(Model $model, User $by): Model
     {
-        $model->forceFill(['created_by' => $this->accounts[$by->id]?->id, 'created_by_name' => $by->first_name . ' ' . $by->last_name])->saveQuietly();
+        $model->forceFill(['created_by' => $by->id, 'created_by_name' => $by->getFilamentName()])->saveQuietly();
 
         return $model;
+    }
+
+    /** @return array{assignee_type: string, assignee_id: int} Konto oder Kontakt fürs Personal */
+    private function assignee(User|Contact $person): array
+    {
+        return ['assignee_type' => $person instanceof User ? 'user' : 'contact', 'assignee_id' => (int) $person->id];
     }
 
     /** Unterschrift als PNG (data:-URL wie SignaturePad): eine Schwungkurve, je Nummer etwas anders */

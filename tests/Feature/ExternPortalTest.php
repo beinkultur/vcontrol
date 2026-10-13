@@ -7,7 +7,6 @@ use App\Enums\AssignmentRole;
 use App\Enums\ServiceCode;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\ExternEvents\Pages\ListExternEvents;
-use App\Models\Employee;
 use App\Models\Event;
 use App\Models\EventFile;
 use App\Models\EventFileTag;
@@ -155,7 +154,7 @@ class ExternPortalTest extends TestCase
             ->assertFormFieldExists('service_vt_trade');
     }
 
-    public function test_beteiligung_ueber_gewerk_und_mitarbeiter(): void
+    public function test_beteiligung_ueber_gewerk_und_eigenes_personal(): void
     {
         $trade = Trade::create(['name' => 'Licht & Ton GmbH', 'email' => 'licht@example.org']);
         $gewerk = $this->userWith($this->role('extern_gewerk', ['events_extern' => 'read']));
@@ -165,17 +164,17 @@ class ExternPortalTest extends TestCase
         $this->assertTrue(Involvement::involves($gewerk->fresh(), $this->other));
         $this->assertFalse(Involvement::involves($gewerk->fresh(), $this->mine));
 
-        $employee = Employee::create(['first_name' => 'Kai', 'last_name' => 'Hausmeister']);
+        // Personen-Konten stehen selbst im Personal (seit 14.10.2026 ohne Mitarbeiter-Stammsatz)
         $mitarbeiter = $this->userWith($this->role('extern_ma', ['events_extern' => 'read']));
-        $mitarbeiter->update(['account_type' => AccountType::VenueEmployee, 'employee_id' => $employee->id]);
-        $this->mine->assignments()->create(['role' => AssignmentRole::Lock, 'assignee_type' => 'employee', 'assignee_id' => $employee->id]);
+        $mitarbeiter->update(['account_type' => AccountType::VenueEmployee, 'positions' => ['VL']]);
+        $this->mine->assignments()->create(['role' => AssignmentRole::Lock, 'assignee_type' => 'user', 'assignee_id' => $mitarbeiter->id]);
 
         $this->assertTrue(Involvement::involves($mitarbeiter->fresh(), $this->mine));
         $this->assertFalse(Involvement::involves($mitarbeiter->fresh(), $this->other));
 
-        // Ein Gewerk-Konto zählt nicht über einen Mitarbeiter, ein Mitarbeiter-Konto nicht über ein Gewerk
-        $gewerk->update(['employee_id' => $employee->id]);
-        $this->assertFalse(Involvement::involves($gewerk->fresh(), $this->mine));
+        // Ein Mitarbeiter-Konto zählt nicht über ein Gewerk
+        $mitarbeiter->update(['trade_id' => $trade->id]);
+        $this->assertFalse(Involvement::involves($mitarbeiter->fresh(), $this->other));
     }
 
     public function test_intern_sieht_die_ansicht_extern_aber_nicht_die_liste(): void

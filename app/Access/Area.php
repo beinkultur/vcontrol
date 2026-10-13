@@ -28,6 +28,7 @@ enum Area: string
     case AdminStammdaten = 'admin_stammdaten';
     case AdminInventar = 'admin_inventar';
     case AdminGewerke = 'admin_gewerke';
+    // Schlüssel aus der PHP-Version; seit 14.10.2026 die Kontakte (statt der Mitarbeiter)
     case AdminMitarbeiter = 'admin_mitarbeiter';
     case AdminFeldoptionen = 'admin_feldoptionen';
     case AdminRaeume = 'admin_raeume';
@@ -56,7 +57,7 @@ enum Area: string
             self::AdminStammdaten => 'Stammdaten',
             self::AdminInventar => 'Inventar',
             self::AdminGewerke => 'Gewerke',
-            self::AdminMitarbeiter => 'Mitarbeiter',
+            self::AdminMitarbeiter => 'Kontakte',
             self::AdminFeldoptionen => 'Event-Feldoptionen',
             self::AdminRaeume => 'Räume',
             self::AdminKalender => 'Kalender (Verwaltung)',

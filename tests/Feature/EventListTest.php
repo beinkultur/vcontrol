@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\AssignmentRole;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\ListEvents;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Promoter;
 use App\Support\EventDisplay;
@@ -80,8 +80,8 @@ class EventListTest extends TestCase
 
     public function test_spalten_wie_in_der_php_version(): void
     {
-        $anna = Employee::create(['first_name' => 'Anna', 'last_name' => 'Leitung', 'initials' => 'AL']);
-        $this->kommend->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $anna->id]);
+        $anna = Contact::create(['name' => 'Anna Leitung', 'initials' => 'AL']);
+        $this->kommend->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'contact', 'assignee_id' => $anna->id]);
         $this->kommend->update(['seating' => ['bestuhlt'], 'event_type1' => 'Konzert', 'event_type2' => 'Pop / Rock']);
         $fraglich = Event::create(['title' => 'Vielleicht', 'status' => 'fraglich', 'starts_at' => now()->addDays(10)]);
 

@@ -36,10 +36,10 @@ class UsersTable
                     ->label('Kontotyp')
                     ->visibleFrom('md'),
                 TextColumn::make('link')
-                    ->label('Verknüpft mit')
+                    ->label('Positionen / Gewerk')
                     ->state(fn (User $record): ?string => match (true) {
-                        $record->linkedEmployeeId() !== null => $record->employee?->fullName(),
                         $record->linkedTradeId() !== null => $record->trade?->displayName(),
+                        $record->positionList() !== [] => implode(', ', $record->positionList()),
                         default => null,
                     })
                     ->placeholder('–')
@@ -57,7 +57,7 @@ class UsersTable
                     ->sortable()
                     ->toggleable(),
             ])
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['employee', 'trade']))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('trade'))
             ->defaultSort('last_name')
             ->filters([
                 TernaryFilter::make('is_active')

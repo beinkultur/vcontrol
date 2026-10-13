@@ -32,7 +32,8 @@ class CheckAccess extends Command
         'GET /users' => '/benutzer',
         'GET /admin/rollen' => '/rollen',
         'GET /admin/gewerke' => '/gewerke',
-        'GET /admin/mitarbeiter' => '/mitarbeiter',
+        // Kontakte ersetzen seit 14.10.2026 die Mitarbeiter, gleicher Bereich
+        'GET /admin/mitarbeiter' => '/kontakte',
         'GET /admin/raeume' => '/raeume',
         'GET /admin/feldoptionen' => '/feldoptionen',
         'GET /admin/inventar' => '/inventar',

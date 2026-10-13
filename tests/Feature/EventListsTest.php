@@ -6,7 +6,7 @@ use App\Enums\AssignmentRole;
 use App\Enums\Responsible;
 use App\Enums\ServiceCode;
 use App\Filament\Resources\Events\Pages\ViewEvent;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Room;
 use App\Models\Trade;
@@ -31,11 +31,11 @@ class EventListsTest extends TestCase
         $this->event->rooms()->attach($this->lounge->id, ['usage_type' => 'backstage']);
     }
 
-    public function test_rollen_an_mitarbeiter_gewerk_und_benutzer(): void
+    public function test_rollen_an_kontakt_gewerk_und_benutzer(): void
     {
-        $employee = Employee::create(['first_name' => 'Anna', 'last_name' => 'Leitung']);
+        $contact = Contact::create(['name' => 'Anna Leitung']);
         $trade = Trade::create(['name' => 'Sicherheitsdienst GmbH', 'short_name' => 'SiDi']);
-        $this->event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $employee->id]);
+        $this->event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'contact', 'assignee_id' => $contact->id]);
         $this->event->assignments()->create(['role' => AssignmentRole::SafetyEarly, 'assignee_type' => 'trade', 'assignee_id' => $trade->id]);
 
         $names = $this->event->assignments()->get()->mapWithKeys(fn ($a) => [$a->role->value => $a->assigneeName()]);
@@ -58,8 +58,8 @@ class EventListsTest extends TestCase
 
     public function test_detailansicht_zeigt_rollen_raeume_und_leistungen(): void
     {
-        $employee = Employee::create(['first_name' => 'Anna', 'last_name' => 'Leitung']);
-        $this->event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $employee->id]);
+        $contact = Contact::create(['name' => 'Anna Leitung']);
+        $this->event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'contact', 'assignee_id' => $contact->id]);
         $this->event->services()->create(['service' => ServiceCode::Security, 'responsible' => Responsible::Promoter]);
 
         $this->actingAs($this->admin());
@@ -71,7 +71,7 @@ class EventListsTest extends TestCase
         Filament::setCurrentPanel(Filament::getPanel('app'));
         Livewire::test(ViewEvent::class, ['record' => $this->event->getRouteKey()])
             ->assertSchemaStateSet([
-                'role_pl' => 'employee:' . $employee->id,
+                'role_pl' => 'contact:' . $contact->id,
                 'service_security_responsible' => Responsible::Promoter,
                 'room_' . $this->lounge->id => 'backstage',
             ]);

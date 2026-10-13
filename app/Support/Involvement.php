@@ -10,10 +10,9 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * An welchen Events ein Konto beteiligt ist – wie UserInvolvement der
  * PHP-Version. Grundlage für den Extern-Bereich:
- * - jedes Konto, das selbst im Personal eines Events steht;
- * - Personen-Konten (Mitarbeiter der Venue, Freelancer) über den verknüpften
- *   Mitarbeiter im Personal – die PHP-Version kannte das nur für Mitarbeiter der
- *   Venue;
+ * - jedes Konto, das selbst im Personal eines Events steht (Personen tragen
+ *   seit 14.10.2026 ihre Positionen selbst, die Mitarbeiter der Stammdaten sind
+ *   entfallen);
  * - Gewerke-Konten über das verknüpfte Gewerk im Personal oder in den Gewerken
  *   (Leistungen) des Events.
  */
@@ -33,10 +32,6 @@ final class Involvement
 
         return $query->where(function (Builder $query) use ($user, $assigned): void {
             $query->whereHas('assignments', $assigned('user', (int) $user->getKey()));
-
-            if (($employeeId = $user->linkedEmployeeId()) !== null) {
-                $query->orWhereHas('assignments', $assigned('employee', $employeeId));
-            }
 
             if (($tradeId = $user->linkedTradeId()) !== null) {
                 $query->orWhereHas('assignments', $assigned('trade', $tradeId))

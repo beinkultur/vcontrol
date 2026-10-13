@@ -3,24 +3,31 @@
 namespace App\Filament\Support;
 
 use App\Enums\AssignmentRole;
-use App\Models\Employee;
+use App\Filament\Resources\Contacts\ContactResource;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Trade;
 use App\Models\User;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Rollen am Event als Auswahlfelder. Wert ist „typ:id“ – typ wie in der
- * Morph-Map (employee, trade, user). Gespeichert wird über
+ * Morph-Map (user, contact, trade). Gespeichert wird über
  * saveRelationshipsUsing, also erst nachdem das Event selbst gespeichert ist.
+ * Wer Kontakte anlegen darf, legt einen neuen direkt im Feld an.
  */
 final class AssignmentFields
 {
-    private const TYPES = ['employee', 'trade', 'user'];
+    private const TYPES = ['user', 'contact', 'trade'];
+
+    private const GROUPS = ['user' => 'Benutzer', 'contact' => 'Kontakte', 'trade' => 'Gewerke'];
 
     /**
      * Je Rolle eine Zeile: wer, von, bis.
@@ -59,6 +66,14 @@ final class AssignmentFields
             ->label($role->getLabel())
             ->options(fn (?Event $record): array => self::options($record?->assignments->firstWhere('role', $role), $role))
             ->searchable()
+            ->createOptionForm(Gate::allows('create', Contact::class) ? fn (): array => self::contactForm($role) : null)
+            ->createOptionUsing(fn (array $data): string => 'contact:' . Contact::create([
+                'name' => trim((string) preg_replace('/\s+/u', ' ', (string) $data['name'])),
+                'phone' => filled($data['phone'] ?? null) ? trim((string) $data['phone']) : null,
+                'email' => filled($data['email'] ?? null) ? trim((string) $data['email']) : null,
+                'positions' => array_values((array) ($data['positions'] ?? [])),
+            ])->id)
+            ->createOptionModalHeading('Neuer Kontakt')
             ->afterStateHydrated(function (Select $component, ?Event $record) use ($role): void {
                 $assignment = $record?->assignments->firstWhere('role', $role);
                 $component->state($assignment ? $assignment->assignee_type . ':' . $assignment->assignee_id : null);
@@ -75,10 +90,12 @@ final class AssignmentFields
 
     /**
      * Gruppierte Auswahl; die aktuelle Zuordnung bleibt wählbar, auch wenn der
-     * Mitarbeiter inzwischen fehlt oder archiviert, das Gewerk archiviert oder der
-     * Benutzer inaktiv ist. System-Admins stehen nur für System-Admins zur Wahl.
-     * Je Rolle nur die Typen aus AssignmentRole::assigneeTypes(), mit
-     * Voraussetzung (qualification(), etwa VfV) nur passende Mitarbeiter
+     * Kontakt inzwischen archiviert, das Gewerk archiviert oder der Benutzer
+     * inaktiv ist. System-Admins stehen nur für System-Admins zur Wahl. Je Rolle
+     * nur die Typen aus AssignmentRole::assigneeTypes(); Benutzer nur als
+     * Personen-Konto (Mitarbeiter der Venue, Freelancer) – außer bei der
+     * Projektleitung, die jedes Konto übernehmen kann. Mit Voraussetzung
+     * (qualification(), etwa VfV oder VL) nur passende Benutzer und Kontakte
      * (Position) und Gewerke (Leistungsbereich).
      *
      * @return array<string, array<string, string>>
@@ -91,22 +108,51 @@ final class AssignmentFields
         $qualifies = fn (mixed $values): bool => $qualification === null
             || collect((array) $values)->contains(fn (mixed $value): bool => mb_strtolower(trim((string) $value)) === mb_strtolower($qualification));
         $options = [
-            'Mitarbeiter' => !in_array('employee', $types, true) ? [] : Employee::query()->where('is_archived', false)->orderBy('last_name')->get()
-                ->filter(fn (Employee $e): bool => $qualifies($e->positions))
-                ->mapWithKeys(fn (Employee $e): array => ['employee:' . $e->id => $e->fullName()])->all(),
+            'Benutzer' => !in_array('user', $types, true) ? [] : User::query()->where('is_active', true)->visibleTo($viewer instanceof User ? $viewer : null)
+                ->orderBy('last_name')->orderBy('first_name')->get()
+                ->filter(fn (User $u): bool => $role === AssignmentRole::ProjectLead || (($u->account_type?->hasPositions() ?? false) && $qualifies($u->positionList())))
+                ->mapWithKeys(fn (User $u): array => ['user:' . $u->id => $u->getFilamentName()])->all(),
+            'Kontakte' => !in_array('contact', $types, true) ? [] : Contact::query()->where('is_archived', false)->orderBy('name')->get()
+                ->filter(fn (Contact $c): bool => $qualifies($c->positions))
+                ->mapWithKeys(fn (Contact $c): array => ['contact:' . $c->id => (string) $c->name])->all(),
             'Gewerke' => !in_array('trade', $types, true) ? [] : Trade::query()->where('is_archived', false)->orderBy('name')->get()
                 ->filter(fn (Trade $t): bool => $qualifies($t->categories))
                 ->mapWithKeys(fn (Trade $t): array => ['trade:' . $t->id => $t->displayName()])->all(),
-            'Benutzer' => !in_array('user', $types, true) ? [] : User::query()->where('is_active', true)->visibleTo($viewer instanceof User ? $viewer : null)->orderBy('last_name')->get()
-                ->mapWithKeys(fn (User $u): array => ['user:' . $u->id => $u->getFilamentName()])->all(),
         ];
 
         if ($current !== null) {
-            $group = ['employee' => 'Mitarbeiter', 'trade' => 'Gewerke', 'user' => 'Benutzer'][$current->assignee_type] ?? 'Mitarbeiter';
+            $group = self::GROUPS[$current->assignee_type] ?? 'Kontakte';
             $options[$group][$current->assignee_type . ':' . $current->assignee_id] ??= $current->assigneeName();
         }
 
         return array_filter($options);
+    }
+
+    /**
+     * Neuer Kontakt direkt aus dem Feld: Person oder Funktion, mit Kontaktdaten
+     * fürs Daysheet; die Position der Rolle (VL, VfV) ist vorbelegt.
+     *
+     * @return list<\Filament\Schemas\Components\Component|\Filament\Forms\Components\Field>
+     */
+    private static function contactForm(AssignmentRole $role): array
+    {
+        return [
+            TextInput::make('name')
+                ->label('Name')
+                ->helperText('Person oder Funktion, z. B. „Hallenmeister“.')
+                ->required()
+                ->maxLength(160),
+            Grid::make(2)->schema([
+                TextInput::make('phone')->label('Telefon')->tel()->maxLength(50),
+                TextInput::make('email')->label('E-Mail')->email()->maxLength(255),
+            ]),
+            CheckboxList::make('positions')
+                ->label('Positionen')
+                ->helperText($role->qualification() !== null ? 'Für ' . $role->getLabel() . ' braucht der Kontakt die Position ' . $role->qualification() . '.' : null)
+                ->options(ContactResource::positionOptions(null))
+                ->default($role->qualification() !== null ? [$role->qualification()] : [])
+                ->columns(3),
+        ];
     }
 
     private static function save(Event $event, AssignmentRole $role, ?string $state, mixed $startsAt, mixed $endsAt): void

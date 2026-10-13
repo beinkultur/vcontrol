@@ -30,7 +30,7 @@ enum OptionField: string implements HasLabel
             self::PrStatus => 'PR-Status',
             self::VaType1 => 'VA-Kategorie 1',
             self::VaType2 => 'VA-Kategorie 2',
-            self::EmployeePosition => 'Mitarbeiter-Position',
+            self::EmployeePosition => 'Position',
             self::ContractStatus => 'Vertragsstatus',
             self::AccountingStatus => 'FIBU-Status',
             self::CostUnit => 'Einheit (Preislisten)',

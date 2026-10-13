@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Filament\Resources\Employees\Pages;
+namespace App\Filament\Resources\Contacts\Pages;
 
-use App\Filament\Resources\Employees\EmployeeResource;
-use App\Models\Employee;
+use App\Filament\Resources\Contacts\ContactResource;
+use App\Models\Contact;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 
-class ManageEmployees extends ManageRecords
+class ManageContacts extends ManageRecords
 {
-    protected static string $resource = EmployeeResource::class;
+    protected static string $resource = ContactResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -22,7 +22,7 @@ class ManageEmployees extends ManageRecords
 
     public function getSubheading(): ?string
     {
-        return 'Löschen geht nur, solange kein Event und kein Benutzerkonto auf den Mitarbeiter verweist – sonst archivieren.';
+        return 'Personen und Funktionen ohne Anmeldung, z. B. „Hallenmeister“. Wer ein Konto hat, bekommt Positionen unter Verwaltung › Benutzer. Löschen geht nur, solange kein Event auf den Kontakt verweist – sonst archivieren.';
     }
 
     /** @return array<string, Tab> */
@@ -30,10 +30,10 @@ class ManageEmployees extends ManageRecords
     {
         return [
             'aktiv' => Tab::make('Aktiv')
-                ->badge(Employee::where('is_archived', false)->count())
+                ->badge(Contact::where('is_archived', false)->count())
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('is_archived', false)),
             'archiv' => Tab::make('Archiv')
-                ->badge(Employee::where('is_archived', true)->count())
+                ->badge(Contact::where('is_archived', true)->count())
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('is_archived', true)),
         ];
     }

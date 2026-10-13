@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AccountType;
+use App\Enums\AssignmentRole;
 use App\Enums\ColorScheme;
 use App\Enums\ServiceCode;
 use App\Filament\Pages\ManageVenue;
@@ -12,6 +14,7 @@ use App\Filament\Resources\Events\RelationManagers\DaysheetsRelationManager;
 use App\Mail\DamageReported;
 use App\Mail\DaysheetMail;
 use App\Models\AuditLog;
+use App\Models\Contact;
 use App\Models\Damage;
 use App\Models\Daysheet;
 use App\Models\Event;
@@ -19,6 +22,7 @@ use App\Models\EventFile;
 use App\Models\EventFileTag;
 use App\Models\Setting;
 use App\Models\Trade;
+use App\Models\User;
 use App\Support\Daysheets;
 use Filament\Facades\Filament;
 use Illuminate\Support\Carbon;
@@ -168,6 +172,22 @@ class DaysheetTest extends TestCase
 
         Mail::assertNothingSent();
         $this->assertSame(0, Daysheet::query()->count());
+    }
+
+    public function test_ansprechpartner_mit_kontaktdaten(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-06 10:00'));
+        $hallenmeister = Contact::create(['name' => 'Hallenmeister', 'phone' => '040 123 45-6', 'email' => 'halle@example.org']);
+        $lead = User::factory()->create(['first_name' => 'Anna', 'last_name' => 'Leitung', 'phone' => '0171 000 00', 'account_type' => AccountType::VenueEmployee]);
+        $this->event->assignments()->create(['role' => AssignmentRole::Unlock, 'assignee_type' => 'contact', 'assignee_id' => $hallenmeister->id, 'starts_at' => '07:30']);
+        $this->event->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'user', 'assignee_id' => $lead->id]);
+        [, $token] = $this->send();
+
+        $this->get('/daysheet/' . $token)
+            ->assertOk()
+            ->assertSeeInOrder(['Projektleitung', 'Anna Leitung', '0171 000 00', 'Aufschließen', 'Hallenmeister', 'ab 07:30', '040 123 45-6', 'halle@example.org'])
+            ->assertSee('href="tel:040123456"', false)
+            ->assertSee('href="mailto:halle@example.org"', false);
     }
 
     public function test_link_ohne_konto_bis_ablauf_oder_sperre(): void

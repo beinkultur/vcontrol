@@ -11,7 +11,6 @@ use App\Enums\ServiceCode;
 use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Models\Article;
 use App\Models\AuditLog;
-use App\Models\Employee;
 use App\Models\EventFile;
 use App\Models\EventFileTag;
 use App\Models\EventIncomingInvoice;
@@ -64,6 +63,7 @@ final class AuditPresenter
         'promoters' => 'Veranstalter',
         'promoter_contacts' => 'Ansprechpartner',
         'employees' => 'Mitarbeiter',
+        'contacts' => 'Kontakt',
         'trades' => 'Gewerk',
         'rooms' => 'Raum',
         'seating_plans' => 'Saalplan',
@@ -125,6 +125,7 @@ final class AuditPresenter
         'promoters' => [Area::Veranstalter],
         'promoter_contacts' => [Area::Veranstalter],
         'employees' => [Area::AdminMitarbeiter],
+        'contacts' => [Area::AdminMitarbeiter],
         'trades' => [Area::AdminGewerke],
         'rooms' => [Area::AdminRaeume],
         'seating_plans' => [Area::AdminStammdaten],
@@ -271,7 +272,6 @@ final class AuditPresenter
         'promoter_id' => [Promoter::class, 'name'],
         'price_list_id' => [PriceList::class, 'name'],
         'trade_id' => [Trade::class, 'name'],
-        'employee_id' => [Employee::class, ['first_name', 'last_name']],
         'user_id' => [User::class, ['first_name', 'last_name']],
         'returned_by' => [User::class, ['first_name', 'last_name']],
         'role_id' => [Role::class, 'name'],
@@ -347,7 +347,7 @@ final class AuditPresenter
             'responsible' => Responsible::tryFrom((string) $value)?->getLabel(),
             'service' => ServiceCode::tryFrom((string) $value)?->getLabel(),
             'account_type' => AccountType::tryFrom((string) $value)?->getLabel(),
-            'assignee_type' => ['employee' => 'Mitarbeiter', 'trade' => 'Gewerk', 'user' => 'Benutzer'][(string) $value] ?? null,
+            'assignee_type' => ['contact' => 'Kontakt', 'employee' => 'Mitarbeiter', 'trade' => 'Gewerk', 'user' => 'Benutzer'][(string) $value] ?? null,
             'invoice_key' => EventIncomingInvoice::SLOTS[(string) $value] ?? null,
             default => null,
         };

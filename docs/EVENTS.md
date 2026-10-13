@@ -35,7 +35,8 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `event_room` | `vc_event_rooms` | Raumbelegung mit Art (Backstage/Büro) |
 | `event_services` | `vc_event_trades` | Leistungen je Event (4.465 Zeilen): Leistungscode, Gewerk oder freier Anbieter, verantwortlich Halle/Veranstalter, Notiz |
 | `event_service_groups` | `vc_event_trade_active`, `vc_event_trade_groups` | welche Leistungsgruppen aktiv sind |
-| `event_assignments` | `vc_event_role_assignments` | Rollen am Event (VL, VfV …) an Mitarbeiter, Gewerk oder Benutzer, mit Zeiten |
+| `event_assignments` | `vc_event_role_assignments` | Rollen am Event (VL, VfV …) an Benutzer, Kontakt oder Gewerk, mit Zeiten (Kontakte statt Mitarbeiter seit 14.10.2026) |
+| `contacts` | `vc_employees` (bis 14.10.2026 `employees`) | Kontakte ohne Anmeldung: Person oder Funktion („Hallenmeister“), Kürzel, Telefon, E-Mail, Positionen, Notiz, archiviert |
 | `event_incoming_invoices` | `vc_event_incoming_invoices` | die sechs erwarteten Eingangsrechnungen |
 | `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Halle: PDF, Name, genutzte Bereiche, Bestuhlung, aktiv |
 
@@ -139,8 +140,8 @@ Bedienbar:
   belegt, fehlen), **Veranstaltungsleitung** und **Technik** (die Dienste aus dem
   Personal aller Events – Auf-/Abschließen und House Rep. bzw. VfV, „🔗 Person ·
   Rolle (Event)“, Link auf Planung › Personal – dazu eigene Einträge),
-  **Persönlich** (nur die eigenen Dienste: als Konto, über den verknüpften
-  Mitarbeiter oder das Gewerk; sieht jeder mit Kalender-Recht – ein eigener
+  **Persönlich** (nur die eigenen Dienste: als Konto selbst oder über das
+  verknüpfte Gewerk; sieht jeder mit Kalender-Recht – ein eigener
   Dienst steht nur einmal da, schräg gestreift in den Farben beider Ebenen),
   alle anderen
   Ebenen (Wartung, Towers …) eigene Einträge. Eigene Einträge
@@ -161,16 +162,25 @@ Bedienbar:
   aktive Konten, die „Persönlich“ lesen dürfen.
 - **Profil:** Standard-Ansicht des Kalenders (Monat, Woche, Tag, 4 Wochen) und die
   Abo-Adresse; das aktuelle Passwort fragt das Profil nur beim Passwortwechsel.
-- **Benutzer ↔ Mitarbeiter/Gewerk** (Verwaltung › Benutzer, 13.10.2026):
-  Personen-Konten (Kontotyp „Mitarbeiter der Venue“, vorher „… der Halle“, und
-  „Freelancer“) werden mit einem Mitarbeiter der Stammdaten verknüpft, je
-  Mitarbeiter höchstens ein Konto; die Positionen des Mitarbeiters (VL, VfV …)
-  stehen im Formular und werden beim Mitarbeiter gespeichert (nur mit Recht
-  „Mitarbeiter“ bearbeiten). Gewerk-Accounts werden mit einem Gewerk verknüpft,
-  beliebig viele je Gewerk. Die Dienste des Mitarbeiters bzw. Gewerks sind dann
-  die des Kontos: persönlicher Kalender, Abo, „Meine Events“. Die Verknüpfung
-  passt zum Kontotyp, die andere wird beim Speichern gelöst. Anders als in der
-  PHP-Version zählt die Mitarbeiter-Verknüpfung auch bei Freelancern.
+- **Personal: Benutzer, Kontakte, Gewerke** (14.10.2026, ersetzt die Mitarbeiter
+  der Stammdaten und die Verknüpfung Konto ↔ Mitarbeiter vom 13.10.2026):
+  - Personen-Konten (Kontotyp „Mitarbeiter der Venue“, vorher „… der Halle“, und
+    „Freelancer“) tragen Positionen (VL, VfV …), Kürzel und Telefon selbst
+    (Verwaltung › Benutzer) und werden direkt im Personal eingetragen.
+  - **Kontakte** (Stammdaten › Kontakte, Recht „Kontakte“ – Schlüssel
+    `admin_mitarbeiter` wie zuvor die Mitarbeiter): Personen oder Funktionen ohne
+    Anmeldung, etwa der „Hallenmeister“ fürs Aufschließen; Name, Kürzel, Telefon,
+    E-Mail, Positionen, Notiz, archivieren statt löschen, sobald benutzt. Wer
+    Kontakte bearbeiten darf, legt einen neuen auch direkt im Personal-Feld an.
+  - Gewerk-Accounts sind mit einem Gewerk verknüpft, beliebig viele je Gewerk;
+    dessen Dienste und Events sind dann die des Kontos.
+  - Übernahme (Migration `2026_10_14_100000`): Ein Mitarbeiter ging in das
+    Personen-Konto auf, mit dem er verknüpft war oder das eindeutig dieselbe
+    E-Mail-Adresse bzw. denselben Namen hatte (samt Diensten, Positionen, Kürzel,
+    Telefon); alle übrigen wurden Kontakte mit ihren Diensten. ipa: Nico Bein und
+    Tamara Beck in ihre Konten, sechs Kontakte.
+  - Daysheet und „Meine Events“ zeigen bei den Ansprechpartnern (Projektleitung,
+    Auf-/Abschließen, House Rep. früh/spät) Telefon und E-Mail.
 - **Kalender für Externe** (`/extern/kalender`, Recht „Kalender (extern)“):
   dieselben lesbaren Ebenen, nur lesen; Links nur zu Events, an denen das Konto
   beteiligt ist (dann „Meine Events“, fett mit ↗), alles andere ohne Link. Das
@@ -261,11 +271,11 @@ Bedienbar:
 - **Extern-Bereich „Meine Events“** (`/extern/events`, Recht „Events (extern)“,
   02.10.2026) für Freelancer und Gewerke mit eigenem Konto: nur Events, an
   denen das Konto beteiligt ist (`App\Support\Involvement` wie
-  UserInvolvement der PHP-Version: Konto im Personal; Personen-Konto (Mitarbeiter
-  der Venue, Freelancer) über den verknüpften Mitarbeiter; Gewerke-Konto über das
+  UserInvolvement der PHP-Version: Konto im Personal; Gewerke-Konto über das
   Gewerk im Personal oder in den
-  Gewerken). Nur lesend: Zeiten, Ansprechpartner (Projektleitung, House Rep.
-  früh/spät, Ansprechpartner vor Ort), Gewerke, Bühne mit Plan, Dateien,
+  Gewerken). Nur lesend: Zeiten, Ansprechpartner (Projektleitung,
+  Auf-/Abschließen, House Rep. früh/spät, Ansprechpartner vor Ort, mit Telefon
+  und E-Mail), Gewerke, Bühne mit Plan, Dateien,
   Notizen – nichts aus Buchhaltung, Buchung, Gästen, Betrieb
   (`App\Support\ExternSheet`). Dateien und Notizen sind sichtbar, bis jemand
   „Für Externe verbergen“ anhakt. Externe kommen ins selbe Panel und sehen nur
@@ -301,15 +311,17 @@ Freitermin-Suche, Sortierung
   Veranstalter 827; dazu 214 Notizen). Übernommen werden nur diese plus die
   Aktiv-Schalter (zusammen 1.259); eine fehlende Zeile heißt „nicht festgelegt“.
 - **Rollen** mit Uhrzeit von/bis (im Bestand 5 von 367, z. B. VfV 03:00–17:30).
-  Zur Wahl stehen je Rolle nur passende: VfV früh/spät nur Mitarbeiter mit
-  Position VfV und Gewerke mit diesem Leistungsbereich (12.10.2026), House Rep.
-  früh/spät nur Mitarbeiter mit Position VL (13.10.2026), Auf-/Abschließen jeder
-  Mitarbeiter; schon Eingetragenes bleibt wählbar.
+  Zur Wahl stehen je Rolle nur passende: VfV früh/spät nur Konten und Kontakte
+  mit Position VfV und Gewerke mit diesem Leistungsbereich (12.10.2026), House
+  Rep. früh/spät nur Konten und Kontakte mit Position VL (13.10.2026),
+  Auf-/Abschließen jede Person (Personen-Konto oder Kontakt), die
+  Projektleitung jedes Konto, jeder Kontakt und jedes Gewerk; schon
+  Eingetragenes bleibt wählbar.
   Leert man die Person, verschwindet die Rolle samt Uhrzeit.
 - **Rollen:** Die „Projektleitung“ steckt in den Rollen (`pl`, 123 Events),
   nicht im leeren Feld `pl` am Event. Rollen verweisen per Morph-Map auf
-  Mitarbeiter, Gewerk oder Benutzer (`employee`/`trade`/`user`, dieselben
-  Werte wie in der PHP-Version).
+  Benutzer, Kontakt oder Gewerk (`user`/`contact`/`trade`; die PHP-Version
+  hatte `employee` statt `contact`).
 - **Räume:** Ein Raum, den ein Event belegt, lässt sich nicht mehr löschen
   (Policy und Fremdschlüssel). Die PHP-Version löschte ihn samt Belegungen.
 - **Saalplan (neu, 12.10.2026):** Standard-Saalpläne pflegt, wer die Stammdaten

@@ -58,6 +58,16 @@
                             @if ($row['time'])
                                 <span class="vc-sheet__muted">· {{ $row['time'] }}</span>
                             @endif
+                            @if ($row['phone'] || $row['email'])
+                                <span class="vc-sheet__contact">
+                                    @if ($row['phone'])
+                                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', $row['phone']) }}">{{ $row['phone'] }}</a>
+                                    @endif
+                                    @if ($row['email'])
+                                        <a href="mailto:{{ $row['email'] }}">{{ $row['email'] }}</a>
+                                    @endif
+                                </span>
+                            @endif
                         </dd>
                     @endforeach
                 </dl>

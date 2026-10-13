@@ -3,8 +3,9 @@
 namespace App\Support;
 
 use App\Enums\AssignmentRole;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
+use App\Models\User;
 use Carbon\CarbonInterface;
 
 /** Darstellung eines Events in Liste und Workspace wie in der PHP-Version (EventList). */
@@ -85,7 +86,7 @@ final class EventDisplay
         }
         $assignee = $lead->assignee;
 
-        return $assignee instanceof Employee && filled($assignee->initials) ? $assignee->initials : $lead->assigneeName();
+        return ($assignee instanceof Contact || $assignee instanceof User) && filled($assignee->initials) ? (string) $assignee->initials : $lead->assigneeName();
     }
 
     public static function projectLeadName(Event $event): ?string

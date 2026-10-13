@@ -6,9 +6,10 @@ use Filament\Support\Contracts\HasLabel;
 
 /**
  * In welcher Beziehung ein Benutzer zur Venue steht. Personen-Konten
- * (Mitarbeiter der Venue, Freelancer) lassen sich mit einem Mitarbeiter der
- * Stammdaten verknüpfen, Gewerk-Accounts mit einem Gewerk – dessen Dienste und
- * Events gelten dann als die eigenen (persönlicher Kalender, „Meine Events“).
+ * (Mitarbeiter der Venue, Freelancer) tragen Positionen (VL, VfV …) und werden
+ * selbst im Personal der Events eingetragen; Gewerk-Accounts sind mit einem
+ * Gewerk verknüpft – dessen Dienste und Events gelten dann als die eigenen
+ * (persönlicher Kalender, „Meine Events“).
  */
 enum AccountType: string implements HasLabel
 {
@@ -25,8 +26,8 @@ enum AccountType: string implements HasLabel
         };
     }
 
-    /** Verknüpfung mit einem Mitarbeiter der Stammdaten (users.employee_id) */
-    public function linksEmployee(): bool
+    /** Person mit Positionen, im Personal der Events wählbar (seit 14.10.2026 statt der Mitarbeiter der Stammdaten) */
+    public function hasPositions(): bool
     {
         return $this === self::VenueEmployee || $this === self::Freelancer;
     }

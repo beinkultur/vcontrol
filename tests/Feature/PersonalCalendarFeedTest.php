@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\AccountType;
 use App\Enums\AssignmentRole;
-use App\Models\Employee;
+use App\Models\Contact;
 use App\Models\Event;
 use App\Models\Trade;
 use App\Models\User;
@@ -15,7 +15,7 @@ use Tests\TestCase;
 /** Persönlicher Kalender als ICS-Feed (/kalender/persoenlich.ics): die eigenen Dienste, Schlüssel je Konto. */
 class PersonalCalendarFeedTest extends TestCase
 {
-    private Employee $anna;
+    private User $anna;
 
     private Trade $trade;
 
@@ -26,28 +26,28 @@ class PersonalCalendarFeedTest extends TestCase
         parent::setUp();
         $this->travelTo(Carbon::parse('2026-10-14 10:00'));
 
-        $this->anna = Employee::create(['first_name' => 'Anna', 'last_name' => 'Koch', 'initials' => 'AK']);
-        $tom = Employee::create(['first_name' => 'Tom', 'last_name' => 'Meyer', 'initials' => 'TM']);
+        $this->anna = $this->account(AccountType::VenueEmployee);
+        $tom = Contact::create(['name' => 'Tom Meyer', 'positions' => ['VL']]);
         $this->trade = Trade::create(['name' => 'Lichtwerk']);
 
         $this->concert = Event::create(['title' => 'Rock im Herbst', 'status' => 'bestätigt', 'starts_at' => '2026-10-24 20:00:00']);
-        $this->concert->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'employee', 'assignee_id' => $this->anna->id, 'starts_at' => '08:00', 'ends_at' => '16:00']);
-        $this->concert->assignments()->create(['role' => AssignmentRole::Unlock, 'assignee_type' => 'employee', 'assignee_id' => $this->anna->id]);
-        $this->concert->assignments()->create(['role' => AssignmentRole::HouseRepLate, 'assignee_type' => 'employee', 'assignee_id' => $tom->id, 'starts_at' => '16:00', 'ends_at' => '01:00']);
+        $this->concert->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'user', 'assignee_id' => $this->anna->id, 'starts_at' => '08:00', 'ends_at' => '16:00']);
+        $this->concert->assignments()->create(['role' => AssignmentRole::Unlock, 'assignee_type' => 'user', 'assignee_id' => $this->anna->id]);
+        $this->concert->assignments()->create(['role' => AssignmentRole::HouseRepLate, 'assignee_type' => 'contact', 'assignee_id' => $tom->id, 'starts_at' => '16:00', 'ends_at' => '01:00']);
         $this->concert->assignments()->create(['role' => AssignmentRole::SafetyLate, 'assignee_type' => 'trade', 'assignee_id' => $this->trade->id, 'starts_at' => '16:00', 'ends_at' => '01:00']);
-        $this->concert->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $this->anna->id]);
+        $this->concert->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'user', 'assignee_id' => $this->anna->id]);
 
         $comedy = Event::create(['title' => 'Comedy Abend', 'status' => 'fraglich', 'starts_at' => '2026-11-03 00:00:00']);
-        $comedy->assignments()->create(['role' => AssignmentRole::HouseRepLate, 'assignee_type' => 'employee', 'assignee_id' => $this->anna->id, 'starts_at' => '17:00', 'ends_at' => '23:30']);
+        $comedy->assignments()->create(['role' => AssignmentRole::HouseRepLate, 'assignee_type' => 'user', 'assignee_id' => $this->anna->id, 'starts_at' => '17:00', 'ends_at' => '23:30']);
         // Zu lange her: nicht im Feed
         $old = Event::create(['title' => 'Altes Konzert', 'status' => 'bestätigt', 'starts_at' => '2026-05-01 00:00:00']);
-        $old->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'employee', 'assignee_id' => $this->anna->id]);
+        $old->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'user', 'assignee_id' => $this->anna->id]);
     }
 
-    private function account(AccountType $type, array $permissions = ['kalender' => 'read'], ?int $employee = null, ?int $trade = null): User
+    private function account(AccountType $type, array $permissions = ['kalender' => 'read'], ?int $trade = null): User
     {
         $user = $this->userWith($this->role('r' . $type->value . count(User::all()), $permissions));
-        $user->update(['account_type' => $type, 'employee_id' => $employee, 'trade_id' => $trade]);
+        $user->update(['account_type' => $type, 'trade_id' => $trade]);
 
         return $user->fresh();
     }
@@ -67,7 +67,7 @@ class PersonalCalendarFeedTest extends TestCase
 
     public function test_mitarbeiter_konto_sieht_seine_dienste(): void
     {
-        $user = $this->account(AccountType::VenueEmployee, employee: $this->anna->id);
+        $user = $this->anna;
         $ics = $this->feed('/kalender/persoenlich.ics?token=' . $user->personalFeedToken());
 
         // 08:00–16:00 Berliner Sommerzeit = 06:00–14:00 UTC
@@ -95,20 +95,21 @@ class PersonalCalendarFeedTest extends TestCase
         $this->assertStringContainsString('/extern/events/' . $this->concert->id, $ics);
     }
 
-    public function test_freelancer_mit_mitarbeiter_zaehlt_wie_der_mitarbeiter(): void
+    public function test_freelancer_mit_eigenem_dienst(): void
     {
-        $freelancer = $this->account(AccountType::Freelancer, ['kalender_extern' => 'read', 'events_extern' => 'read'], employee: $this->anna->id);
-        $this->assertTrue(Involvement::involves($freelancer, $this->concert));
-        $this->assertSame(3, substr_count($this->feed('/kalender/persoenlich.ics?token=' . $freelancer->personalFeedToken()), 'BEGIN:VEVENT'));
+        $freelancer = $this->account(AccountType::Freelancer, ['kalender_extern' => 'read', 'events_extern' => 'read']);
+        $this->assertFalse(Involvement::involves($freelancer, $this->concert));
+        $this->concert->assignments()->where('role', AssignmentRole::HouseRepLate->value)->update(['assignee_type' => 'user', 'assignee_id' => $freelancer->id]);
 
-        // Gewerk-Account mit alter Mitarbeiter-Verknüpfung: zählt nicht
-        $trade = $this->account(AccountType::TradeAccount, ['kalender_extern' => 'read', 'events_extern' => 'read'], employee: $this->anna->id);
-        $this->assertSame(0, substr_count($this->feed('/kalender/persoenlich.ics?token=' . $trade->personalFeedToken()), 'BEGIN:VEVENT'));
+        $this->assertTrue(Involvement::involves($freelancer, $this->concert));
+        $this->assertSame(1, substr_count($this->feed('/kalender/persoenlich.ics?token=' . $freelancer->personalFeedToken()), 'BEGIN:VEVENT'));
+        // Kontakte haben keinen Feed: Toms früherer Dienst taucht nirgends mehr auf
+        $this->assertStringNotContainsString('House Rep. spät · Rock im Herbst', $this->feed('/kalender/persoenlich.ics?token=' . $this->anna->personalFeedToken()));
     }
 
     public function test_zugriff(): void
     {
-        $user = $this->account(AccountType::VenueEmployee, employee: $this->anna->id);
+        $user = $this->anna;
         $token = $user->personalFeedToken();
 
         $this->get('/kalender/persoenlich.ics')->assertForbidden();
@@ -121,7 +122,7 @@ class PersonalCalendarFeedTest extends TestCase
         // Gesperrt oder ohne Kalender-Recht: nichts
         $user->update(['is_active' => false]);
         $this->get('/kalender/persoenlich.ics?token=' . $token)->assertForbidden();
-        $noCalendar = $this->account(AccountType::VenueEmployee, ['events' => 'read'], employee: $this->anna->id);
+        $noCalendar = $this->account(AccountType::VenueEmployee, ['events' => 'read']);
         $this->get('/kalender/persoenlich.ics?token=' . $noCalendar->personalFeedToken())->assertForbidden();
     }
 }
