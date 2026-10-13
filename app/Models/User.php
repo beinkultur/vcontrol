@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Access\Access;
 use App\Access\Area;
 use App\Enums\AccountType;
+use App\Support\Audit;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
@@ -13,12 +14,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
-#[Fillable(['first_name', 'last_name', 'email', 'password', 'account_type', 'employee_id', 'trade_id', 'is_active', 'calendar_permissions'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['first_name', 'last_name', 'email', 'password', 'account_type', 'employee_id', 'trade_id', 'is_active', 'calendar_permissions', 'calendar_view'])]
+#[Hidden(['password', 'remember_token', 'calendar_token', 'calendar_token_hash'])]
 class User extends Authenticatable implements FilamentUser, HasName
 {
     /** @use HasFactory<UserFactory> */
@@ -40,7 +43,67 @@ class User extends Authenticatable implements FilamentUser, HasName
             'last_login_at' => 'datetime',
             'account_type' => AccountType::class,
             'calendar_permissions' => 'array',
+            'calendar_token' => 'encrypted',
         ];
+    }
+
+    /**
+     * Mitarbeiter der Stammdaten, als der dieses Konto gilt (nur Personen-Konten,
+     * AccountType::linksEmployee).
+     *
+     * @return BelongsTo<Employee, $this>
+     */
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    /** @return BelongsTo<Trade, $this> */
+    public function trade(): BelongsTo
+    {
+        return $this->belongsTo(Trade::class);
+    }
+
+    /** Verknüpfter Mitarbeiter, sofern der Kontotyp ihn vorsieht – sonst zählt die Verknüpfung nicht */
+    public function linkedEmployeeId(): ?int
+    {
+        return ($this->account_type?->linksEmployee() ?? false) && $this->employee_id !== null ? (int) $this->employee_id : null;
+    }
+
+    /** Verknüpftes Gewerk, sofern der Kontotyp es vorsieht (Gewerk-Account) */
+    public function linkedTradeId(): ?int
+    {
+        return ($this->account_type?->linksTrade() ?? false) && $this->trade_id !== null ? (int) $this->trade_id : null;
+    }
+
+    /**
+     * Schlüssel des persönlichen ICS-Feeds (/kalender/persoenlich.ics). Beim
+     * ersten Abruf angelegt, ohne Eintrag im Änderungsprotokoll.
+     */
+    public function personalFeedToken(): string
+    {
+        $token = (string) $this->calendar_token;
+
+        return $token !== '' ? $token : Audit::quietly(fn (): string => $this->renewPersonalFeedToken());
+    }
+
+    /** Neuer Schlüssel – die bisherige Adresse gilt danach nicht mehr. */
+    public function renewPersonalFeedToken(): string
+    {
+        $token = Str::random(40);
+        $this->forceFill(['calendar_token' => $token, 'calendar_token_hash' => hash('sha256', $token)])->save();
+
+        return $token;
+    }
+
+    /** Konto zu einem Feed-Schlüssel; gesucht wird über den Hash, der Schlüssel selbst liegt verschlüsselt */
+    public static function forFeedToken(mixed $token): ?self
+    {
+        if (!is_string($token) || strlen($token) < 20) {
+            return null;
+        }
+
+        return self::query()->where('calendar_token_hash', hash('sha256', $token))->first();
     }
 
     /** @return BelongsToMany<Role, $this> */

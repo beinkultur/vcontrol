@@ -199,7 +199,8 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   Konten mit mehr Rechten ändert nur, wer diese Rechte hat (UserPolicy), und beim
   Speichern prüft `AccountSafety` die neuen Rollen und Kalender-Rechte.
 - Passwort ändert jeder selbst unter Profil (`App\Filament\Pages\Auth\EditProfile`,
-  nur das Passwort); „Angemeldet bleiben“ gilt 30 Tage (`config/auth.php`).
+  dazu Standard-Ansicht und Abo-Adresse des Kalenders); „Angemeldet bleiben“
+  gilt 30 Tage (`config/auth.php`).
   „Passwort vergessen?“ schickt einen Link per Mail, 10 Minuten gültig
   (`config/auth.php`). Die eigene Anfrageseite
   `App\Filament\Pages\Auth\RequestPasswordReset` antwortet auf jede Adresse

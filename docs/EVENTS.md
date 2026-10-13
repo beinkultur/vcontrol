@@ -129,7 +129,10 @@ Bedienbar:
 - **Kalender** (`/kalender`, Recht „Kalender“, 13.10.2026) wie in der
   PHP-Version: Monat, Woche, Tag, 4 Wochen; die Ebenen aus Verwaltung ›
   Kalender als Chips in ihrer Farbe zum Ein- und Ausblenden, Auswahl in der
-  Adresse (`?view=month&date=2026-11-01&cal[]=events`). Inhalt je Ebene
+  Adresse (`?view=month&date=2026-11-01&cal[]=events`); ohne Angabe die
+  Standard-Ansicht aus dem Profil. Reihenfolge der Ebenen überall: Events,
+  Anfragen, Persönlich, danach alphabetisch (Vorgabe vom 13.10.2026, das
+  Sortieren von Hand unter Verwaltung › Kalender entfällt). Inhalt je Ebene
   (`App\Support\CalendarItems`): **Events** (alle; fragliche blass, stornierte
   durchgestrichen – in der PHP-Version ohne Kennzeichnung), **Anfragen** (offene,
   je Wunschtermin mit Rang „1️⃣ Titel (1. Opt.)“; Tage, die ein bestätigtes Event
@@ -137,7 +140,9 @@ Bedienbar:
   Personal aller Events – Auf-/Abschließen und House Rep. bzw. VfV, „🔗 Person ·
   Rolle (Event)“, Link auf Planung › Personal – dazu eigene Einträge),
   **Persönlich** (nur die eigenen Dienste: als Konto, über den verknüpften
-  Mitarbeiter oder das Gewerk; sieht jeder mit Kalender-Recht), alle anderen
+  Mitarbeiter oder das Gewerk; sieht jeder mit Kalender-Recht – ein eigener
+  Dienst steht nur einmal da, schräg gestreift in den Farben beider Ebenen),
+  alle anderen
   Ebenen (Wartung, Towers …) eigene Einträge. Eigene Einträge
   (`CalendarEntry`, ganztägig oder mit Uhrzeit, Ende einschließlich) legt an,
   ändert und löscht, wer die Ebene bearbeiten darf (`CalendarEntryPolicy`); auf
@@ -147,6 +152,25 @@ Bedienbar:
   Rest steht als „+n weitere“ da und führt zum Tag. Zeitraster 6–22 Uhr, länger,
   wenn ein Eintrag früher beginnt oder später endet. Am Handy eine Liste der
   Tage. Die Freitermin-Suche (`/anfragen/freitermin`) fehlt noch.
+- **Persönlicher Kalender als Abo** (`/kalender/persoenlich.ics`, 13.10.2026,
+  neu gegenüber der PHP-Version): die eigenen Dienste mit Uhrzeit (UTC), ohne
+  Uhrzeit ganztägig, 90 Tage zurück bis 18 Monate voraus, fragliche Events
+  vorläufig, stornierte abgesagt. Schlüssel je Konto, Adresse im Profil („Neue
+  Adresse“ macht die alte ungültig); gespeichert verschlüsselt, gesucht über den
+  SHA-256-Hash, im Audit maskiert. Angemeldet geht es auch ohne Schlüssel; nur
+  aktive Konten, die „Persönlich“ lesen dürfen.
+- **Profil:** Standard-Ansicht des Kalenders (Monat, Woche, Tag, 4 Wochen) und die
+  Abo-Adresse; das aktuelle Passwort fragt das Profil nur beim Passwortwechsel.
+- **Benutzer ↔ Mitarbeiter/Gewerk** (Verwaltung › Benutzer, 13.10.2026):
+  Personen-Konten (Kontotyp „Mitarbeiter der Venue“, vorher „… der Halle“, und
+  „Freelancer“) werden mit einem Mitarbeiter der Stammdaten verknüpft, je
+  Mitarbeiter höchstens ein Konto; die Positionen des Mitarbeiters (VL, VfV …)
+  stehen im Formular und werden beim Mitarbeiter gespeichert (nur mit Recht
+  „Mitarbeiter“ bearbeiten). Gewerk-Accounts werden mit einem Gewerk verknüpft,
+  beliebig viele je Gewerk. Die Dienste des Mitarbeiters bzw. Gewerks sind dann
+  die des Kontos: persönlicher Kalender, Abo, „Meine Events“. Die Verknüpfung
+  passt zum Kontotyp, die andere wird beim Speichern gelöst. Anders als in der
+  PHP-Version zählt die Mitarbeiter-Verknüpfung auch bei Freelancern.
 - **Kalender für Externe** (`/extern/kalender`, Recht „Kalender (extern)“):
   dieselben lesbaren Ebenen, nur lesen; Links nur zu Events, an denen das Konto
   beteiligt ist (dann „Meine Events“, fett mit ↗), alles andere ohne Link. Das
@@ -237,8 +261,9 @@ Bedienbar:
 - **Extern-Bereich „Meine Events“** (`/extern/events`, Recht „Events (extern)“,
   02.10.2026) für Freelancer und Gewerke mit eigenem Konto: nur Events, an
   denen das Konto beteiligt ist (`App\Support\Involvement` wie
-  UserInvolvement der PHP-Version: Konto im Personal; Mitarbeiter-Konto über den
-  verknüpften Mitarbeiter; Gewerke-Konto über das Gewerk im Personal oder in den
+  UserInvolvement der PHP-Version: Konto im Personal; Personen-Konto (Mitarbeiter
+  der Venue, Freelancer) über den verknüpften Mitarbeiter; Gewerke-Konto über das
+  Gewerk im Personal oder in den
   Gewerken). Nur lesend: Zeiten, Ansprechpartner (Projektleitung, House Rep.
   früh/spät, Ansprechpartner vor Ort), Gewerke, Bühne mit Plan, Dateien,
   Notizen – nichts aus Buchhaltung, Buchung, Gästen, Betrieb

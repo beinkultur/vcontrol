@@ -1642,6 +1642,32 @@ button.vc-cal__row:hover {
     color: #fff;
 }
 
+/* Eigener Dienst auf zwei Ebenen (z. B. Veranstaltungsleitung und Persönlich):
+   schräg gestreift in beiden Farben, der Streifen links in der ersten */
+.vc-cal .is-shared {
+    background: repeating-linear-gradient(135deg,
+        color-mix(in srgb, var(--vc-cal-color) 22%, white) 0 0.45rem,
+        color-mix(in srgb, var(--vc-cal-color-2) 22%, white) 0.45rem 0.9rem);
+}
+
+.vc-cal a.is-shared:hover {
+    background: repeating-linear-gradient(135deg,
+        color-mix(in srgb, var(--vc-cal-color) 34%, white) 0 0.45rem,
+        color-mix(in srgb, var(--vc-cal-color-2) 34%, white) 0.45rem 0.9rem);
+}
+
+.dark .vc-cal .is-shared {
+    background: repeating-linear-gradient(135deg,
+        color-mix(in srgb, var(--vc-cal-color) 30%, var(--gray-900)) 0 0.45rem,
+        color-mix(in srgb, var(--vc-cal-color-2) 30%, var(--gray-900)) 0.45rem 0.9rem);
+}
+
+.dark .vc-cal a.is-shared:hover {
+    background: repeating-linear-gradient(135deg,
+        color-mix(in srgb, var(--vc-cal-color) 44%, var(--gray-900)) 0 0.45rem,
+        color-mix(in srgb, var(--vc-cal-color-2) 44%, var(--gray-900)) 0.45rem 0.9rem);
+}
+
 /* Status der Events: fraglich blass, storniert durchgestrichen */
 .vc-cal .is-fraglich {
     opacity: 0.55;

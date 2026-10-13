@@ -61,9 +61,17 @@ class Calendar extends Model
         return in_array($this->key, self::LOCKED, true);
     }
 
-    /** @param Builder<self> $query */
+    /**
+     * Reihenfolge überall (Leiste im Kalender, Verwaltung, Rechte): Events,
+     * Anfragen, Persönlich, danach alphabetisch – Vorgabe vom 13.10.2026, ersetzt
+     * die frühere Reihenfolge von Hand (sort_order bleibt ungenutzt stehen).
+     *
+     * @param Builder<self> $query
+     */
     public function scopeOrdered(Builder $query): void
     {
-        $query->orderBy('sort_order')->orderBy('name');
+        $key = $query->getQuery()->getGrammar()->wrap('key');
+        $query->orderByRaw("case {$key} when ? then 0 when ? then 1 when ? then 2 else 3 end", [self::EVENTS, self::INQUIRIES, self::PERSONAL])
+            ->orderBy('name');
     }
 }

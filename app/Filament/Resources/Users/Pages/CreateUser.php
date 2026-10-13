@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Access\AccountSafety;
 use App\Filament\Concerns\BoxedPage;
+use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -21,5 +23,18 @@ class CreateUser extends CreateRecord
             Notification::make()->danger()->title($violation)->send();
             $this->halt();
         }
+    }
+
+    /** @param  array<string, mixed>  $data */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        return UserForm::withLinks($data);
+    }
+
+    protected function afterCreate(): void
+    {
+        /** @var User $user */
+        $user = $this->getRecord();
+        UserForm::savePositions($user, $this->data);
     }
 }

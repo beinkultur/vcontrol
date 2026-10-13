@@ -18,6 +18,7 @@ use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
@@ -104,8 +105,8 @@ class CalendarResource extends Resource
                     ->boolean()
                     ->alignCenter(),
             ])
-            ->reorderable('sort_order')
-            ->defaultSort('sort_order')
+            // Feste Reihenfolge wie in der Leiste des Kalenders (Calendar::scopeOrdered)
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->ordered())
             ->paginated(false)
             ->recordActions([
                 EditAction::make(),

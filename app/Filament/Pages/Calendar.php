@@ -31,9 +31,10 @@ use Illuminate\Support\HtmlString;
 use Livewire\Attributes\Url;
 
 /**
- * Kalender wie /kalender der PHP-Version: Monat, Woche, Tag, 4 Wochen; Ebenen
- * (Kalender-Ebenen der Verwaltung) mit eigener Farbe zum Ein- und Ausblenden,
- * die Auswahl steht in der Adresse. Inhalt: App\Support\CalendarItems,
+ * Kalender wie /kalender der PHP-Version: Monat, Woche, Tag, 4 Wochen (ohne
+ * Angabe die Standard-Ansicht aus dem Profil); Ebenen (Kalender-Ebenen der
+ * Verwaltung) mit eigener Farbe zum Ein- und Ausblenden, die Auswahl steht in
+ * der Adresse. Inhalt: App\Support\CalendarItems,
  * Anordnung: App\Support\CalendarLayout. Eigene Einträge legt an, wer eine
  * Ebene bearbeiten darf (CalendarEntryPolicy). Externe: ExternCalendar.
  */
@@ -103,7 +104,7 @@ class Calendar extends Page
     protected function getViewData(): array
     {
         $user = self::user();
-        $cal = CalendarView::make($this->ansicht, $this->datum);
+        $cal = $this->calendarView();
         $readable = CalendarItems::readableLayers($user);
         $visible = CalendarItems::visibleLayers($user, $this->ebenen);
         $items = CalendarItems::for($user, $cal->from(), $cal->until(), $visible, static::isExtern());
@@ -185,10 +186,16 @@ class Calendar extends Page
         return $more;
     }
 
+    /** Ansicht aus der Adresse, sonst die Standard-Ansicht aus dem Profil (users.calendar_view), sonst Monat */
+    private function calendarView(): CalendarView
+    {
+        return CalendarView::make($this->ansicht ?: self::user()->calendar_view, $this->datum);
+    }
+
     /** Adresse mit Ansicht und Datum der aktuellen Seite, Änderungen aus $changes */
     private function url(array $changes): string
     {
-        $cal = CalendarView::make($this->ansicht, $this->datum);
+        $cal = $this->calendarView();
         $query = array_filter([
             'view' => $changes['view'] ?? $cal->view,
             'date' => $changes['date'] ?? $cal->date->toDateString(),
@@ -239,7 +246,7 @@ class Calendar extends Page
             ->fillForm(fn (): array => [
                 'calendar_key' => array_key_first($this->editableLayers()),
                 'all_day' => true,
-                'start_date' => CalendarView::make($this->ansicht, $this->datum)->date->toDateString(),
+                'start_date' => $this->calendarView()->date->toDateString(),
             ])
             ->schema(fn (): array => $this->entrySchema())
             ->action(function (array $data, Action $action): void {

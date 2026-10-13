@@ -13,6 +13,7 @@ use App\Models\Event;
 use App\Models\Inquiry;
 use App\Models\Promoter;
 use App\Models\User;
+use App\Support\CalendarItem;
 use App\Support\CalendarItems;
 use App\Support\CalendarLayout;
 use Carbon\CarbonImmutable;
@@ -188,20 +189,53 @@ class CalendarTest extends TestCase
     {
         $anna = Employee::create(['first_name' => 'Anna', 'last_name' => 'Koch', 'initials' => 'AK']);
         $tom = Employee::create(['first_name' => 'Tom', 'last_name' => 'Meyer', 'initials' => 'TM']);
-        $this->concert->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'employee', 'assignee_id' => $anna->id, 'starts_at' => '08:00', 'ends_at' => '16:00']);
-        $this->concert->assignments()->create(['role' => AssignmentRole::SafetyLate, 'assignee_type' => 'employee', 'assignee_id' => $tom->id, 'starts_at' => '16:00', 'ends_at' => '01:00']);
+        $early = $this->concert->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'employee', 'assignee_id' => $anna->id, 'starts_at' => '08:00', 'ends_at' => '16:00']);
+        $late = $this->concert->assignments()->create(['role' => AssignmentRole::SafetyLate, 'assignee_type' => 'employee', 'assignee_id' => $tom->id, 'starts_at' => '16:00', 'ends_at' => '01:00']);
         $this->concert->assignments()->create(['role' => AssignmentRole::ProjectLead, 'assignee_type' => 'employee', 'assignee_id' => $anna->id]);
 
-        $user = $this->userWith($this->role('team', ['kalender' => 'read'], calendars: ['technik' => 'read', 'veranstaltungsleitung' => 'read']));
+        $user = $this->userWith($this->role('team', ['kalender' => 'read', 'events' => 'read'], calendars: ['technik' => 'read', 'veranstaltungsleitung' => 'read']));
         $user->update(['account_type' => AccountType::VenueEmployee, 'employee_id' => $anna->id]);
         $user = $user->fresh();
         $items = collect(CalendarItems::for($user, CarbonImmutable::parse('2026-10-19'), CarbonImmutable::parse('2026-10-25')));
 
-        $this->assertSame('🔗 Anna Koch · House Rep. früh (Rock im Herbst)', $items->firstWhere('layer', 'veranstaltungsleitung')?->title);
-        $this->assertSame('🔗 Tom Meyer · VfV spät (Rock im Herbst)', $items->firstWhere('layer', 'technik')?->title);
-        $this->assertSame([960, 1440], $items->firstWhere('layer', 'technik')->minutes(), 'Ende nach Mitternacht: bis 24 Uhr');
-        // Persönlich: nur die eigenen Dienste, die Projektleitung zählt nicht
-        $this->assertSame(['🔗 Anna Koch · House Rep. früh (Rock im Herbst)'], $items->where('layer', 'personal')->pluck('title')->all());
+        // Der eigene Dienst einmal, auf Veranstaltungsleitung und Persönlich; die Projektleitung zählt nicht
+        $own = $items->where('uid', 'role-' . $early->id);
+        $this->assertCount(1, $own);
+        $this->assertSame('🔗 Anna Koch · House Rep. früh (Rock im Herbst)', $own->first()->title);
+        $this->assertSame(['veranstaltungsleitung', 'personal'], $own->first()->colorLayers());
+        // Fremder Dienst nur auf Technik; Ende nach Mitternacht: bis 24 Uhr
+        $other = $items->firstWhere('uid', 'role-' . $late->id);
+        $this->assertSame('🔗 Tom Meyer · VfV spät (Rock im Herbst)', $other->title);
+        $this->assertSame(['technik'], $other->colorLayers());
+        $this->assertSame([960, 1440], $other->minutes());
+        $this->assertCount(2, $items->where('kind', CalendarItem::DUTY));
+
+        // Im Raster gestreift in beiden Farben
+        $this->actingAs($user);
+        $this->get('/kalender?view=week&date=2026-10-24')
+            ->assertOk()
+            ->assertSee('is-shared', false)
+            ->assertSee('--vc-cal-color: #0EA5E9; --vc-cal-color-2: #6366F1', false);
+        // Nur „Persönlich“ eingeblendet: einfarbig
+        $mine = collect(CalendarItems::for($user, CarbonImmutable::parse('2026-10-19'), CarbonImmutable::parse('2026-10-25'), ['personal']));
+        $this->assertSame([['personal']], $mine->map->colorLayers()->values()->all());
+    }
+
+    public function test_ebenen_in_fester_reihenfolge_und_standard_ansicht_aus_dem_profil(): void
+    {
+        Calendar::create(['key' => 'aaa', 'name' => 'Abbau', 'color' => '#111111', 'sort_order' => 99]);
+        $user = $this->reader(['events' => 'read', 'anfragen' => 'read', 'wartung' => 'read', 'technik' => 'read', 'veranstaltungsleitung' => 'read', 'aaa' => 'read']);
+
+        // Events, Anfragen, Persönlich, dann nach Namen – die Reihenfolge von Hand zählt nicht mehr
+        $this->assertSame(['events', 'anfragen', 'personal', 'aaa', 'technik', 'veranstaltungsleitung', 'wartung'],
+            CalendarItems::readableLayers($user)->pluck('key')->all());
+
+        $this->actingAs($user);
+        $this->get('/kalender')->assertOk()->assertSee('Oktober 2026')->assertSee('vc-cal--month', false);
+        $user->update(['calendar_view' => 'week']);
+        $this->get('/kalender')->assertOk()->assertSee('12. – 18. Oktober 2026')->assertSee('vc-cal--week', false);
+        // Die Adresse geht vor
+        $this->get('/kalender?view=day')->assertOk()->assertSee('Mittwoch, 14. Oktober 2026');
     }
 
     public function test_extern_nur_lesen_links_nur_zu_eigenen_events(): void

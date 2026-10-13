@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\Auth\EditProfile;
 use App\Models\AuditLog;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
@@ -41,6 +42,59 @@ class ProfileTest extends TestCase
         // Im Audit nur maskiert
         $log = AuditLog::query()->where('subject', 'users')->where('action', 'updated')->latest('id')->firstOrFail();
         $this->assertSame('***', $log->new_values['password']);
+    }
+
+    public function test_kalender_standard_ansicht_ohne_passwort_speichern(): void
+    {
+        $user = $this->userWith($this->role('team', ['kalender' => 'read']));
+        $this->actingAs($user);
+
+        Livewire::test(EditProfile::class)
+            ->assertSchemaStateSet(['calendar_view' => 'month'])
+            ->fillForm(['calendar_view' => 'week'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame('week', $user->fresh()->calendar_view);
+
+        Livewire::test(EditProfile::class)
+            ->fillForm(['calendar_view' => 'jahr'])
+            ->call('save')
+            ->assertHasFormErrors(['calendar_view']);
+    }
+
+    public function test_adresse_des_persoenlichen_kalenders(): void
+    {
+        $user = $this->userWith($this->role('team', ['kalender' => 'read']));
+        $this->actingAs($user);
+
+        $this->get('/profile')->assertOk()->assertSee('Persönlicher Kalender zum Abonnieren');
+        $user->refresh();
+        $token = $user->personalFeedToken();
+        $this->assertSame(40, strlen($token));
+        $this->get('/profile')->assertSee('/kalender/persoenlich.ics?token=' . $token, false);
+        // Verschlüsselt gespeichert, gesucht wird über den Hash; das Audit sieht nichts davon
+        $this->assertStringNotContainsString($token, (string) $user->getRawOriginal('calendar_token'));
+        $this->assertSame(hash('sha256', $token), $user->calendar_token_hash);
+        $this->assertFalse(AuditLog::query()->where('subject', 'users')->where('action', 'updated')->exists(), 'das erste Anlegen ohne Eintrag');
+        $this->get('/kalender/persoenlich.ics?token=' . $token)->assertOk();
+
+        // Neue Adresse: die alte gilt nicht mehr
+        Livewire::test(EditProfile::class)
+            ->callAction(TestAction::make('renewPersonalFeed')->schemaComponent('personalFeed', 'form'));
+        $renewed = $user->fresh()->personalFeedToken();
+        $this->assertNotSame($token, $renewed);
+        $this->get('/kalender/persoenlich.ics?token=' . $token)->assertForbidden();
+        $this->get('/kalender/persoenlich.ics?token=' . $renewed)->assertOk();
+        $log = AuditLog::query()->where('subject', 'users')->where('action', 'updated')->latest('id')->firstOrFail();
+        $this->assertSame('***', $log->new_values['calendar_token']);
+        $this->assertSame('***', $log->new_values['calendar_token_hash']);
+    }
+
+    public function test_ohne_kalender_kein_kalender_im_profil(): void
+    {
+        $this->actingAs($this->userWith($this->role('catering', ['events' => 'read'])));
+
+        $this->get('/profile')->assertOk()->assertDontSee('Standard-Ansicht')->assertDontSee('persoenlich.ics');
     }
 
     public function test_name_und_e_mail_bleiben_der_benutzerverwaltung(): void

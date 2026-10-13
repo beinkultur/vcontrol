@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Enums\AccountType;
 use App\Enums\ServiceCode;
 use App\Models\Event;
 use App\Models\User;
@@ -12,7 +11,9 @@ use Illuminate\Database\Eloquent\Builder;
  * An welchen Events ein Konto beteiligt ist – wie UserInvolvement der
  * PHP-Version. Grundlage für den Extern-Bereich:
  * - jedes Konto, das selbst im Personal eines Events steht;
- * - Mitarbeiter-Konten über den verknüpften Mitarbeiter im Personal;
+ * - Personen-Konten (Mitarbeiter der Venue, Freelancer) über den verknüpften
+ *   Mitarbeiter im Personal – die PHP-Version kannte das nur für Mitarbeiter der
+ *   Venue;
  * - Gewerke-Konten über das verknüpfte Gewerk im Personal oder in den Gewerken
  *   (Leistungen) des Events.
  */
@@ -33,13 +34,13 @@ final class Involvement
         return $query->where(function (Builder $query) use ($user, $assigned): void {
             $query->whereHas('assignments', $assigned('user', (int) $user->getKey()));
 
-            if ($user->account_type === AccountType::VenueEmployee && $user->employee_id !== null) {
-                $query->orWhereHas('assignments', $assigned('employee', (int) $user->employee_id));
+            if (($employeeId = $user->linkedEmployeeId()) !== null) {
+                $query->orWhereHas('assignments', $assigned('employee', $employeeId));
             }
 
-            if ($user->account_type === AccountType::TradeAccount && $user->trade_id !== null) {
-                $query->orWhereHas('assignments', $assigned('trade', (int) $user->trade_id))
-                    ->orWhereHas('services', fn (Builder $services): Builder => $services->where('trade_id', $user->trade_id)
+            if (($tradeId = $user->linkedTradeId()) !== null) {
+                $query->orWhereHas('assignments', $assigned('trade', $tradeId))
+                    ->orWhereHas('services', fn (Builder $services): Builder => $services->where('trade_id', $tradeId)
                         ->whereIn('service', ServiceCode::activeValues()));
             }
         });

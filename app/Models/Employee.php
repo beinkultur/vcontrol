@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Mitarbeiter der Halle, z. B. Veranstaltungsleitung (VL) oder VfV. Archivierte
+ * Mitarbeiter der Venue, z. B. Veranstaltungsleitung (VL) oder VfV. Ein
+ * Benutzerkonto (Mitarbeiter der Venue, Freelancer) kann mit ihm verknüpft sein
+ * (users.employee_id) – seine Dienste sind dann die des Kontos. Archivierte
  * stehen nicht mehr zur Auswahl, an bisherigen Events bleiben sie stehen.
  */
 #[Fillable(['first_name', 'last_name', 'initials', 'phone', 'email', 'positions', 'is_archived'])]

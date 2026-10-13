@@ -35,7 +35,7 @@ final class Audit
     /** Keine inhaltliche Änderung */
     private const IGNORED = ['id', 'created_at', 'updated_at', 'created_by', 'created_by_name', 'updated_by', 'updated_by_name', 'remember_token'];
 
-    private const SECRETS = ['password', 'wlan_password', 'token_hash'];
+    private const SECRETS = ['password', 'wlan_password', 'token_hash', 'calendar_token', 'calendar_token_hash'];
 
     private const SIGNATURES = ['signature', 'house_rep_signature', 'promoter_rep_signature'];
 

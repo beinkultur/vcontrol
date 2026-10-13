@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Access\AccountSafety;
 use App\Filament\Concerns\BoxedPage;
+use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
@@ -32,5 +33,18 @@ class EditUser extends EditRecord
             Notification::make()->danger()->title($violation)->send();
             $this->halt();
         }
+    }
+
+    /** @param  array<string, mixed>  $data */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return UserForm::withLinks($data);
+    }
+
+    protected function afterSave(): void
+    {
+        /** @var User $user */
+        $user = $this->getRecord();
+        UserForm::savePositions($user, $this->data);
     }
 }

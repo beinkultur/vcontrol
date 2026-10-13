@@ -23,9 +23,4 @@ class CalendarPolicy extends AreaPolicy
             && !$record->is_system
             && !$record->entries()->exists();
     }
-
-    public function reorder(User $user): bool
-    {
-        return $user->access()->canEdit($this->area());
-    }
 }

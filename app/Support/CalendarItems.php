@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Access\Level;
-use App\Enums\AccountType;
 use App\Enums\AssignmentRole;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\ExternEvents\ExternEventResource;
@@ -29,9 +28,10 @@ use Illuminate\Support\Collection;
  * - „anfragen“: offene Anfragen je Wunschtermin mit Rang (1️⃣ Option …), Tage,
  *   die ein bestätigtes Event belegt, fehlen;
  * - „personal“: die eigenen Dienste (House Rep., Auf-/Abschließen, VfV) – als
- *   Konto, über den Mitarbeiter (Konten der Halle) oder das Gewerk;
+ *   Konto, über den verknüpften Mitarbeiter (Personen-Konten) oder das Gewerk;
  * - „veranstaltungsleitung“ und „technik“: dieselben Dienste aller Events
- *   (House Rep. bzw. VfV), dazu eigene Einträge;
+ *   (House Rep. bzw. VfV), dazu eigene Einträge. Ein eigener Dienst erscheint
+ *   nur einmal, mit beiden Ebenen (CalendarItem::$layers, im Raster gestreift);
  * - alle anderen Ebenen: eigene Einträge (CalendarEntry).
  * Extern: dieselben lesbaren Ebenen, Links aber nur zu Events, an denen das
  * Konto beteiligt ist (Involvement), ohne „🔗“.
@@ -184,8 +184,9 @@ final class CalendarItems
     /**
      * Dienste aus dem Personal der Events: gespiegelt auf Veranstaltungsleitung
      * und Technik (alle Events, nur mit eingetragener Person), die eigenen
-     * zusätzlich auf „Persönlich“. Am ersten Tag des Events, mit den Zeiten
-     * der Zuordnung (Ende vor dem Beginn: am Folgetag), ohne Zeiten ganztägig.
+     * auf „Persönlich“ – ein eigener Dienst einmal mit beiden Ebenen. Am ersten
+     * Tag des Events, mit den Zeiten der Zuordnung (Ende vor dem Beginn: am
+     * Folgetag), ohne Zeiten ganztägig.
      *
      * @param  array<string, list<AssignmentRole>>  $mirrors
      * @return list<CalendarItem>
@@ -193,31 +194,66 @@ final class CalendarItems
     private static function duties(User $user, CarbonImmutable $from, CarbonImmutable $until, array $mirrors, bool $personal): array
     {
         $roles = array_merge(...array_values($personal ? self::MIRRORS : $mirrors));
-        $assignments = EventAssignment::query()
-            ->with(['event', 'assignee'])
-            ->whereIn('role', array_map(fn (AssignmentRole $role): string => $role->value, $roles))
-            ->where('assignee_id', '>', 0)
-            ->whereHas('event', fn (Builder $events): Builder => $events->whereNotNull('starts_at')
-                ->where('starts_at', '>=', $from)->where('starts_at', '<', $until->addDay()))
-            ->get();
+        $assignments = self::assignments($roles, $from, $until)->get();
 
         $items = [];
         foreach ($assignments as $assignment) {
-            $event = $assignment->event;
-            $mine = $personal && self::isOwn($user, $assignment);
             $layers = array_keys(array_filter($mirrors, fn (array $layerRoles): bool => in_array($assignment->role, $layerRoles, true)));
-            if ($mine) {
+            if ($personal && self::isOwn($user, $assignment)) {
                 $layers[] = Calendar::PERSONAL;
             }
-            foreach ($layers as $layer) {
-                $items[] = self::duty($assignment, $event, $layer);
+            if ($layers !== []) {
+                $items[] = self::duty($assignment, $assignment->event, $layers);
             }
         }
 
         return $items;
     }
 
-    private static function duty(EventAssignment $assignment, Event $event, string $layer): CalendarItem
+    /**
+     * Die eigenen Dienste im Zeitraum (Rollen aus MIRRORS) – für den
+     * persönlichen ICS-Feed (App\Support\PersonalIcsFeed).
+     *
+     * @return Collection<int, EventAssignment>
+     */
+    public static function ownAssignments(User $user, CarbonImmutable $from, CarbonImmutable $until): Collection
+    {
+        $employeeId = $user->linkedEmployeeId();
+        $tradeId = $user->linkedTradeId();
+
+        return self::assignments(array_merge(...array_values(self::MIRRORS)), $from, $until)
+            ->where(function (Builder $query) use ($user, $employeeId, $tradeId): void {
+                $query->where(fn (Builder $own): Builder => $own->where('assignee_type', 'user')->where('assignee_id', $user->id));
+                if ($employeeId !== null) {
+                    $query->orWhere(fn (Builder $own): Builder => $own->where('assignee_type', 'employee')->where('assignee_id', $employeeId));
+                }
+                if ($tradeId !== null) {
+                    $query->orWhere(fn (Builder $own): Builder => $own->where('assignee_type', 'trade')->where('assignee_id', $tradeId));
+                }
+            })
+            ->get()
+            ->sortBy(fn (EventAssignment $assignment): string => $assignment->event->starts_at->format('Y-m-d') . ' ' . ($assignment->starts_at ?? '00:00'))
+            ->values();
+    }
+
+    /**
+     * Zuordnungen mit Person zu Events, die im Zeitraum beginnen.
+     *
+     * @param  list<AssignmentRole>  $roles
+     * @return Builder<EventAssignment>
+     */
+    private static function assignments(array $roles, CarbonImmutable $from, CarbonImmutable $until): Builder
+    {
+        return EventAssignment::query()
+            ->with(['event', 'assignee'])
+            ->whereIn('role', array_map(fn (AssignmentRole $role): string => $role->value, $roles))
+            ->where('assignee_id', '>', 0)
+            ->whereHas('event', fn (Builder $events): Builder => $events->whereNotNull('starts_at')
+                ->where('starts_at', '>=', $from)->where('starts_at', '<', $until->addDay()));
+    }
+
+    /** @param  non-empty-list<string>  $layers */
+    private static function duty(EventAssignment $assignment, Event $event, array $layers): CalendarItem
     {
         $day = CarbonImmutable::parse($event->starts_at)->startOfDay();
         $start = self::clock($assignment->starts_at);
@@ -226,8 +262,8 @@ final class CalendarItems
         $title = self::LINK . self::assigneeName($assignment) . ' · ' . $assignment->role->getLabel() . ' (' . $event->title . ')';
 
         return new CalendarItem(
-            uid: 'role-' . $assignment->id . '-' . $layer,
-            layer: $layer,
+            uid: 'role-' . $assignment->id,
+            layer: $layers[0],
             kind: CalendarItem::DUTY,
             title: $title,
             firstDay: $day,
@@ -238,16 +274,17 @@ final class CalendarItems
             tooltip: $title,
             status: EventDisplay::statusKind($event->status),
             eventId: $event->id,
+            layers: $layers,
         );
     }
 
-    /** Eigener Dienst: als Konto, als verknüpfter Mitarbeiter (Konten der Halle) oder als verknüpftes Gewerk */
+    /** Eigener Dienst: als Konto, als verknüpfter Mitarbeiter (Personen-Konten) oder als verknüpftes Gewerk */
     private static function isOwn(User $user, EventAssignment $assignment): bool
     {
         return match ($assignment->assignee_type) {
             'user' => (int) $assignment->assignee_id === (int) $user->id,
-            'employee' => $user->account_type === AccountType::VenueEmployee && (int) $assignment->assignee_id === (int) $user->employee_id,
-            'trade' => $user->account_type === AccountType::TradeAccount && (int) $assignment->assignee_id === (int) $user->trade_id,
+            'employee' => $user->linkedEmployeeId() !== null && (int) $assignment->assignee_id === $user->linkedEmployeeId(),
+            'trade' => $user->linkedTradeId() !== null && (int) $assignment->assignee_id === $user->linkedTradeId(),
             default => false,
         };
     }

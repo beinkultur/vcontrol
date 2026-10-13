@@ -16,8 +16,6 @@ use App\Models\Setting;
  */
 final class EventIcsFeed
 {
-    private const EOL = "\r\n";
-
     public static function token(): ?string
     {
         $token = trim((string) Setting::lookup(Setting::CALENDAR_FEED_TOKEN));
@@ -52,7 +50,7 @@ final class EventIcsFeed
             'PRODID:-//VenueControl//Events//DE',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
-            'X-WR-CALNAME:' . self::escape($venue . ' — Veranstaltungen'),
+            'X-WR-CALNAME:' . Ics::escape($venue . ' — Veranstaltungen'),
             'X-WR-TIMEZONE:' . config('app.timezone'),
         ];
 
@@ -69,7 +67,7 @@ final class EventIcsFeed
         }
         $lines[] = 'END:VCALENDAR';
 
-        return implode('', array_map(fn (string $line): string => self::fold($line) . self::EOL, $lines));
+        return Ics::render($lines);
     }
 
     /** @return list<string> */
@@ -93,44 +91,10 @@ final class EventIcsFeed
             'DTSTAMP:' . $stamp,
             'DTSTART;VALUE=DATE:' . str_replace('-', '', $start),
             'DTEND;VALUE=DATE:' . str_replace('-', '', $end),
-            'SUMMARY:' . self::escape((string) ($event->title ?: 'Veranstaltung')),
+            'SUMMARY:' . Ics::escape((string) ($event->title ?: 'Veranstaltung')),
             'TRANSP:TRANSPARENT',
-            $description === [] ? null : 'DESCRIPTION:' . self::escape(implode("\n", $description)),
+            $description === [] ? null : 'DESCRIPTION:' . Ics::escape(implode("\n", $description)),
             'END:VEVENT',
         ]));
-    }
-
-    /**
-     * Sonderzeichen nach RFC 5545 maskieren. Jeder Zeilenumbruch (auch ein
-     * einzelnes CR) wird zu „\n“, andere Steuerzeichen fallen weg – sonst ließe
-     * sich über einen Titel eine eigene Zeile in den Feed schreiben.
-     */
-    private static function escape(string $value): string
-    {
-        $value = str_replace(["\r\n", "\r"], "\n", $value);
-        $value = preg_replace('/[\x00-\x08\x0B-\x1F\x7F]/', '', $value) ?? '';
-
-        return str_replace(['\\', ';', ',', "\n"], ['\\\\', '\;', '\\,', '\\n'], $value);
-    }
-
-    /** Zeilen auf 75 Oktett falten; nach Zeichen schneiden, damit kein UTF-8 zerrissen wird. */
-    private static function fold(string $line): string
-    {
-        if (strlen($line) <= 75) {
-            return $line;
-        }
-
-        $out = '';
-        $current = '';
-        foreach (preg_split('//u', $line, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $char) {
-            $limit = $out === '' ? 75 : 74;
-            if (strlen($current) + strlen($char) > $limit) {
-                $out .= ($out === '' ? '' : self::EOL . ' ') . $current;
-                $current = '';
-            }
-            $current .= $char;
-        }
-
-        return $current === '' ? $out : $out . ($out === '' ? '' : self::EOL . ' ') . $current;
     }
 }

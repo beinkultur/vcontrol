@@ -35,6 +35,15 @@ class UsersTable
                 TextColumn::make('account_type')
                     ->label('Kontotyp')
                     ->visibleFrom('md'),
+                TextColumn::make('link')
+                    ->label('Verknüpft mit')
+                    ->state(fn (User $record): ?string => match (true) {
+                        $record->linkedEmployeeId() !== null => $record->employee?->fullName(),
+                        $record->linkedTradeId() !== null => $record->trade?->displayName(),
+                        default => null,
+                    })
+                    ->placeholder('–')
+                    ->visibleFrom('lg'),
                 IconColumn::make('is_active')
                     ->label('Aktiv')
                     ->visibleFrom('md')
@@ -48,6 +57,7 @@ class UsersTable
                     ->sortable()
                     ->toggleable(),
             ])
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['employee', 'trade']))
             ->defaultSort('last_name')
             ->filters([
                 TernaryFilter::make('is_active')

@@ -84,7 +84,7 @@ class EmployeeResource extends Resource
      *
      * @return array<string, string>
      */
-    private static function positionOptions(?Employee $record): array
+    public static function positionOptions(?Employee $record): array
     {
         $options = FieldOption::choices(OptionField::EmployeePosition);
         foreach ($record?->positions ?? [] as $position) {

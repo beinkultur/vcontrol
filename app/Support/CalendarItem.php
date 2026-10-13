@@ -36,13 +36,26 @@ final class CalendarItem
         public readonly ?int $eventId = null,
         /** Extern: Link zum eigenen Event (fett, mit ↗) */
         public readonly bool $linked = false,
+        /**
+         * Alle Ebenen, auf denen der Eintrag steht, die erste ist $layer – mehr als
+         * eine bei eigenen Diensten (z. B. Veranstaltungsleitung und Persönlich).
+         *
+         * @var list<string>
+         */
+        public readonly array $layers = [],
     ) {
     }
 
     public function with(?string $title = null, ?string $tooltip = null, ?string $url = null, ?bool $linked = null): self
     {
         return new self($this->uid, $this->layer, $this->kind, $title ?? $this->title, $this->firstDay, $this->lastDay, $this->time,
-            $this->endTime, $url, $tooltip ?? $this->tooltip, $this->status, $this->entryId, $this->eventId, $linked ?? $this->linked);
+            $this->endTime, $url, $tooltip ?? $this->tooltip, $this->status, $this->entryId, $this->eventId, $linked ?? $this->linked, $this->layers);
+    }
+
+    /** @return non-empty-list<string> die Ebenen für die Farbe, mindestens $layer */
+    public function colorLayers(): array
+    {
+        return $this->layers !== [] ? $this->layers : [$this->layer];
     }
 
     public function isAllDay(): bool
