@@ -234,8 +234,8 @@ class CostingTest extends TestCase
         $this->assertStringNotContainsString('Grundmiete vollbestuhlt HS', $html, 'in der Preisliste vorgegeben: aus');
         $this->assertStringContainsString('mind. 2.500,00 €', $html);
         $this->assertStringContainsString('nach Aufwand', $html);
-        $this->assertStringContainsString('5.914,00 €', $html);
-        $this->assertStringContainsString('7.037,66 €', $html);
+        $this->assertStringContainsString('<tr class="net"><td>Gesamt netto</td><td class="num">5.914,00 €</td></tr>', $html);
+        $this->assertStringContainsString('<tr><td>Gesamt brutto</td><td class="num">7.037,66 €</td></tr>', $html);
         $this->assertStringContainsString('Alle Preise zzgl. MwSt.', $html);
         $this->assertStringContainsString('<div class="footer">Inselpark Arena · erstellt mit VenueControl</div>', $html, 'Fuß ohne VenueControl-Logo');
 

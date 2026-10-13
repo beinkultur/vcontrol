@@ -8,11 +8,11 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 /**
- * Costing als PDF (A4 hoch) mit Dompdf, aus der Vorlage costing-pdf: Kopf mit
- * dem Logo der Halle (VenueLogo, sonst ihr Name), Event und Preisliste, die
- * Posten nach Abschnitten, Summen netto, Mehrwertsteuer und brutto, darunter
- * Anmerkung und Hinweise der Preisliste. Ohne Zugriff auf fremde Adressen:
- * Bilder kommen als data-URI, Skripte aus.
+ * Costing als PDF (A4 hoch) mit Dompdf, aus der Vorlage costing-pdf: das Logo
+ * der Halle mittig in der Kopfzeile jeder Seite (VenueLogo, sonst ihr Name über
+ * dem Titel), Event und Preisliste, die Posten nach Abschnitten, Summen netto,
+ * Mehrwertsteuer und brutto, darunter Anmerkung und Hinweise der Preisliste.
+ * Ohne Zugriff auf fremde Adressen: Bilder kommen als data-URI, Skripte aus.
  */
 final class CostingPdf
 {
@@ -32,7 +32,7 @@ final class CostingPdf
             'costing' => $costing,
             'event' => $costing->event,
             'venue' => Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name'),
-            'venueLogo' => VenueLogo::fitted(62, 20),
+            'venueLogo' => VenueLogo::fitted(40, 12),
             'sections' => $costing->printedSections(),
         ])->render(), 'UTF-8');
         $dompdf->setPaper('A4');

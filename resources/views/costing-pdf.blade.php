@@ -1,7 +1,8 @@
 {{--
     Costing als PDF (App\Support\CostingPdf, Dompdf): Dompdf kann nur CSS 2.1 –
     deshalb Tabellen statt Flex/Grid, Schrift DejaVu Sans (hat €, Umlaute).
-    Seitenzahlen setzt CostingPdf, der Fuß steht fest am Seitenende.
+    Seitenzahlen setzt CostingPdf. Kopf (Logo der Halle, mittig) und Fuß stehen
+    mit position: fixed im Seitenrand und damit auf jeder Seite.
 --}}
 @php
     $venueLogo ??= null;
@@ -16,13 +17,12 @@
     <meta charset="utf-8">
     <title>{{ $costing->fileName() }}</title>
     <style>
-        @page { margin: 16mm 16mm 24mm; }
+        /* Mit Logo macht der obere Rand Platz für die Kopfzeile */
+        @page { margin: {{ $venueLogo ? '28mm' : '16mm' }} 16mm 24mm; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 8.5pt; color: #1a1a1a; line-height: 1.35; }
         .venue { font-size: 10pt; font-weight: bold; letter-spacing: 0.04em; text-transform: uppercase; color: #555; }
-        h1 { font-size: 17pt; margin: 1mm 0 0; }
-        .head { width: 100%; margin-bottom: 5mm; }
-        .head td { vertical-align: bottom; padding: 0; }
-        .head-logo { text-align: right; }
+        h1 { font-size: 17pt; margin: 1mm 0 5mm; }
+        .page-head { position: fixed; top: -18mm; left: 0; width: 100%; text-align: center; }
         table { border-collapse: collapse; }
         .meta { width: 100%; margin-bottom: 5mm; }
         .meta td { padding: 0.8mm 2mm 0.8mm 0; vertical-align: top; }
@@ -46,31 +46,24 @@
         .totals { width: 75mm; margin: 5mm 0 0 103mm; }
         .totals-block { page-break-inside: avoid; }
         .totals td { padding: 1.1mm 1.5mm; }
-        .totals .gross td { font-weight: bold; font-size: 9.5pt; border-top: 0.8pt solid #1a1a1a; }
+        /* Hervorgehoben ist der Nettobetrag, mit Summenstrich darüber; brutto steht schlicht darunter */
+        .totals .net td { font-weight: bold; font-size: 9.5pt; border-top: 0.8pt solid #1a1a1a; }
         .block { margin-top: 6mm; font-size: 7.8pt; color: #333; page-break-inside: avoid; }
         .block strong { display: block; margin-bottom: 1mm; color: #1a1a1a; }
         .footer { position: fixed; bottom: -16mm; left: 0; right: 0; font-size: 7pt; color: #777; }
     </style>
 </head>
 <body>
+    @if ($venueLogo)
+        <div class="page-head"><img src="{{ $venueLogo['src'] }}" alt="{{ $venue }}" style="width: {{ $venueLogo['width'] }}mm; height: {{ $venueLogo['height'] }}mm;"></div>
+    @endif
     <div class="footer">{{ $venue }} · erstellt mit VenueControl</div>
 
-    {{-- Mit Logo der Halle steht ihr Name nicht noch einmal darüber --}}
-    <table class="head">
-        <tr>
-            <td>
-                @if (!$venueLogo)
-                    <div class="venue">{{ $venue }}</div>
-                @endif
-                <h1>Costing</h1>
-            </td>
-            @if ($venueLogo)
-                <td class="head-logo">
-                    <img src="{{ $venueLogo['src'] }}" alt="{{ $venue }}" style="width: {{ $venueLogo['width'] }}mm; height: {{ $venueLogo['height'] }}mm;">
-                </td>
-            @endif
-        </tr>
-    </table>
+    {{-- Ohne Logo steht der Name der Halle über dem Titel --}}
+    @if (!$venueLogo)
+        <div class="venue">{{ $venue }}</div>
+    @endif
+    <h1>Costing</h1>
 
     <table class="meta">
         <tr>
@@ -154,9 +147,9 @@
 
     <div class="totals-block">
         <table class="totals">
-            <tr><td>Summe netto</td><td class="num">{{ $money($costing->net()) }}</td></tr>
+            <tr class="net"><td>Gesamt netto</td><td class="num">{{ $money($costing->net()) }}</td></tr>
             <tr><td>zzgl. {{ $number($costing->vat_rate) }} % MwSt.</td><td class="num">{{ $money($costing->vat()) }}</td></tr>
-            <tr class="gross"><td>Gesamt brutto</td><td class="num">{{ $money($costing->gross()) }}</td></tr>
+            <tr><td>Gesamt brutto</td><td class="num">{{ $money($costing->gross()) }}</td></tr>
         </table>
         @if ($open > 0)
             <p class="small" style="text-align: right;">Posten „nach Aufwand“ sind in der Summe nicht enthalten.</p>

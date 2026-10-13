@@ -295,12 +295,12 @@ Freitermin, Sortierung
   Daysheet das zuletzt verschickte Costing als PDF zeigen (Vorgabe: nein;
   `events.costing`, `daysheet.costing`). Dazu Betreff, Text und feste BCC-Adressen
   der Costing-Mail. Das Logo der Halle (Verwaltung › Halle, PNG oder JPG,
-  `App\Support\VenueLogo`) steht oben rechts auf dem Costing statt ihres Namens,
-  ebenso rechts im Kopf der Daysheet-Seite (auf dem Handy über dem Titel) und im
-  Kopf der Mails (Daysheet, Costing, Passwort vergessen; eingebettet,
-  `vendor/mail/html/venue`). Ohne Logo bleibt es beim Namen; im Fuß von Mails und
-  Daysheet-Seite steht weiter „erstellt mit VenueControl“ mit dessen Logo, im
-  Fuß des Costing-PDFs nur die Zeile.
+  `App\Support\VenueLogo`) steht auf dem Costing mittig in der Kopfzeile jeder
+  Seite statt ihres Namens, rechts im Kopf der Daysheet-Seite (auf dem Handy über
+  dem Titel) und im Kopf der Mails (Daysheet, Costing, Passwort vergessen;
+  eingebettet, `vendor/mail/html/venue`). Ohne Logo bleibt es beim Namen; im Fuß
+  von Mails und Daysheet-Seite steht weiter „erstellt mit VenueControl“ mit
+  dessen Logo, im Fuß des Costing-PDFs nur die Zeile.
 
 ## Offene Punkte
 

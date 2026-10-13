@@ -42,7 +42,9 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
 - PDFs erzeugt Dompdf (`App\Support\CostingPdf`, Vorlage `costing-pdf`): nur CSS
   2.1 – Tabellen statt Flex/Grid, Schrift DejaVu Sans (€, Umlaute), Bilder als
   data-URI, fremde Adressen aus. Was zusammenbleiben soll, als eigene Tabelle in
-  einem Block mit `page-break-inside: avoid` – auf `tbody` wirkt es nicht.
+  einem Block mit `page-break-inside: avoid` – auf `tbody` wirkt es nicht. Kopf-
+  und Fußzeile jeder Seite: `position: fixed` mit negativem `top`/`bottom` im
+  Seitenrand (`@page`), im `body` vor dem Inhalt.
 - Composer und `php artisan filament:assets` nie unter `umask 077` laufen lassen.
   Die Dateien unter `public/` liefert der Webserver als anderer Benutzer aus; nur
   für den Eigentümer lesbar heißt 403, und die Oberfläche lädt ohne CSS und JS

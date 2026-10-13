@@ -43,17 +43,17 @@ class VenueLogoTest extends TestCase
         Storage::disk(VenueLogo::DISK)->assertExists($path);
         $this->get(route('venue.logo'))->assertOk()->assertHeader('Content-Type', 'image/png');
 
-        // Eingepasst in 62 × 20 mm, Seitenverhältnis bleibt
-        $logo = VenueLogo::fitted(62, 20);
-        $this->assertSame(62.0, $logo['width']);
-        $this->assertSame(17.57, $logo['height']);
+        // Eingepasst in 40 × 12 mm (Kopfzeile des Costings), Seitenverhältnis bleibt
+        $logo = VenueLogo::fitted(40, 12);
+        $this->assertSame(40.0, $logo['width']);
+        $this->assertSame(11.33, $logo['height']);
         $this->assertStringStartsWith('data:image/png;base64,', $logo['src']);
 
-        // Auf dem Costing: das Logo statt des Hallennamens
+        // Auf dem Costing: mittig in der Kopfzeile jeder Seite statt des Hallennamens
         $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
         $costing = Costing::createFor($event, null);
         $html = view('costing-pdf', ['costing' => $costing, 'event' => $event, 'venue' => 'Inselpark Arena', 'venueLogo' => $logo, 'sections' => []])->render();
-        $this->assertStringContainsString('<img src="data:image/png;base64,', $html);
+        $this->assertStringContainsString('<div class="page-head"><img src="data:image/png;base64,', $html);
         $this->assertStringNotContainsString('<div class="venue">', $html);
         $this->assertStringStartsWith('%PDF', CostingPdf::render($costing));
 
