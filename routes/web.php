@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BackupCronController;
 use App\Http\Controllers\CalendarFeedController;
+use App\Http\Controllers\CostingController;
 use App\Http\Controllers\DamagePhotoController;
 use App\Http\Controllers\DaysheetController;
 use App\Http\Controllers\EventFileController;
@@ -30,6 +31,7 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
     Route::get('/events/{event}/daysheet', [DaysheetController::class, 'preview'])->name('events.daysheet-preview');
     Route::get('/events/{event}/saalplan', [SeatingPlanController::class, 'event'])->name('events.seating-plan');
     Route::get('/saalplaene/{plan}/pdf', [SeatingPlanController::class, 'standard'])->name('seating-plans.pdf');
+    Route::get('/costings/{costing}/pdf', [CostingController::class, 'pdf'])->name('costings.pdf');
 });
 
 // Daysheet: ohne Konto, der Schlüssel im Link berechtigt (bis zum Tag nach der

@@ -16,6 +16,7 @@ use App\Models\EventFile;
 use App\Models\EventFileTag;
 use App\Models\EventIncomingInvoice;
 use App\Models\InventoryItem;
+use App\Models\PriceList;
 use App\Models\Promoter;
 use App\Models\Role;
 use App\Models\Room;
@@ -66,6 +67,10 @@ final class AuditPresenter
         'trades' => 'Gewerk',
         'rooms' => 'Raum',
         'seating_plans' => 'Saalplan',
+        'price_lists' => 'Preisliste',
+        'price_list_items' => 'Preislisten-Posten',
+        'costings' => 'Costing',
+        'costing_items' => 'Costing-Posten',
         'field_options' => 'Feldoption',
         'inventory_categories' => 'Inventar-Kategorie',
         'inventory_items' => 'Inventar',
@@ -119,6 +124,12 @@ final class AuditPresenter
         'trades' => [Area::AdminGewerke],
         'rooms' => [Area::AdminRaeume],
         'seating_plans' => [Area::AdminStammdaten],
+        // wie PriceListPolicy, ohne „Events bearbeiten“ (hier zählt nur Lesen)
+        'price_lists' => [Area::AdminStammdaten, Area::Buchhaltung],
+        'price_list_items' => [Area::AdminStammdaten, Area::Buchhaltung],
+        // Finanzdaten: nicht für jede Leserolle der Events
+        'costings' => [Area::Buchhaltung],
+        'costing_items' => [Area::Buchhaltung],
         'field_options' => [Area::AdminFeldoptionen],
         'inventory_categories' => [Area::AdminInventar],
         'inventory_items' => [Area::AdminInventar],
@@ -173,7 +184,12 @@ final class AuditPresenter
         'seating' => 'Bestuhlung', 'ticketing' => 'Ticketing', 'wlan' => 'WLAN', 'wlan_password' => 'WLAN-Passwort',
         'booking_notes' => 'Notizen Buchung', 'onsite_contact' => 'Ansprechpartner vor Ort', 'closed' => 'Event abgeschlossen',
         'seating_plan_id' => 'Standard-Saalplan', 'seating_plan_path' => 'Eigener Saalplan', 'seating_plan_original_name' => 'Saalplan-Datei',
-        'seating_plan_mime_type' => 'Saalplan-Typ',
+        'seating_plan_mime_type' => 'Saalplan-Typ', 'price_list_id' => 'Preisliste',
+        // Preislisten, Costings
+        'intro' => 'Kopf', 'section' => 'Abschnitt', 'minimum' => 'Mindestbetrag', 'default_factor' => 'Faktor (Vorgabe)',
+        'factor_from_pax' => 'Faktor = PAX erwartet', 'factor' => 'Faktor', 'fixed_price' => 'Preis aus der Preisliste',
+        'price_list_item_id' => 'Preislisten-Posten', 'costing_id' => 'Costing', 'vat_rate' => 'MwSt. (%)', 'sent_at' => 'Verschickt',
+        'sent_to' => 'Verschickt an', 'sent_by_name' => 'Verschickt von',
         // Buchhaltung, PR
         'contract_status' => 'Vertragsstatus', 'accounting_status' => 'FIBU-Status', 'price_list' => 'Preisliste', 'rent' => 'Miete',
         'invoice_numbers' => 'Rechnungsnummern', 'accounting_closed' => 'Abrechnung abgeschlossen', 'pr_date' => 'PR-Datum', 'pr_status' => 'PR-Status',
@@ -228,17 +244,22 @@ final class AuditPresenter
         'event_incoming_invoices' => ['is_active' => 'Erwartet'],
         'event_stages' => ['width' => 'Bühne Breite', 'depth' => 'Bühne Tiefe', 'height' => 'Bühnenhöhe'],
         'settings' => ['key' => 'Einstellung'],
+        'price_lists' => ['notes' => 'Anmerkungen'],
+        'costings' => ['version' => 'Fassung', 'note' => 'Anmerkung'],
+        'price_list_items' => ['name' => 'Kostenpunkt', 'description' => 'Hinweis'],
+        'costing_items' => ['name' => 'Posten', 'description' => 'Hinweis'],
         'promoter_contacts' => ['role' => 'Funktion'],
     ];
 
     /** Felder mit ja/nein */
     private const BOOLEANS = ['closed', 'accounting_closed', 'power_ant', 'house_rig_early', 'briefing_complete', 'sold_out_award', 'house_delay',
         'stair_third', 'split_setup_teardown', 'is_active', 'is_archived', 'is_system', 'is_super', 'is_system_admin', 'is_shared', 'is_settled', 'is_fixed',
-        'is_received', 'hidden_from_externals'];
+        'is_received', 'hidden_from_externals', 'factor_from_pax', 'fixed_price'];
 
     /** Fremdschlüssel → [Modell, Spalte(n) für den Namen] */
     private const REFERENCES = [
         'promoter_id' => [Promoter::class, 'name'],
+        'price_list_id' => [PriceList::class, 'name'],
         'trade_id' => [Trade::class, 'name'],
         'employee_id' => [Employee::class, ['first_name', 'last_name']],
         'user_id' => [User::class, ['first_name', 'last_name']],

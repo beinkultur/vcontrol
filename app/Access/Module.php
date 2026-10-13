@@ -14,6 +14,7 @@ enum Module: string
     case SeatingPlan = 'saalplan';
     case GuestList = 'gaesteliste';
     case Accounting = 'buchhaltung';
+    case PriceLists = 'preislisten';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum Module: string
             self::SeatingPlan => 'Saalplan',
             self::GuestList => 'Gästeliste',
             self::Accounting => 'Buchhaltung',
+            self::PriceLists => 'Preislisten & Costing',
         };
     }
 
@@ -33,6 +35,7 @@ enum Module: string
             self::SeatingPlan => 'Standard-Saalpläne der Halle und eigene Pläne je Event (PDF), auch für Externe und im Daysheet. Bereiche und Bestuhlung gibt es immer.',
             self::GuestList => 'Gäste mit Freikarten je Event und die Liste zum Drucken für den Einlass.',
             self::Accounting => 'Finanzen, FIBU-Status und Eingangsrechnungen je Event, die Buchhaltungsliste und die Finanz-Warnung.',
+            self::PriceLists => 'Preislisten der Halle mit Kostenpunkten, die Preisliste je Event und das Costing, das der Eventmanager daraus erstellt und als PDF verschickt. Die Buchhaltung sieht beides.',
         };
     }
 

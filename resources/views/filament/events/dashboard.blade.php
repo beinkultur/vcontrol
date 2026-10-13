@@ -31,6 +31,9 @@
     $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
+    // Preisliste und Costing: nur mit ihrem Modul, das Costing nur für Eventmanager und Buchhaltung (CostingPolicy)
+    $priceLists = \App\Access\Module::PriceLists->isEnabled();
+    $costing = $priceLists && \App\Filament\Resources\Costings\CostingResource::canViewAny() ? $event->costings()->first() : null;
     $time = fn ($value): ?string => filled($value) ? substr((string) $value, 0, 5) : null;
     $stage = $stagePlan ? \App\Support\StagePodests::summary($event->stage)['text'] : '–';
     $link = fn (string $phase, ?string $section = null): string => $pageUrl . '?phase=' . $phase . ($section ? '&bereich=' . $section : '');
@@ -38,7 +41,8 @@
     $cards = [
         'buchung' => ['num' => 1, 'title' => 'Buchung', 'lines' => array_filter([
             $seesFinance && filled($event->finance?->contract_status) ? 'Vertrag: ' . $event->finance->contract_status : null,
-            $seesFinance && filled($event->finance?->price_list) ? 'Preisliste: ' . $event->finance->price_list : null,
+            $priceLists && $event->priceList !== null ? 'Preisliste: ' . $event->priceList->name : null,
+            $costing !== null ? 'Costing: ' . $costing->label() . ', ' . $costing->statusLabel() : null,
             filled($event->pr?->pr_status) ? 'PR: ' . $event->pr->pr_status : null,
             $event->hasFinanceAlert() ? 'Buchhaltung: offen' : null,
         ])],

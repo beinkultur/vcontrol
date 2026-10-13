@@ -1270,6 +1270,53 @@ a.vc-card:hover {
 }
 
 /* ---------------------------------------------------------------------
+ * Costing: Summen neben der Anmerkung (filament/costings/totals)
+ * ------------------------------------------------------------------ */
+
+.vc-costing-totals dl {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0;
+}
+
+.vc-costing-totals dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-costing-totals dt {
+    color: var(--gray-600);
+}
+
+.dark .vc-costing-totals dt {
+    color: var(--gray-400);
+}
+
+.vc-costing-totals__gross {
+    border-top: 1px solid var(--gray-300);
+    padding-top: 0.35rem;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.dark .vc-costing-totals__gross {
+    border-top-color: var(--gray-700);
+}
+
+.vc-costing-totals p {
+    margin-top: 0.5rem;
+}
+
+/* Neben dem Textfeld: auf Höhe des Eingabefelds, nicht der Beschriftung */
+@media (min-width: 64rem) {
+    .vc-costing-totals {
+        padding-top: 1.75rem;
+    }
+}
+
+/* ---------------------------------------------------------------------
  * Handy und Tablet. Breiten wie Filament: sm 40rem (640 px), md 48rem
  * (768 px), lg 64rem (1024 px). Welche Tabellenspalten auf dem Handy
  * fehlen, steht bei den Spalten (visibleFrom).

@@ -7,9 +7,11 @@ use App\Access\Level;
 use App\Access\Module;
 use App\Enums\AssignmentRole;
 use App\Enums\OptionField;
+use App\Filament\Resources\Costings\CostingResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ViewEvent;
+use App\Filament\Resources\Events\RelationManagers\CostingsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\DamagesRelationManager;
@@ -30,6 +32,7 @@ use App\Models\EventFinance;
 use App\Models\EventOperation;
 use App\Models\EventPr;
 use App\Models\EventStage;
+use App\Models\PriceList;
 use App\Support\EventProgress;
 use Closure;
 use App\Support\StagePlan;
@@ -134,6 +137,10 @@ class EventForm
                                 // die Finanzdaten stünden sonst im Seitenquelltext.
                                 self::can(Area::Buchhaltung)
                                     ? self::tab('Buchhaltung', 'buchhaltung')->schema(self::accounting())
+                                    : null,
+                                // Nur mit dem Modul Preislisten & Costing, für Eventmanager und Buchhaltung (CostingPolicy)
+                                CostingResource::canViewAny()
+                                    ? self::tab('Costing', 'costing')->schema([self::embedded(CostingsRelationManager::class)])
                                     : null,
                                 self::tab('PR', 'pr')
                                     ->schema([self::pr()]),
@@ -349,6 +356,8 @@ class EventForm
                 Section::make('Intern')
                     ->schema([
                         AssignmentFields::select(AssignmentRole::ProjectLead),
+                        // Nur mit dem Modul Preislisten & Costing
+                        ...(Module::PriceLists->isEnabled() ? [self::priceList()] : []),
                         Grid::make(2)
                             ->hiddenOn('create')
                             ->schema([
@@ -370,6 +379,16 @@ class EventForm
                     ]),
             ]),
         ];
+    }
+
+    /** Preisliste, nach der gerechnet wird – Grundlage fürs Costing (Buchung › Costing). */
+    private static function priceList(): Select
+    {
+        return Select::make('price_list_id')
+            ->label('Preisliste')
+            ->options(fn (?Event $record): array => PriceList::choices($record?->price_list_id))
+            ->helperText('Grundlage fürs Costing.')
+            ->native(false);
     }
 
     /**
@@ -438,19 +457,16 @@ class EventForm
                         ->label('Vertragsstatus')
                         ->options(fn (?EventFinance $record): array => OptionChoices::for(OptionField::ContractStatus, $record?->contract_status))
                         ->native(false),
-                    Select::make('price_list')
-                        ->label('Preisliste')
-                        ->options(fn (?EventFinance $record): array => OptionChoices::for(OptionField::PriceList, $record?->price_list))
-                        ->native(false),
+                    // Die Preisliste steht seit 13.10.2026 unter Buchung › Daten (Modul Preislisten & Costing)
+                    TextInput::make('rent')
+                        ->label('Miete')
+                        ->numeric()
+                        ->suffix('€'),
                     CheckboxList::make('accounting_status')
                         ->label('FIBU-Status')
                         ->options(fn (?EventFinance $record): array => OptionChoices::for(OptionField::AccountingStatus, $record?->accounting_status))
                         ->columns(2)
                         ->columnSpanFull(),
-                    TextInput::make('rent')
-                        ->label('Miete')
-                        ->numeric()
-                        ->suffix('€'),
                     TagsInput::make('invoice_numbers')
                         ->label('Rechnungsnummern'),
                     Toggle::make('accounting_closed')

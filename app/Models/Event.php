@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
     'va_nr', 'va_id', 'title', 'promoter_id', 'status', 'event_type1', 'event_type2',
     'starts_at', 'ends_at', 'pax_expected', 'pax', 'areas', 'seating', 'ticketing',
     'wlan', 'wlan_password', 'description', 'booking_notes', 'onsite_contact',
-    'closed', 'seating_plan_id', 'seating_plan_path', 'seating_plan_original_name',
+    'closed', 'seating_plan_id', 'seating_plan_path', 'seating_plan_original_name', 'price_list_id',
 ])]
 class Event extends Model
 {
@@ -121,6 +121,18 @@ class Event extends Model
         }
 
         return $this->seatingPlan?->name;
+    }
+
+    /** Preisliste, nach der gerechnet wird (Modul Preislisten & Costing) @return BelongsTo<PriceList, $this> */
+    public function priceList(): BelongsTo
+    {
+        return $this->belongsTo(PriceList::class);
+    }
+
+    /** Costings in Fassungen, neueste zuerst @return HasMany<Costing, $this> */
+    public function costings(): HasMany
+    {
+        return $this->hasMany(Costing::class)->orderByDesc('version');
     }
 
     /** @return HasOne<EventFinance, $this> */

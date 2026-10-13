@@ -62,14 +62,16 @@ final class EventProgress
     }
 
     /**
-     * Vertrag und Preisliste/Miete zählen nur mit dem Modul Buchhaltung – ohne
-     * lassen sie sich nicht eintragen.
+     * Vertrag und Miete zählen nur mit dem Modul Buchhaltung, die Preisliste nur
+     * mit dem Modul Preislisten & Costing – ohne lassen sie sich nicht eintragen.
+     * Preisliste oder Miete ist eine Prüfung, wie in der PHP-Version.
      *
      * @return list<bool>
      */
     private static function bookingChecks(Event $e): array
     {
         $accounting = Module::Accounting->isEnabled();
+        $priceLists = Module::PriceLists->isEnabled();
 
         return self::counted([
             filled($e->title),
@@ -81,7 +83,7 @@ final class EventProgress
             filled($e->seating),
             $e->assignments->contains('role', AssignmentRole::ProjectLead),
             $accounting ? filled($e->finance?->contract_status) : null,
-            $accounting ? (filled($e->finance?->price_list) || $e->finance?->rent !== null) : null,
+            ($accounting || $priceLists) ? (($priceLists && $e->price_list_id !== null) || ($accounting && $e->finance?->rent !== null)) : null,
             filled($e->pr?->pr_status) || $e->pr?->pr_date !== null,
             filled($e->areas) || filled($e->ticketing),
         ]);

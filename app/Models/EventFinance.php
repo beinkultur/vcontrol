@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
 /** Finanzdaten eines Events – Bereich Buchhaltung. */
-#[Fillable(['contract_status', 'accounting_status', 'price_list', 'rent', 'invoice_numbers', 'accounting_closed'])]
+#[Fillable(['contract_status', 'accounting_status', 'rent', 'invoice_numbers', 'accounting_closed'])]
 class EventFinance extends EventDetail
 {
     protected $table = 'event_finances';

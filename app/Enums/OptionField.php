@@ -12,7 +12,6 @@ enum OptionField: string implements HasLabel
     case Areas = 'areas';
     case Seating = 'seating';
     case Ticketing = 'ticketing';
-    case PriceList = 'price_list';
     case PrStatus = 'pr_status';
     case VaType1 = 'va_type1';
     case VaType2 = 'va_type2';
@@ -27,7 +26,6 @@ enum OptionField: string implements HasLabel
             self::Areas => 'Bereiche',
             self::Seating => 'Bestuhlung',
             self::Ticketing => 'Ticketing',
-            self::PriceList => 'Preisliste',
             self::PrStatus => 'PR-Status',
             self::VaType1 => 'VA-Kategorie 1',
             self::VaType2 => 'VA-Kategorie 2',
@@ -40,7 +38,7 @@ enum OptionField: string implements HasLabel
     /** Feld eines Moduls (Verwaltung › System): Ohne das Modul gibt es hier nichts zu pflegen. */
     public function module(): ?Module
     {
-        return in_array($this, [self::PriceList, self::ContractStatus, self::AccountingStatus], true) ? Module::Accounting : null;
+        return in_array($this, [self::ContractStatus, self::AccountingStatus], true) ? Module::Accounting : null;
     }
 
     /** @return list<self> Felder ohne Modul und die freigegebener Module */

@@ -9,15 +9,19 @@ use App\Enums\OptionField;
 use App\Filament\Pages\ManageSystem;
 use App\Filament\Pages\ManageVenue;
 use App\Filament\Resources\Accounting\Pages\ListAccounting;
+use App\Filament\Resources\Costings\CostingResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\ViewEvent;
+use App\Filament\Resources\PriceLists\PriceListResource;
 use App\Filament\Resources\Roles\RoleResource;
 use App\Filament\Resources\SeatingPlans\SeatingPlanResource;
 use App\Mail\DaysheetMail;
+use App\Models\Costing;
 use App\Models\Event;
 use App\Models\EventGuest;
+use App\Models\PriceList;
 use App\Models\SeatingPlan;
 use App\Models\Setting;
 use App\Support\Daysheets;
@@ -75,7 +79,7 @@ class ModulesTest extends TestCase
         $this->actingAs($this->systemAdmin());
 
         Livewire::test(ManageSystem::class)
-            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung']])
+            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung', 'preislisten']])
             // Die Buchhaltung steht nicht mehr unter Bereiche, sie kommt mit ihrem Modul
             ->assertFormFieldExists('areas_arbeitsbereiche', fn (CheckboxList $field): bool => !array_key_exists('buchhaltung', $field->getOptions())
                 && array_key_exists('events', $field->getOptions()))
@@ -120,8 +124,8 @@ class ModulesTest extends TestCase
         // Die Seite zeigt es so an; gespeichert gilt nur noch das Modul
         $this->actingAs($this->systemAdmin());
         Livewire::test(ManageSystem::class)
-            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste']])
-            ->fillForm(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung']])
+            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'preislisten']])
+            ->fillForm(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung', 'preislisten']])
             ->call('save');
 
         $this->assertTrue(Module::Accounting->isEnabled());
@@ -239,6 +243,35 @@ class ModulesTest extends TestCase
         $this->assertSame(1, $this->event->guests()->count());
         $this->only(...Module::cases());
         $this->get(EventResource::getUrl('edit', ['record' => $this->event]))->assertSee('Gästeliste');
+    }
+
+    public function test_ohne_preislisten_kein_costing(): void
+    {
+        $list = PriceList::create(['name' => 'Konzert-Preisliste 2025-09']);
+        $list->items()->create(['name' => 'Grundmiete', 'unit' => 'pauschal', 'price' => 2800, 'default_factor' => 1]);
+        $this->event->update(['price_list_id' => $list->id]);
+        $costing = Costing::createFor($this->event, $list);
+
+        $this->only(Module::StagePlan, Module::SeatingPlan, Module::GuestList, Module::Accounting);
+        $this->actingAs($this->admin());
+
+        $this->assertFalse(PriceListResource::canAccess(), 'nicht in der Navigation');
+        $this->assertFalse(CostingResource::canAccess());
+        $this->get(PriceListResource::getUrl())->assertForbidden();
+        $this->get(CostingResource::getUrl('view', ['record' => $costing]))->assertForbidden();
+        $this->get(route('costings.pdf', $costing))->assertNotFound();
+
+        // Am Event weder Preisliste noch Reiter Costing
+        Livewire::test(EditEvent::class, ['record' => $this->event->getRouteKey()])
+            ->assertFormFieldDoesNotExist('price_list_id');
+        $this->get(EventResource::getUrl('edit', ['record' => $this->event]))
+            ->assertOk()
+            ->assertDontSee('Konzert-Preisliste')
+            ->assertDontSee('Costing');
+
+        // Gespeichertes bleibt
+        $this->assertSame($list->id, $this->event->fresh()->price_list_id);
+        $this->assertSame(1, Costing::query()->count());
     }
 
     public function test_ohne_buchhaltung(): void

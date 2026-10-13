@@ -3,11 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Access\Module;
+use App\Models\Costing;
 use App\Models\Damage;
 use App\Models\Event;
 use App\Models\EventFile;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Filament\Resources\Pages\EditRecord;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\Eloquent\Model;
@@ -19,8 +21,9 @@ use Throwable;
  * echten Daten: Listen, Anlegen und je Resource einige Datensätze in Ansicht
  * und Bearbeitung. Findet Fehler, die erst mit Altwerten aus dem Import
  * auftreten und in den Tests (leere SQLite-Datenbank) nicht vorkommen. Liest
- * nur, schreibt nichts. Seiten abgeschalteter Bereiche und nicht freigegebener
- * Module (Verwaltung › System) gibt es nicht – sie werden übersprungen.
+ * nur, schreibt nichts. Seiten, die der Admin nicht erreicht – abgeschaltete
+ * Bereiche, nicht freigegebene Module (Verwaltung › System), verschickte
+ * Costings beim Bearbeiten – werden übersprungen.
  */
 class SmokeRender extends Command
 {
@@ -30,7 +33,7 @@ class SmokeRender extends Command
 
     protected $description = 'Rendert alle Seiten als Admin mit echten Daten und meldet Fehler';
 
-    /** @var list<string> Seiten, die es wegen abgeschalteter Bereiche oder Module nicht gibt */
+    /** @var list<string> Seiten, die der Admin nicht erreicht (canAccess) */
     private array $skipped = [];
 
     public function handle(Kernel $kernel): int
@@ -75,7 +78,7 @@ class SmokeRender extends Command
             return self::FAILURE;
         }
         if ($this->skipped !== []) {
-            $this->line('Übersprungen, Bereich oder Modul aus: ' . implode(', ', $this->skipped));
+            $this->line('Übersprungen, für den Admin nicht erreichbar: ' . implode(', ', $this->skipped));
         }
         $this->info(count($rows) . ' Seiten fehlerfrei' . ($this->skipped !== [] ? ', ' . count($this->skipped) . ' übersprungen' : ''));
 
@@ -99,9 +102,11 @@ class SmokeRender extends Command
                     continue;
                 }
                 foreach ($this->samples($resource::getModel()) as $record) {
-                    // Eigene Seiten wie der Bühnenplan prüfen hier auch ihr Modul
+                    // Eigene Seiten wie der Bühnenplan prüfen hier auch ihr Modul; bearbeiten nur,
+                    // was der Admin bearbeiten darf (ein verschicktes Costing führt zur Ansicht)
                     $path = $resource::getUrl($name, ['record' => $record], isAbsolute: false);
-                    if ($registration->getPage()::canAccess(['record' => $record])) {
+                    $page = $registration->getPage();
+                    if ($page::canAccess(['record' => $record]) && (!is_subclass_of($page, EditRecord::class) || $resource::canEdit($record))) {
                         $paths[] = $path;
                     } else {
                         $this->skipped[] = $path;
@@ -130,6 +135,15 @@ class SmokeRender extends Command
                 } else {
                     $this->skipped[] = route($route, $event, absolute: false);
                 }
+            }
+        }
+        // Costing-PDFs (Dompdf) mit echten Posten
+        foreach ($this->samples(Costing::class) as $costing) {
+            $path = route('costings.pdf', $costing, absolute: false);
+            if (Module::PriceLists->isEnabled()) {
+                $paths[] = $path;
+            } else {
+                $this->skipped[] = $path;
             }
         }
         foreach (EventFile::query()->orderBy('id')->limit(5)->get() as $file) {
