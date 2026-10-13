@@ -1,13 +1,13 @@
 {{--
     HTML-Fassung der Costing-Mail (App\Mail\CostingMail), aufgebaut wie die
-    Daysheet-Mail: Text aus dem Versand-Dialog als eigenes HTML in <p> (e()
-    maskiert, Markdown deutet nichts um), das PDF hängt an. Nicht einrücken:
-    Markdown macht sonst Code daraus.
+    Daysheet-Mail: im Kopf das Logo der Halle (sonst ihr Name), Text aus dem
+    Versand-Dialog als eigenes HTML in <p> (e() maskiert, Markdown deutet nichts
+    um), das PDF hängt an. Nicht einrücken: Markdown macht sonst Code daraus.
 --}}
 <x-mail::layout>
 <x-slot:header>
 <x-mail::header :url="config('app.url')">
-{{ $venue }}
+<x-mail::venue :mail="$message" :name="$venue" />
 </x-mail::header>
 </x-slot:header>
 

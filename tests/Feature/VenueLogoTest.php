@@ -3,18 +3,25 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\ManageVenue;
+use App\Mail\CostingMail;
+use App\Mail\DaysheetMail;
 use App\Models\Costing;
 use App\Models\Event;
 use App\Models\Setting;
+use App\Models\User;
 use App\Support\CostingPdf;
 use App\Support\VenueLogo;
+use Filament\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Filament\Facades\Filament;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Part\DataPart;
 use Tests\TestCase;
 
-/** Logo der Halle (Verwaltung › Halle): hochladen, ersetzen, auf dem Costing. */
+/** Logo der Halle (Verwaltung › Halle): hochladen, ersetzen, auf dem Costing, im Daysheet und in den Mails. */
 class VenueLogoTest extends TestCase
 {
     protected function setUp(): void
@@ -37,7 +44,7 @@ class VenueLogoTest extends TestCase
         $this->get(route('venue.logo'))->assertOk()->assertHeader('Content-Type', 'image/png');
 
         // Eingepasst in 62 × 20 mm, Seitenverhältnis bleibt
-        $logo = VenueLogo::forPdf(62, 20);
+        $logo = VenueLogo::fitted(62, 20);
         $this->assertSame(62.0, $logo['width']);
         $this->assertSame(17.57, $logo['height']);
         $this->assertStringStartsWith('data:image/png;base64,', $logo['src']);
@@ -45,7 +52,7 @@ class VenueLogoTest extends TestCase
         // Auf dem Costing: das Logo statt des Hallennamens
         $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
         $costing = Costing::createFor($event, null);
-        $html = view('costing-pdf', ['costing' => $costing, 'event' => $event, 'venue' => 'Inselpark Arena', 'venueLogo' => $logo, 'sections' => [], 'logo' => ''])->render();
+        $html = view('costing-pdf', ['costing' => $costing, 'event' => $event, 'venue' => 'Inselpark Arena', 'venueLogo' => $logo, 'sections' => []])->render();
         $this->assertStringContainsString('<img src="data:image/png;base64,', $html);
         $this->assertStringNotContainsString('<div class="venue">', $html);
         $this->assertStringStartsWith('%PDF', CostingPdf::render($costing));
@@ -66,7 +73,7 @@ class VenueLogoTest extends TestCase
 
         $this->actingAs($this->admin());
         $this->get(route('venue.logo'))->assertNotFound();
-        $this->assertNull(VenueLogo::forPdf(62, 20));
+        $this->assertNull(VenueLogo::fitted(62, 20));
 
         // Nur PNG und JPG
         Livewire::test(ManageVenue::class)
@@ -79,7 +86,42 @@ class VenueLogoTest extends TestCase
         Storage::disk(VenueLogo::DISK)->put('venue/logo.png', '%PDF-1.4 kein Bild');
         Setting::put(Setting::VENUE_LOGO, 'venue/logo.png');
         $this->assertNull(VenueLogo::path());
-        $this->assertNull(VenueLogo::forPdf(62, 20));
+        $this->assertNull(VenueLogo::fitted(62, 20));
         $this->get(route('venue.logo'))->assertNotFound();
+    }
+
+    public function test_im_kopf_von_daysheet_und_mails(): void
+    {
+        Setting::put(Setting::VENUE_NAME, 'Inselpark Arena');
+        Storage::disk(VenueLogo::DISK)->putFileAs('venue', UploadedFile::fake()->image('ipa.png', 600, 170), 'ipa.png');
+        Setting::put(Setting::VENUE_LOGO, 'venue/ipa.png');
+
+        // Daysheet: rechts neben dem Titel, als data-URI (die Seite braucht keine Anmeldung)
+        $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
+        $this->actingAs($this->admin())
+            ->get(route('events.daysheet-preview', $event))
+            ->assertOk()
+            ->assertSee('<img class="vc-sheet__logo" src="data:image/png;base64,', false)
+            ->assertSee('width="200" height="57" alt="Inselpark Arena">', false);
+
+        // Mails: im Kopf eingebettet statt des Namens, das VenueControl-Logo bleibt im Fuß
+        $link = 'https://example.org/daysheet/abc';
+        Mail::to('buero@halle.de')->send(new DaysheetMail('Daysheet', "Hier:\n\n{$link}", link: $link));
+        Mail::to('buero@halle.de')->send(new CostingMail('Costing', 'Anbei das Costing.', '%PDF-1.4', 'costing.pdf'));
+        $notification = new ResetPasswordNotification('abc');
+        $notification->url = 'https://example.org/passwort/neu';
+        User::factory()->create()->notify($notification);
+
+        $sent = app('mailer')->getSymfonyTransport()->messages();
+        $this->assertCount(3, $sent);
+        foreach ($sent as $message) {
+            /** @var Email $email */
+            $email = $message->getOriginalMessage();
+            $inline = collect($email->getAttachments())->filter(fn (DataPart $part): bool => $part->getDisposition() === 'inline');
+            $this->assertCount(2, $inline, 'Logo der Halle und VenueControl-Logo, eingebettet');
+            $this->assertMatchesRegularExpression('#class="header".*?<img src="cid:[^"]+" width="200" height="57" alt="Inselpark Arena"#s', $email->getHtmlBody());
+            $this->assertMatchesRegularExpression('#<img src="cid:[^"]+" width="40" height="40" alt="VenueControl"#', $email->getHtmlBody());
+            $this->assertStringNotContainsString('<img', (string) $email->getTextBody());
+        }
     }
 }

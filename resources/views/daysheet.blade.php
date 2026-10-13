@@ -39,7 +39,7 @@
         <button type="button" onclick="window.print()">Drucken / als PDF speichern</button>
     </div>
     <main class="page">
-        @include('extern.sheet', ['sheet' => $sheet, 'showHead' => true])
+        @include('extern.sheet', ['sheet' => $sheet, 'showHead' => true, 'logo' => $logo])
     </main>
     {{-- Wie der Fuß der Mails (vendor/mail/html/logo): Zeile, darunter das Logo --}}
     <footer class="footer">

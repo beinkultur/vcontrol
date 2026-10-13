@@ -1,21 +1,28 @@
 {{--
     Was Externe von einem Event sehen (App\Support\ExternSheet): im Extern-Bereich
     und im Daysheet. Stile: public/css/sheet.css. $showHead: Titelzeile zeigen
-    (im Panel steht sie schon im Seitenkopf).
+    (im Panel steht sie schon im Seitenkopf). $logo: Logo der Halle rechts
+    daneben (VenueLogo::fitted, in Pixeln), nur auf der Daysheet-Seite.
 --}}
 @php
     $showHead ??= true;
+    $logo ??= null;
 @endphp
 <div class="vc-sheet">
     @if ($showHead)
         <header class="vc-sheet__head">
-            <h1>{{ $sheet['title'] }}</h1>
-            <p>
-                {{ $sheet['date'] }} · {{ $sheet['venue'] }}
-                @if (filled($sheet['promoter']))
-                    · Veranstalter: {{ $sheet['promoter'] }}
-                @endif
-            </p>
+            <div>
+                <h1>{{ $sheet['title'] }}</h1>
+                <p>
+                    {{ $sheet['date'] }} · {{ $sheet['venue'] }}
+                    @if (filled($sheet['promoter']))
+                        · Veranstalter: {{ $sheet['promoter'] }}
+                    @endif
+                </p>
+            </div>
+            @if ($logo)
+                <img class="vc-sheet__logo" src="{{ $logo['src'] }}" width="{{ (int) round($logo['width']) }}" height="{{ (int) round($logo['height']) }}" alt="{{ $sheet['venue'] }}">
+            @endif
         </header>
     @endif
 

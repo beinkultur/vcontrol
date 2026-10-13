@@ -30,6 +30,20 @@
     --sheet-alert-fg: #fca5a5;
 }
 
+/* Titel links, das Logo der Halle (Daysheet) rechts, unten bündig wie auf dem Costing */
+.vc-sheet__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+}
+
+.vc-sheet__logo {
+    flex: none;
+    max-width: 40%;
+    height: auto;
+}
+
 .vc-sheet__head h1 {
     margin: 0;
     font-size: 1.5rem;
@@ -214,6 +228,18 @@
 .vc-sheet__plan-toggle:not([open]) .vc-sheet__when-open,
 .vc-sheet__plan-toggle[open] .vc-sheet__when-closed {
     display: none;
+}
+
+/* Schmal: das Logo über dem Titel */
+@media screen and (max-width: 40rem) {
+    .vc-sheet__head {
+        flex-direction: column-reverse;
+        align-items: flex-start;
+    }
+
+    .vc-sheet__logo {
+        max-width: 60%;
+    }
 }
 
 @media print {

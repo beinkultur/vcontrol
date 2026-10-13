@@ -9,6 +9,7 @@ use App\Models\EventFile;
 use App\Models\Setting;
 use App\Support\CostingSettings;
 use App\Support\ExternSheet;
+use App\Support\VenueLogo;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -51,6 +52,7 @@ class DaysheetController extends Controller
                 'preview' => false,
                 'documentTitle' => self::documentTitle($daysheet->event),
                 'venue' => self::venue(),
+                'logo' => self::logo(),
             ])
             ->withHeaders(self::HEADERS);
     }
@@ -110,6 +112,7 @@ class DaysheetController extends Controller
             'preview' => true,
             'documentTitle' => self::documentTitle($event),
             'venue' => self::venue(),
+            'logo' => self::logo(),
         ]);
     }
 
@@ -121,5 +124,11 @@ class DaysheetController extends Controller
     private static function venue(): string
     {
         return Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name');
+    }
+
+    /** Logo der Halle für den Kopf, in Pixeln (VenueLogo) */
+    private static function logo(): ?array
+    {
+        return VenueLogo::fitted(200, 64);
     }
 }

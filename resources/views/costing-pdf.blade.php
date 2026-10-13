@@ -36,6 +36,7 @@
         .c-factor { width: 15mm; }
         .c-amount { width: 25mm; }
         .items th { font-size: 7.5pt; font-weight: normal; color: #666; text-align: left; border-bottom: 0.8pt solid #888; padding: 1.2mm 1.5mm; }
+        .items th.num { text-align: right; }
         .items td { padding: 1.2mm 1.5mm; border-bottom: 0.4pt solid #ddd; vertical-align: top; }
         .items .section td { font-weight: bold; font-size: 8pt; text-transform: uppercase; padding-top: 4mm; border-bottom: 0.8pt solid #888; }
         .items .subtotal td { border-bottom: 0; color: #666; font-size: 7.5pt; padding-top: 0.6mm; }
@@ -49,11 +50,10 @@
         .block { margin-top: 6mm; font-size: 7.8pt; color: #333; page-break-inside: avoid; }
         .block strong { display: block; margin-bottom: 1mm; color: #1a1a1a; }
         .footer { position: fixed; bottom: -16mm; left: 0; right: 0; font-size: 7pt; color: #777; }
-        .footer img { width: 9mm; height: 9mm; vertical-align: middle; margin-left: 2mm; }
     </style>
 </head>
 <body>
-    <div class="footer">{{ $venue }} · erstellt mit VenueControl<img src="{{ $logo }}" alt=""></div>
+    <div class="footer">{{ $venue }} · erstellt mit VenueControl</div>
 
     {{-- Mit Logo der Halle steht ihr Name nicht noch einmal darüber --}}
     <table class="head">

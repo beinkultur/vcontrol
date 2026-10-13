@@ -7,8 +7,9 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Logo der Halle (Verwaltung › Halle): PNG oder JPG, nicht öffentlich
- * gespeichert. Steht auf dem Costing (CostingPdf), die Halle-Seite zeigt es über
- * die Route venue.logo. SVG ist als Upload gesperrt (App\Support\Uploads).
+ * gespeichert. Steht auf dem Costing (CostingPdf), im Kopf der Daysheet-Seite
+ * und der Mails (vendor/mail/html/venue); die Halle-Seite zeigt es über die
+ * Route venue.logo. SVG ist als Upload gesperrt (App\Support\Uploads).
  */
 final class VenueLogo
 {
@@ -39,11 +40,14 @@ final class VenueLogo
     }
 
     /**
-     * Fürs PDF: als data-URI, eingepasst in die Fläche (Millimeter).
+     * Das Bild, eingepasst in die Fläche: Breite und Höhe in deren Einheit
+     * (Millimeter fürs PDF, Pixel für Mail und Daysheet), das Seitenverhältnis
+     * bleibt. src als data-URI – Dompdf lädt nichts nach, das Daysheet braucht
+     * keine Anmeldung; Mails betten content ein.
      *
-     * @return array{src: string, width: float, height: float}|null
+     * @return array{content: string, mime: string, name: string, src: string, width: float, height: float}|null
      */
-    public static function forPdf(float $maxWidth, float $maxHeight): ?array
+    public static function fitted(float $maxWidth, float $maxHeight): ?array
     {
         $path = self::path();
         if ($path === null) {
@@ -55,9 +59,13 @@ final class VenueLogo
             return null;
         }
         $scale = min($maxWidth / $size[0], $maxHeight / $size[1]);
+        $mime = (string) self::mimeType($path);
 
         return [
-            'src' => 'data:' . self::mimeType($path) . ';base64,' . base64_encode($content),
+            'content' => $content,
+            'mime' => $mime,
+            'name' => basename($path),
+            'src' => 'data:' . $mime . ';base64,' . base64_encode($content),
             'width' => round($size[0] * $scale, 2),
             'height' => round($size[1] * $scale, 2),
         ];

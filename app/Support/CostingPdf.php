@@ -32,9 +32,8 @@ final class CostingPdf
             'costing' => $costing,
             'event' => $costing->event,
             'venue' => Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name'),
-            'venueLogo' => VenueLogo::forPdf(62, 20),
+            'venueLogo' => VenueLogo::fitted(62, 20),
             'sections' => $costing->printedSections(),
-            'logo' => 'data:image/png;base64,' . base64_encode((string) file_get_contents(public_path('images/logo-mail.png'))),
         ])->render(), 'UTF-8');
         $dompdf->setPaper('A4');
         $dompdf->render();

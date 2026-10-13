@@ -226,7 +226,7 @@ class CostingTest extends TestCase
 
         $html = view('costing-pdf', [
             'costing' => $costing, 'event' => $this->event, 'venue' => 'Inselpark Arena',
-            'sections' => $costing->printedSections(), 'logo' => '',
+            'sections' => $costing->printedSections(),
         ])->render();
         $this->assertStringContainsString('Grundmiete unbestuhlt', $html);
         $this->assertStringContainsString('Nacht-/Sonn-/Feiertagszuschlag', $html, 'Faktor 0 steht im PDF, mit 0,00 €');
@@ -237,6 +237,7 @@ class CostingTest extends TestCase
         $this->assertStringContainsString('5.914,00 €', $html);
         $this->assertStringContainsString('7.037,66 €', $html);
         $this->assertStringContainsString('Alle Preise zzgl. MwSt.', $html);
+        $this->assertStringContainsString('<div class="footer">Inselpark Arena · erstellt mit VenueControl</div>', $html, 'Fuß ohne VenueControl-Logo');
 
         // Ausgeschaltet: nicht im PDF, nicht in der Summe
         $costing->items->firstWhere('name', 'Grundmiete unbestuhlt')->update(['is_active' => false]);
@@ -244,7 +245,7 @@ class CostingTest extends TestCase
         $this->assertSame(3114.0, $costing->net());
         $html = view('costing-pdf', [
             'costing' => $costing, 'event' => $this->event, 'venue' => 'Inselpark Arena',
-            'sections' => $costing->printedSections(), 'logo' => '',
+            'sections' => $costing->printedSections(),
         ])->render();
         $this->assertStringNotContainsString('Grundmiete unbestuhlt', $html);
         $this->assertStringContainsString('3.114,00 €', $html);
