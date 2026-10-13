@@ -86,7 +86,7 @@ class EventPlanningTest extends TestCase
         $this->assertNotNull($this->event->assignments()->where('role', AssignmentRole::SafetyEarly->value)->first());
     }
 
-    public function test_vfv_nur_mit_position_oder_leistungsbereich_vfv(): void
+    public function test_vfv_und_house_rep_nur_mit_passender_position(): void
     {
         $vfv = Employee::create(['first_name' => 'Vera', 'last_name' => 'Fach', 'positions' => ['VfV']]);
         $vl = Employee::create(['first_name' => 'Volker', 'last_name' => 'Leitung', 'positions' => ['VL']]);
@@ -101,10 +101,10 @@ class EventPlanningTest extends TestCase
             ->assertFormFieldExists('role_safety_1', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'trade:' . $sidi->id])
             ->assertFormFieldExists('role_safety_2', fn (Select $field): bool => in_array('user:' . $kollege->id, $keys($field), true)
                 && !in_array('employee:' . $vl->id, $keys($field), true))
-            // Auf-/Abschließen und House Rep.: nur Mitarbeiter, alle Positionen
+            // Auf-/Abschließen: nur Mitarbeiter, alle Positionen; House Rep. früh/spät nur mit VL
             ->assertFormFieldExists('role_house_rep_1', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
-            ->assertFormFieldExists('role_house_rep_2', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
-            ->assertFormFieldExists('role_house_rep_3', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
+            ->assertFormFieldExists('role_house_rep_2', fn (Select $field): bool => $keys($field) === ['employee:' . $vl->id])
+            ->assertFormFieldExists('role_house_rep_3', fn (Select $field): bool => $keys($field) === ['employee:' . $vl->id])
             ->assertFormFieldExists('role_house_rep_4', fn (Select $field): bool => $keys($field) === ['employee:' . $vfv->id, 'employee:' . $vl->id])
             // Projektleitung weiter mit allen
             ->assertFormFieldExists('role_pl', fn (Select $field): bool => in_array('employee:' . $vl->id, $keys($field), true)

@@ -46,13 +46,15 @@ enum AssignmentRole: string implements HasLabel
 
     /**
      * Voraussetzung für die Rolle: Zur Wahl stehen dann nur Mitarbeiter mit
-     * dieser Position und Gewerke mit diesem Leistungsbereich (Vorgabe vom
-     * 12.10.2026). Null: keine.
+     * dieser Position und Gewerke mit diesem Leistungsbereich – VfV seit dem
+     * 12.10.2026, House Rep. früh/spät nur mit VL (Veranstaltungsleitung) seit
+     * dem 13.10.2026. Auf-/Abschließen ohne. Null: keine.
      */
     public function qualification(): ?string
     {
         return match ($this) {
             self::SafetyEarly, self::SafetyLate => 'VfV',
+            self::HouseRepEarly, self::HouseRepLate => 'VL',
             default => null,
         };
     }

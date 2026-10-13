@@ -301,6 +301,10 @@ Freitermin-Suche, Sortierung
   Veranstalter 827; dazu 214 Notizen). Übernommen werden nur diese plus die
   Aktiv-Schalter (zusammen 1.259); eine fehlende Zeile heißt „nicht festgelegt“.
 - **Rollen** mit Uhrzeit von/bis (im Bestand 5 von 367, z. B. VfV 03:00–17:30).
+  Zur Wahl stehen je Rolle nur passende: VfV früh/spät nur Mitarbeiter mit
+  Position VfV und Gewerke mit diesem Leistungsbereich (12.10.2026), House Rep.
+  früh/spät nur Mitarbeiter mit Position VL (13.10.2026), Auf-/Abschließen jeder
+  Mitarbeiter; schon Eingetragenes bleibt wählbar.
   Leert man die Person, verschwindet die Rolle samt Uhrzeit.
 - **Rollen:** Die „Projektleitung“ steckt in den Rollen (`pl`, 123 Events),
   nicht im leeren Feld `pl` am Event. Rollen verweisen per Morph-Map auf

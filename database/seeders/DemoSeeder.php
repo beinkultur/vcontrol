@@ -148,7 +148,7 @@ final class DemoSeeder extends Seeder
             OptionField::Ticketing->value => ['freie Platzwahl', 'Innenraum/Rang', 'platzgenau', 'tba.'],
             OptionField::PrStatus->value => ['✓', '✗', 'n.b.'],
             OptionField::VaType1->value => ['Konzert', 'Comedy', 'Show', 'Sport', 'Messe', 'Versammlung', 'Gala'],
-            OptionField::EmployeePosition->value => ['VL', 'VfV', 'House Rep.'],
+            OptionField::EmployeePosition->value => ['VL', 'VfV'],
             OptionField::ContractStatus->value => ['Vertrag erstellt', 'Vertrag versendet', 'Vertrag zurück', 'Rahmenvertrag'],
             OptionField::AccountingStatus->value => ['1. Rate / Grundmiete gestellt', '1. Rate / Grundmiete gezahlt', '2. Rate gestellt', '2. Rate gezahlt', Event::ACCOUNTING_FINAL],
         ];
@@ -255,9 +255,9 @@ final class DemoSeeder extends Seeder
     private function people(): void
     {
         $employees = [
-            ['AK', 'Anna', 'Koch', ['VL']], ['TM', 'Tom', 'Meyer', ['VfV']], ['JS', 'Jana', 'Schulz', ['VL']],
-            ['OP', 'Ole', 'Peters', ['VfV', 'House Rep.']], ['LH', 'Lena', 'Hoffmann', ['House Rep.']], ['MA', 'Mehmet', 'Aydın', ['VL']],
-            ['SW', 'Sophie', 'Wagner', []], ['JB', 'Jonas', 'Becker', ['House Rep.']], ['PR', 'Paula', 'Richter', []], ['DS', 'David', 'Schmitz', ['VfV']],
+            ['AK', 'Anna', 'Koch', ['VL']], ['TM', 'Tom', 'Meyer', ['VfV', 'VL']], ['JS', 'Jana', 'Schulz', ['VL']],
+            ['OP', 'Ole', 'Peters', ['VfV', 'VL']], ['LH', 'Lena', 'Hoffmann', ['VL']], ['MA', 'Mehmet', 'Aydın', ['VL']],
+            ['SW', 'Sophie', 'Wagner', []], ['JB', 'Jonas', 'Becker', ['VL']], ['PR', 'Paula', 'Richter', []], ['DS', 'David', 'Schmitz', ['VfV']],
         ];
         foreach ($employees as [$initials, $first, $last, $positions]) {
             $this->staff[$initials] = Employee::create(['first_name' => $first, 'last_name' => $last, 'initials' => $initials, 'positions' => $positions,
