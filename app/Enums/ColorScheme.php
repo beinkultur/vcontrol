@@ -19,11 +19,27 @@ use Filament\Support\Contracts\HasLabel;
  * stehen fest im Code, nichts davon kommt von Benutzern.
  *
  * stylesheet(): was sich nicht über Farben allein machen lässt, etwa die dunkle
- * Kopfleiste von Lila-Grün (public/css/scheme-lila-gruen.css).
+ * Kopfleiste von Lila-Grün (public/css/scheme-lila-gruen.css) oder Schrift und
+ * Formen der Website bei VC Basic (public/css/scheme-vc-basic.css).
  */
 enum ColorScheme: string implements HasLabel
 {
-    /** Das ursprüngliche Aussehen: Blau, neutrales Grau */
+    /** Blau der Website www.vcontrol.eu: 600 = #2563eb (Knöpfe, Links), 700 = #1d4ed8 (darüberfahren) */
+    private const WEBSITE_BLUE = [
+        50 => '#eff6ff',
+        100 => '#dbeafe',
+        200 => '#bfdbfe',
+        300 => '#93c5fd',
+        400 => '#60a5fa',
+        500 => '#3b82f6',
+        600 => '#2563eb',
+        700 => '#1d4ed8',
+        800 => '#1e40af',
+        900 => '#1e3a8a',
+        950 => '#172554',
+    ];
+
+    /** Der Look der Website www.vcontrol.eu: Blau, kühles Blaugrau bis Navy (seit 14.10.2026) */
     case VcBasic = 'vc-basic';
 
     /** Die Palette des T1X-Backends (App\Support\T1XPalette im T1X-Repo) */
@@ -45,7 +61,7 @@ enum ColorScheme: string implements HasLabel
     public function description(): string
     {
         return match ($this) {
-            self::VcBasic => 'Blau mit neutralem Grau – das bisherige Aussehen.',
+            self::VcBasic => 'Blau mit kühlem Blaugrau, runden Knöpfen und Systemschrift – wie die Website www.vcontrol.eu.',
             self::LilaGruen => 'Lila mit Grün, grünlichem Grau und dunkler Kopfleiste – die Farben von T1X.',
         };
     }
@@ -59,12 +75,39 @@ enum ColorScheme: string implements HasLabel
     public function colors(): array
     {
         return match ($this) {
+            // Blau und Bernstein genau wie auf der Website (dort die Werte von 600 und
+            // 700), Grau aus deren Tönen: 50 Abschnittsgrund, 200 Linien, 500
+            // gedämpfte Schrift, 700 Fließtext, 950 Navy der Überschriften
             self::VcBasic => [
-                'primary' => Color::Blue,
-                'gray' => Color::Zinc,
-                'info' => Color::Blue,
+                'primary' => self::WEBSITE_BLUE,
+                'gray' => [
+                    50 => '#f4f7fb',
+                    100 => '#edf1f7',
+                    200 => '#e3e8ef',
+                    300 => '#cbd3df',
+                    400 => '#9aa4b5',
+                    500 => '#6b7587',
+                    600 => '#515c70',
+                    700 => '#3b4659',
+                    800 => '#26324a',
+                    900 => '#182540',
+                    950 => '#0f1d3a',
+                ],
+                'info' => self::WEBSITE_BLUE,
                 'success' => Color::Green,
-                'warning' => Color::Amber,
+                'warning' => [
+                    50 => '#fffbeb',
+                    100 => '#fef3c7',
+                    200 => '#fde68a',
+                    300 => '#fcd34d',
+                    400 => '#fbbf24',
+                    500 => '#f59e0b',
+                    600 => '#d97706',
+                    700 => '#b45309',
+                    800 => '#92400e',
+                    900 => '#78350f',
+                    950 => '#451a03',
+                ],
                 'danger' => Color::Red,
             ],
             self::LilaGruen => [
@@ -174,7 +217,7 @@ enum ColorScheme: string implements HasLabel
     public function stylesheet(): ?string
     {
         return match ($this) {
-            self::VcBasic => null,
+            self::VcBasic => 'css/scheme-vc-basic.css',
             self::LilaGruen => 'css/scheme-lila-gruen.css',
         };
     }

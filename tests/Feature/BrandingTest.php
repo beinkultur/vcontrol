@@ -22,8 +22,12 @@ class BrandingTest extends TestCase
         $this->actingAs($this->admin())
             ->get('/events')
             ->assertOk()
-            ->assertSee('--primary-600:' . Color::Blue[600], false)
+            // Farben und Look der Website www.vcontrol.eu
+            ->assertSee('--primary-600:' . Color::convertToOklch('#2563eb'), false)
+            ->assertSee('--gray-950:' . Color::convertToOklch('#0f1d3a'), false)
+            ->assertSee('--warning-600:' . Color::convertToOklch('#d97706'), false)
             ->assertSee('--vc-buchung:#2563eb;--vc-planung:#0d9488;--vc-durchfuehrung:#d97706;', false)
+            ->assertSee(asset('css/scheme-vc-basic.css') . '?v=', false)
             ->assertDontSee(Color::convertToOklch('#5c0a5a'), false)
             ->assertDontSee('scheme-lila-gruen.css', false);
     }
@@ -50,7 +54,8 @@ class BrandingTest extends TestCase
             ->assertSee('--vc-planung-ink:var(--gray-950);', false)
             // Dunkle Kopfleiste wie im T1X-Veranstalterbereich
             ->assertSee(asset('css/scheme-lila-gruen.css') . '?v=', false)
-            ->assertDontSee('--primary-600:' . Color::Blue[600], false);
+            ->assertDontSee('scheme-vc-basic.css', false)
+            ->assertDontSee('--primary-600:' . Color::convertToOklch('#2563eb'), false);
     }
 
     public function test_nur_der_system_admin_waehlt_das_farbschema(): void
