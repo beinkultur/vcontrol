@@ -29,7 +29,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Livewire\Attributes\Url;
-use UnitEnum;
 
 /**
  * Kalender wie /kalender der PHP-Version: Monat, Woche, Tag, 4 Wochen (ohne
@@ -49,10 +48,8 @@ class Calendar extends Page
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
-    /** Eigene Gruppe in der Kopfleiste: Kalender, darunter die Anfragen (Vorgabe vom 14.10.2026) */
-    protected static string|UnitEnum|null $navigationGroup = 'Kalender';
-
-    protected static ?int $navigationSort = 1;
+    /** Eigener Punkt in der Kopfleiste nach Events und Anfragen (Vorgabe vom 14.10.2026) */
+    protected static ?int $navigationSort = 3;
 
     protected string $view = 'filament.pages.calendar';
 

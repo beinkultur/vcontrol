@@ -33,7 +33,6 @@ use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use UnitEnum;
 
 /**
  * Anfragen (Optionen) wie /anfragen der PHP-Version: Veranstalter fragen einen
@@ -53,9 +52,6 @@ class InquiryResource extends Resource
     protected static ?string $pluralModelLabel = 'Anfragen';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedInboxArrowDown;
-
-    /** Unterpunkt des Kalenders in der Kopfleiste (Vorgabe vom 14.10.2026) */
-    protected static string|UnitEnum|null $navigationGroup = 'Kalender';
 
     protected static ?int $navigationSort = 2;
 

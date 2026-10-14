@@ -108,8 +108,8 @@ class AppPanelProvider extends PanelProvider
             // in der Regel die Event-Liste (Filament-Weiterleitung „home“).
             // Reihenfolge: Events, Buchhaltung, Codes (ohne Gruppe, nach navigationSort),
             // dann diese Gruppen.
-            // Punkte ohne Gruppe stehen vorn (nur noch Events), dahinter die Gruppen als Aufklapp-Menü
-            ->navigationGroups(['Kalender', 'Finanzen', 'Protokolle', 'Stammdaten', 'Verwaltung'])
+            // Punkte ohne Gruppe stehen vorn (Events, Anfragen, Kalender), dahinter die Gruppen als Aufklapp-Menü
+            ->navigationGroups(['Finanzen', 'Protokolle', 'Stammdaten', 'Verwaltung'])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
