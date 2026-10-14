@@ -11,6 +11,7 @@ use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Url;
+use UnitEnum;
 
 /**
  * Codes Tageszugang wie /codes der PHP-Version: aktuell gültiger Code, Suche
@@ -24,11 +25,14 @@ class AccessCodes extends Page
 
     protected static ?string $title = 'Codes Tageszugang';
 
-    protected static ?string $navigationLabel = 'Codes';
+    protected static ?string $navigationLabel = 'Codes Tageszugang';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
-    protected static ?int $navigationSort = 5;
+    /** Kein eigener Punkt in der Kopfleiste mehr, sondern bei den Protokollen (Vorgabe vom 14.10.2026) */
+    protected static string|UnitEnum|null $navigationGroup = 'Protokolle';
+
+    protected static ?int $navigationSort = 40;
 
     protected string $view = 'filament.pages.access-codes';
 
