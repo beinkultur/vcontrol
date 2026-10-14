@@ -40,6 +40,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 /**
  * Costings aller Events (Modul Preislisten & Costing): die Liste (Menüpunkt, nur
@@ -60,7 +61,10 @@ class CostingResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalculator;
 
-    protected static ?int $navigationSort = 5;
+    /** Gruppe „Finanzen“ mit der Buchhaltung (Vorgabe vom 14.10.2026) */
+    protected static string|UnitEnum|null $navigationGroup = 'Finanzen';
+
+    protected static ?int $navigationSort = 2;
 
     /** Seiten eines Costings: wer Costings sieht; die Liste prüft ListCostings selbst (Menüpunkt) */
     public static function canAccess(): bool

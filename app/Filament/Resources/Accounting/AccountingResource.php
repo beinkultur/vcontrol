@@ -21,6 +21,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 /**
  * Buchhaltungsliste: dieselben Events, gesehen von der Buchhaltung. Zugang über
@@ -39,7 +40,10 @@ class AccountingResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
 
-    protected static ?int $navigationSort = 4;
+    /** Gruppe „Finanzen“ mit den Costings, damit die Kopfleiste schmal bleibt (Vorgabe vom 14.10.2026) */
+    protected static string|UnitEnum|null $navigationGroup = 'Finanzen';
+
+    protected static ?int $navigationSort = 1;
 
     public static function canViewAny(): bool
     {
