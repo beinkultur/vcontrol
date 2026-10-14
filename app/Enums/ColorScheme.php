@@ -61,7 +61,7 @@ enum ColorScheme: string implements HasLabel
     public function description(): string
     {
         return match ($this) {
-            self::VcBasic => 'Blau mit kühlem Blaugrau, runden Knöpfen und Systemschrift – wie die Website www.vcontrol.eu.',
+            self::VcBasic => 'Blau mit kühlem Blaugrau und Systemschrift – wie die Website www.vcontrol.eu.',
             self::LilaGruen => 'Lila mit Grün, grünlichem Grau und dunkler Kopfleiste – die Farben von T1X.',
         };
     }

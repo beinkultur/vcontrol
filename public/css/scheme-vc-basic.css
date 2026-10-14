@@ -1,42 +1,35 @@
 /*
  * Farbschema „VC Basic“ (App\Enums\ColorScheme::stylesheet): der Look der
  * Website www.vcontrol.eu über die Farben hinaus – Systemschrift wie dort statt
- * Inter, Knöpfe als Pillen (gefüllte mit einem Schatten in ihrer Farbe), größere
- * Rundungen bei Abschnitten, Tabellen und Dialogen, kräftige Überschriften mit
- * enger Laufweite, Kopfleiste leicht durchscheinend mit feiner Linie. Die Farben
- * selbst stehen in ColorScheme::colors() (Blau #2563eb, Blaugrau bis Navy
- * #0f1d3a). Nur geladen, wenn das Schema aktiv ist.
+ * Inter, gefüllte Knöpfe mit einem Schatten in ihrer Farbe, kräftige
+ * Überschriften mit enger Laufweite, Kopfleiste leicht durchscheinend mit feiner
+ * Linie. Die Rundungen bleiben die von Filament (die runderen Formen der Website
+ * passten nicht, 14.10.2026 zurückgenommen). Die Farben selbst stehen in
+ * ColorScheme::colors() (Blau #2563eb, Blaugrau bis Navy #0f1d3a). Nur geladen,
+ * wenn das Schema aktiv ist.
  */
 
 :root {
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Knöpfe rund wie auf der Website; gefüllte mit Schatten in ihrer Farbe */
-.fi-btn {
-    border-radius: 999px;
-}
-
-.fi-btn.fi-color-primary.fi-bg-color-600 {
+/* Gefüllte Knöpfe mit Schatten in ihrer Farbe – nur echte Knöpfe: Auswahl-Knöpfe
+   (ToggleButtons) sind <label> mit denselben Klassen, auch die nicht gewählten */
+button.fi-btn.fi-color-primary.fi-bg-color-600,
+a.fi-btn.fi-color-primary.fi-bg-color-600 {
     box-shadow: 0 8px 20px -10px rgb(37 99 235 / 0.7);
 }
 
-.fi-btn.fi-color-danger.fi-bg-color-600 {
+button.fi-btn.fi-color-danger.fi-bg-color-600,
+a.fi-btn.fi-color-danger.fi-bg-color-600 {
     box-shadow: 0 8px 20px -10px rgb(220 38 38 / 0.6);
 }
 
-.dark .fi-btn.fi-color-primary.fi-bg-color-600,
-.dark .fi-btn.fi-color-danger.fi-bg-color-600 {
+.dark button.fi-btn.fi-color-primary.fi-bg-color-600,
+.dark a.fi-btn.fi-color-primary.fi-bg-color-600,
+.dark button.fi-btn.fi-color-danger.fi-bg-color-600,
+.dark a.fi-btn.fi-color-danger.fi-bg-color-600 {
     box-shadow: none;
-}
-
-/* Abschnitte, Tabellen, Dialoge, Menüs und die Anmeldung: Rundung der Website-Karten (20 px) */
-.fi-section,
-.fi-ta-ctn,
-.fi-modal-window,
-.fi-dropdown-panel,
-.fi-simple-main {
-    border-radius: 1.25rem;
 }
 
 /* Überschriften kräftig mit enger Laufweite, in Navy (Grau 950) */
@@ -67,14 +60,4 @@
 /* Das Initialen-Bild oben rechts bleibt im Dunkelmodus auf der Navy-Leiste sichtbar */
 .dark .fi-topbar .fi-avatar {
     box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3);
-}
-
-/* Kalender (public/css/vcontrol.css): Knöpfe und Ansichten ebenfalls rund, das Raster mit der Rundung der Abschnitte */
-.vc-cal__btn,
-.vc-cal__view {
-    border-radius: 999px;
-}
-
-.vc-cal__grid {
-    border-radius: 1.25rem;
 }
