@@ -24,7 +24,7 @@ use Filament\Support\Contracts\HasLabel;
  */
 enum ColorScheme: string implements HasLabel
 {
-    /** Blau der Website www.vcontrol.eu: 600 = #2563eb (Knöpfe, Links), 700 = #1d4ed8 (darüberfahren) */
+    /** Blau der Website www.venuecontrol.eu: 600 = #2563eb (Knöpfe, Links), 700 = #1d4ed8 (darüberfahren) */
     private const WEBSITE_BLUE = [
         50 => '#eff6ff',
         100 => '#dbeafe',
@@ -39,7 +39,7 @@ enum ColorScheme: string implements HasLabel
         950 => '#172554',
     ];
 
-    /** Der Look der Website www.vcontrol.eu: Blau, kühles Blaugrau bis Navy (seit 14.10.2026) */
+    /** Der Look der Website www.venuecontrol.eu: Blau, kühles Blaugrau bis Navy (seit 14.10.2026) */
     case VcBasic = 'vc-basic';
 
     /** Die Palette des T1X-Backends (App\Support\T1XPalette im T1X-Repo) */
@@ -61,7 +61,7 @@ enum ColorScheme: string implements HasLabel
     public function description(): string
     {
         return match ($this) {
-            self::VcBasic => 'Blau mit kühlem Blaugrau – die Farben der Website www.vcontrol.eu.',
+            self::VcBasic => 'Blau mit kühlem Blaugrau – die Farben der Website www.venuecontrol.eu.',
             self::LilaGruen => 'Lila mit Grün, grünlichem Grau und dunkler Kopfleiste – die Farben von T1X.',
         };
     }

@@ -22,7 +22,7 @@ class BrandingTest extends TestCase
         $this->actingAs($this->admin())
             ->get('/events')
             ->assertOk()
-            // Farben und Look der Website www.vcontrol.eu
+            // Farben und Look der Website www.venuecontrol.eu
             ->assertSee('--primary-600:' . Color::convertToOklch('#2563eb'), false)
             ->assertSee('--gray-950:' . Color::convertToOklch('#0f1d3a'), false)
             ->assertSee('--warning-600:' . Color::convertToOklch('#d97706'), false)
@@ -118,7 +118,7 @@ class BrandingTest extends TestCase
 
         $this->assertNotNull($logo, 'Logo hängt eingebettet an der Mail');
         $this->assertSame('image/png', $logo->getMediaType() . '/' . $logo->getMediaSubtype());
-        $this->assertMatchesRegularExpression('#erstellt mit <a href="https://www\.vcontrol\.eu"[^>]*>VenueControl</a>.*?<img src="cid:[^"]+" width="40" height="40"#s', $email->getHtmlBody());
+        $this->assertMatchesRegularExpression('#erstellt mit <a href="https://www\.venuecontrol\.eu"[^>]*>VenueControl</a>.*?<img src="cid:[^"]+" width="40" height="40"#s', $email->getHtmlBody());
         $this->assertStringNotContainsString('<img', $email->getTextBody());
     }
 }

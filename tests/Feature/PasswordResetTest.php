@@ -99,12 +99,12 @@ class PasswordResetTest extends TestCase
         $html = $email->getHtmlBody();
         $this->assertStringContainsString('https://example.org/passwort/neu', $html);
         $this->assertStringContainsString('Inselpark Arena', $html);
-        $this->assertMatchesRegularExpression('#erstellt mit <a href="https://www\.vcontrol\.eu"[^>]*>VenueControl</a>.*?<img src="cid:[^"]+" width="40" height="40"#s', $html);
+        $this->assertMatchesRegularExpression('#erstellt mit <a href="https://www\.venuecontrol\.eu"[^>]*>VenueControl</a>.*?<img src="cid:[^"]+" width="40" height="40"#s', $html);
         $this->assertStringNotContainsString('Alle Rechte vorbehalten', $html);
         $this->assertCount(1, $email->getAttachments(), 'nur das Logo, eingebettet');
 
         // Textfassung: dieselbe Zeile, ohne Bild
-        $this->assertStringContainsString('Inselpark Arena · erstellt mit [VenueControl](https://www.vcontrol.eu)', $email->getTextBody());
+        $this->assertStringContainsString('Inselpark Arena · erstellt mit [VenueControl](https://www.venuecontrol.eu)', $email->getTextBody());
         $this->assertStringNotContainsString('<img', $email->getTextBody());
     }
 

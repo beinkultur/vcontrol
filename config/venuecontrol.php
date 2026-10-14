@@ -61,9 +61,10 @@ return [
 
     /*
     | Website von VenueControl: verlinkt in „erstellt mit VenueControl“
-    | (Daysheet-Mail und Daysheet-Seite).
+    | (Daysheet-Mail und Daysheet-Seite). Seit 14.10.2026 www.venuecontrol.eu,
+    | die alten Adressen (www.)vcontrol.eu leiten dorthin um.
     */
 
-    'website' => 'https://www.vcontrol.eu',
+    'website' => 'https://www.venuecontrol.eu',
 
 ];

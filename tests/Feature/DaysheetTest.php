@@ -113,7 +113,7 @@ class DaysheetTest extends TestCase
 
         // HTML wie Laravels Mails: Text, an der Stelle des Links die Schaltfläche, Link zum Kopieren
         $mail = Mail::sent(DaysheetMail::class)->last();
-        $mail->assertSeeInOrderInHtml(['Hallo,', 'hier:', 'Daysheet öffnen', 'Gültig bis 10.10.2026, 23:59 Uhr.', $mail->link, 'erstellt mit', 'href="https://www.vcontrol.eu"', 'VenueControl</a>'], false)
+        $mail->assertSeeInOrderInHtml(['Hallo,', 'hier:', 'Daysheet öffnen', 'Gültig bis 10.10.2026, 23:59 Uhr.', $mail->link, 'erstellt mit', 'href="https://www.venuecontrol.eu"', 'VenueControl</a>'], false)
             ->assertSeeInText($mail->link)
             ->assertDontSeeInText('Daysheet öffnen');
     }
@@ -200,7 +200,7 @@ class DaysheetTest extends TestCase
             ->assertSee('Konzert Nord')
             ->assertSee('18:30 Uhr')
             ->assertSee('Drucken / als PDF speichern')
-            ->assertSee('erstellt mit <a href="https://www.vcontrol.eu"', false)
+            ->assertSee('erstellt mit <a href="https://www.venuecontrol.eu"', false)
             ->assertHeader('Referrer-Policy', 'no-referrer')
             ->assertHeader('X-Robots-Tag', 'noindex, nofollow');
 
@@ -228,7 +228,7 @@ class DaysheetTest extends TestCase
             ->assertSee('--vc-accent:#660B64;', false)
             ->assertSee('<link rel="apple-touch-icon"', false)
             ->assertSeeInOrder([
-                'erstellt mit <a href="https://www.vcontrol.eu" target="_blank" rel="noopener">VenueControl</a></p>',
+                'erstellt mit <a href="https://www.venuecontrol.eu" target="_blank" rel="noopener">VenueControl</a></p>',
                 '<img src="' . asset('images/logo.svg') . '" alt="VenueControl" width="40" height="40">',
             ], false);
     }
