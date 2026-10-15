@@ -29,7 +29,7 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `event_finances` | `vc_event_finance` | Vertragsstatus, FIBU-Status (Liste), Preisliste, Miete, Rechnungsnummern (Liste statt drei Spalten), Abrechnung abgeschlossen |
 | `event_schedules` | `vc_event_schedules` | Einlass, Beginn, Ende, Curfew, Get-in, Load-in, Load-out, VIP-Einlass |
 | `event_stages` | `vc_event_stage` | Bühnenmaße, Seitenbühnen, Podeste, Treppen, Rückwand, Notizen |
-| `event_operations` | `vc_event_operations` | Strom (Zählerstände, Verbrauch), Backstages/Büros, Buspower, Haus-Delay |
+| `event_operations` | `vc_event_operations` | Bus-Strom (Anschlüsse), Haus-Delay, Backstages/Büros und Zähler-Verweise aus AppSheet; Stromzähler und Verbrauch bis 15.10.2026, seitdem `meter_readings` |
 | `event_pr` | `vc_event_pr` | PR-Datum, PR-Status |
 | `event_checklists` | `vc_event_checklist` | 15 Punkte ja/nein/entfällt |
 | `event_room` | `vc_event_rooms` | Raumbelegung mit Art (Backstage/Büro) |
@@ -39,6 +39,8 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `contacts` | `vc_employees` (bis 14.10.2026 `employees`) | Kontakte ohne Anmeldung: Person oder Funktion („Hallenmeister“), Kürzel, Telefon, E-Mail, Positionen, Notiz, archiviert |
 | `event_incoming_invoices` | `vc_event_incoming_invoices` | die sechs erwarteten Eingangsrechnungen |
 | `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Halle: PDF, Name, genutzte Bereiche, Bestuhlung, aktiv |
+| `meters` | neu (15.10.2026) | Zähler der Venue: Name, Einheit, Zählernummer, Standort, je Event ablesen, aktiv, Reihenfolge |
+| `meter_readings` | neu (15.10.2026), Strom aus `event_operations` | Stände: Zähler, Event mit Anfang/Ende oder frei, Zeitpunkt, Stand (3 Nachkommastellen), Zählerwechsel, Notiz |
 
 Später, mit seinem Modul: Ablaufplan (`vc_event_attachments`).
 
@@ -54,6 +56,11 @@ Für den noch zu bauenden AppSheet-Import festgelegt:
   „Sonstige“ (`extra_platforms`, zählt mit; Text → `other_info`), BÜHNE-ANM →
   „Anmerkungen Bühne“ (`stage_notes`), Podest-Summe aus den Maßen berechnen
   (Standard-Rollipodest zählt mit, wie beim Speichern des Formulars).
+- Offen: Die Zähler-Verweise der Events (`power_start_ref`/`power_end_ref`, auf
+  ipa 23 bzw. 34 Events) zeigen auf Ablesungen in AppSheet. Sie gehören als
+  Stand Anfang/Ende des Zählers „Strom“ nach `meter_readings`
+  (`App\Support\MeterReadings::saveForEvent`), freie Ablesungen ohne Event als
+  Stände ohne Event.
 
 ## Stand der Übernahme (01.10.2026)
 
@@ -88,8 +95,9 @@ Bedienbar:
   Spalte zum Abhaken).
 - **Durchführung › Betrieb** (01.10.2026): Räume einmal je Raum mit Backstage /
   neutral / Büro; Bus-Strom als Anzahl der Anschlüsse (0–5, einzeln
-  abgerechnet, Spalte in der Buchhaltung); Stromzähler Stand Anfang und Ende,
-  der Verbrauch wird daraus berechnet (kein Eingabefeld mehr); „Check“ wie in
+  abgerechnet, Spalte in der Buchhaltung); Zählerstände Anfang und Ende je
+  Zähler „je Event“ (bis 15.10.2026 nur der Stromzähler), der Verbrauch wird
+  daraus berechnet (kein Eingabefeld mehr); „Check“ wie in
   der PHP-Version: Sonderreinigung, Haus-Delay, Miete Elektro-Ameise, Haus-Rig
   ab 7 Uhr, Sold-Out-Award, dazu PAX abgerechnet und (seit 12.10.2026, vorher
   Planung › Checkliste) Merch-Fee und „Merch-Fee eingesammelt“ (ja/nein/
@@ -181,6 +189,23 @@ Bedienbar:
     Tamara Beck in ihre Konten, sechs Kontakte.
   - Daysheet und „Meine Events“ zeigen bei den Ansprechpartnern (Projektleitung,
     Auf-/Abschließen, House Rep. früh/spät) Telefon und E-Mail.
+- **Zählerstände** (`/zaehler`, Recht „Zählerstände“, 15.10.2026; in der
+  PHP-Version je Zähler `/zaehler/strom` usw.): Welche Zähler es gibt, legt die
+  Venue unter Stammdaten › Zähler fest (Recht „Stammdaten“): Name, Einheit,
+  Zählernummer, Standort, „je Event ablesen“, aktiv; löschen nur ohne Stände.
+  Zähler „je Event“ stehen im Event unter Durchführung › Betrieb (Stand Anfang
+  am Morgen des ersten, Ende am Abend des letzten Event-Tags; ziehen mit, wenn
+  sich die Tage ändern). Die Seite zeigt je Zähler und Jahr Kennzahlen
+  (Verbrauch gegen dieselben Tage im Vorjahr, bei Events Anteil und Verbrauch je
+  PAX, sonst Schnitt je Tag, letzter Stand), Verbrauch je Monat gegen das
+  Vorjahr und je Event als Diagramm und Tabelle, darunter die Stände. Freie
+  Ablesungen („Stand erfassen“, ändern, löschen) mit Bearbeiten-Recht; Stände
+  eines Events nur im Event. Jeder Stand muss zwischen seine Nachbarn passen,
+  außer bei „Zählerwechsel“ (neuer Zähler, seit dem vorigen Stand zählt nichts).
+  Auswertung (`App\Support\MeterStats`): Verbrauch zwischen zwei Ständen
+  gleichmäßig auf die Zeit verteilt; Monate ohne Stand davor und danach bleiben
+  leer. Migration `2026_10_15_100000`: Zähler „Strom“ (kWh, je Event) mit den
+  bisherigen Stromzählerständen (Demo: 15 Events, ipa: keine).
 - **Kalender für Externe** (`/extern/kalender`, Recht „Kalender (extern)“):
   dieselben lesbaren Ebenen, nur lesen; Links nur zu Events, an denen das Konto
   beteiligt ist (dann „Meine Events“, fett mit ↗), alles andere ohne Link. Das

@@ -9,11 +9,14 @@ use App\Models\Costing;
 use App\Models\Daysheet;
 use App\Models\Event;
 use App\Models\Inquiry;
+use App\Models\Meter;
+use App\Models\MeterReading;
 use App\Models\Promoter;
 use App\Models\SeatingPlan;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Inquiries;
+use App\Support\MeterStats;
 use App\Support\StagePodests;
 use Database\Seeders\DemoSeeder;
 use Filament\Facades\Filament;
@@ -64,6 +67,22 @@ class DemoDataTest extends TestCase
         $stage = Event::query()->where('title', 'Rock im Herbst: The Velvet Engines')->sole()->stage;
         $this->assertSame(StagePodests::calculate($stage->only(['width', 'depth', 'wing_sl_width', 'wing_sl_depth', 'wing_sr_width', 'wing_sr_depth', 'rollpodest_width', 'rollpodest_depth', 'extra_platforms']))['total'], (int) $stage->podest_total);
 
+        // Zähler: Strom je Event mit Monatsständen dazwischen, Wasser mit Zählerwechsel, Fernwärme –
+        // nirgends ein Rücksprung, also passen die Monatsstände zu den Ständen der Events
+        $this->assertSame(['Strom', 'Wasser', 'Fernwärme'], Meter::query()->ordered()->pluck('name')->all());
+        $power = Meter::query()->where('name', 'Strom')->sole();
+        $past = Event::query()->whereHas('operation')->count();
+        $this->assertSame(2 * $past, $power->readings()->whereNotNull('event_id')->count());
+        $this->assertGreaterThanOrEqual(24, $power->readings()->whereNull('event_id')->count());
+        $this->assertSame(1, MeterReading::query()->where('restart', true)->count());
+        foreach (Meter::all() as $meter) {
+            $stats = MeterStats::for($meter);
+            foreach ($stats->readings as $reading) {
+                $this->assertGreaterThanOrEqual(0, $stats->delta($reading) ?? 0, $meter->name . ' am ' . $reading->read_at);
+            }
+            $this->assertNotNull($stats->year((int) today()->format('Y'))['previous'], $meter->name . ': Vorjahr zum Vergleich');
+        }
+
         // Erfunden: Mailadressen nur auf .example, ein Eintrag im Änderungsprotokoll
         $this->assertSame(0, User::query()->where('email', 'not like', '%.example')->count());
         $this->assertSame(0, Promoter::query()->where('email', 'not like', '%.example')->count());
@@ -73,6 +92,9 @@ class DemoDataTest extends TestCase
         $this->actingAs($this->admin());
         $this->get('/events')->assertOk()->assertSee('Hafenstadt Lions');
         $this->get('/anfragen')->assertOk()->assertSee('Electro Winter Rave');
+        $this->get('/zaehler')->assertOk()->assertSee('Fernwärme')->assertSee('Verbrauch je Event in kWh');
+        $swap = MeterReading::query()->where('restart', true)->sole();
+        $this->get('/zaehler?zaehler=' . $swap->meter_id . '&jahr=' . $swap->read_at->year)->assertOk()->assertSee('Zählerwechsel');
         $this->get(EventResource::getUrl('edit', ['record' => Event::query()->where('closed', true)->first()]))->assertOk();
         $this->get(EventResource::getUrl('edit', ['record' => Event::query()->where('title', 'Rock im Herbst: The Velvet Engines')->sole()]))->assertOk();
     }

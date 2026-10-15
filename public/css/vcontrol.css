@@ -2007,3 +2007,161 @@ button.vc-cal__row:hover {
         white-space: nowrap;
     }
 }
+
+/* Zählerstände (resources/views/filament/pages/meters.blade.php): Zähler als
+   Chips wie die Kalender-Ansichten, Jahr blättern, Diagramme und Tabellen */
+.vc-meters {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.vc-meters__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.vc-meters__chips,
+.vc-meters__years {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.vc-meters__chip,
+.vc-meters__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: inherit;
+    background: var(--gray-50);
+}
+
+.dark .vc-meters__chip,
+.dark .vc-meters__btn {
+    border-color: var(--gray-700);
+    background: rgb(255 255 255 / 0.05);
+}
+
+.vc-meters__chip:hover,
+a.vc-meters__btn:hover {
+    border-color: var(--gray-400);
+}
+
+.vc-meters__chip.is-active {
+    background: var(--primary-600);
+    border-color: var(--primary-600);
+    color: #fff;
+}
+
+.vc-meters__chip.is-active .vc-muted {
+    color: inherit;
+    opacity: 0.8;
+}
+
+.vc-meters__btn.is-disabled {
+    opacity: 0.4;
+}
+
+.vc-meters__year {
+    min-width: 3.5rem;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-meters__charts,
+.vc-meters__tables {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+@media (min-width: 80rem) {
+    .vc-meters__charts--two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .vc-meters__tables--two {
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    }
+}
+
+.vc-meters__table-wrap {
+    overflow-x: auto;
+}
+
+.vc-meters__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-meters__table th {
+    padding: 0.35rem 0.75rem 0.35rem 0;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gray-500);
+    white-space: nowrap;
+}
+
+.vc-meters__table td {
+    padding: 0.3rem 0.75rem 0.3rem 0;
+    border-top: 1px solid var(--gray-100);
+}
+
+.vc-meters__table tfoot td {
+    border-top: 2px solid var(--gray-200);
+    font-weight: 600;
+}
+
+.dark .vc-meters__table td {
+    border-top-color: rgb(255 255 255 / 0.06);
+}
+
+.dark .vc-meters__table tfoot td {
+    border-top-color: rgb(255 255 255 / 0.15);
+}
+
+.vc-meters__table .is-num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.vc-meters__table th:last-child,
+.vc-meters__table td:last-child {
+    padding-right: 0;
+}
+
+.vc-meters__link {
+    color: var(--primary-600);
+}
+
+.dark .vc-meters__link {
+    color: var(--primary-400);
+}
+
+.vc-meters__link:hover {
+    text-decoration: underline;
+}
+
+/* Am Handy ohne Stand Anfang/Ende – der Verbrauch reicht */
+@media (max-width: 40rem) {
+    .vc-meters__table .is-wide {
+        display: none;
+    }
+}

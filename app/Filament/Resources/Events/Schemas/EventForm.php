@@ -22,6 +22,7 @@ use App\Filament\Resources\Events\RelationManagers\ShowChecklistsRelationManager
 use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
 use App\Filament\Support\AssignmentFields;
 use App\Filament\Support\IncomingInvoiceFields;
+use App\Filament\Support\MeterFields;
 use App\Filament\Support\OptionChoices;
 use App\Filament\Support\RoomUsageFields;
 use App\Filament\Support\SeatingPlanFields;
@@ -34,7 +35,6 @@ use App\Models\EventPr;
 use App\Models\EventStage;
 use App\Models\PriceList;
 use App\Support\EventProgress;
-use Closure;
 use App\Support\StagePlan;
 use App\Support\StagePodests;
 use App\Support\StageSettings;
@@ -553,7 +553,8 @@ class EventForm
     }
 
     /**
-     * Durchführung › Betrieb (Show Day) wie in der PHP-Version: Räume, Strom und
+     * Durchführung › Betrieb (Show Day) wie in der PHP-Version: Räume,
+     * Zählerstände (seit 15.10.2026 je Zähler „je Event“, vorher nur Strom),
      * Bus-Strom, die Ja/Nein-Punkte des Tages, PAX.
      *
      * @return list<Section>
@@ -565,27 +566,16 @@ class EventForm
                 ->description('Jeder Raum einmal: Backstage, Büro oder – (nicht belegt).')
                 ->columns(['default' => 1, 'lg' => 2, 'xl' => 3])
                 ->schema(RoomUsageFields::all()),
+            MeterFields::section(),
             // Vor dem Abschnitt „Check“: legt bei neuen Events die Zeile an, die Haus-Delay dort nur ändert
-            Section::make('Strom')
+            Section::make('Bus-Strom')
                 ->relationship('operation')
-                ->columns(['default' => 1, 'md' => 2, 'xl' => 4])
                 ->schema([
                     ToggleButtons::make('bus_power')
-                        ->label('Bus-Strom')
+                        ->hiddenLabel()
                         ->helperText('Anschlüsse, werden einzeln abgerechnet')
                         ->options(array_combine(range(0, EventOperation::MAX_BUS_POWER), array_map('strval', range(0, EventOperation::MAX_BUS_POWER))))
                         ->grouped(),
-                    self::meterReading('power_meter_start', 'Stromzähler Stand Anfang'),
-                    self::meterReading('power_meter_end', 'Stromzähler Stand Ende')
-                        ->rule(fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
-                            $start = $get('power_meter_start');
-                            if (filled($value) && filled($start) && (float) $value < (float) $start) {
-                                $fail('Der Stand am Ende kann nicht kleiner sein als am Anfang.');
-                            }
-                        }),
-                    TextEntry::make('power_consumption_view')
-                        ->label('Verbrauch')
-                        ->state(fn (Get $get, ?EventOperation $record): string => self::consumptionText($get, $record)),
                 ]),
             Section::make('Check')
                 ->columns(['default' => 1, 'md' => 2, 'xl' => 3])
@@ -618,32 +608,6 @@ class EventForm
             ->saveRelationshipsUsing(fn (Event $record, mixed $state) => $record->{$relation}()->updateOrCreate([], [
                 $column => filled($state) ? trim((string) $state) : null,
             ]));
-    }
-
-    private static function meterReading(string $name, string $label): TextInput
-    {
-        return TextInput::make($name)
-            ->label($label)
-            ->numeric()
-            ->minValue(0)
-            ->step(0.01)
-            ->suffix('kWh')
-            ->live(onBlur: true);
-    }
-
-    /** Verbrauch aus den Zählerständen; sonst ein früher eingetragener Wert. */
-    private static function consumptionText(Get $get, ?EventOperation $record): string
-    {
-        $start = $get('power_meter_start');
-        $end = $get('power_meter_end');
-        if (filled($start) && filled($end) && is_numeric($start) && is_numeric($end)) {
-            return number_format((float) $end - (float) $start, 2, ',', '.') . ' kWh';
-        }
-        if ($record?->power_consumption !== null) {
-            return number_format($record->power_consumption, 0, ',', '.') . ' kWh (eingetragen)';
-        }
-
-        return 'aus den Zählerständen';
     }
 
     /**

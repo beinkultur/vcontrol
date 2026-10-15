@@ -15,6 +15,7 @@ use App\Models\EventFile;
 use App\Models\EventFileTag;
 use App\Models\EventIncomingInvoice;
 use App\Models\InventoryItem;
+use App\Models\Meter;
 use App\Models\PriceList;
 use App\Models\Promoter;
 use App\Models\Role;
@@ -78,6 +79,8 @@ final class AuditPresenter
         'article_categories' => 'Artikel-Kategorie',
         'calendars' => 'Kalender-Ebene',
         'calendar_entries' => 'Kalender-Eintrag',
+        'meters' => 'Zähler',
+        'meter_readings' => 'Zählerstand',
         'inquiries' => 'Anfrage',
         'inquiry_dates' => 'Wunschtermin',
         'settings' => 'Einstellung',
@@ -142,6 +145,9 @@ final class AuditPresenter
         'article_categories' => [Area::AdminInventar],
         'calendars' => [Area::AdminKalender],
         'calendar_entries' => [Area::Kalender],
+        // Zähler sieht auch, wer Zählerstände sieht (die Seite zeigt sie); Stände eines Events wie das Event
+        'meters' => [Area::AdminStammdaten, Area::Zaehler],
+        'meter_readings' => [Area::Zaehler, Area::Events],
         'inquiries' => [Area::Anfragen],
         'inquiry_dates' => [Area::Anfragen],
         'settings' => [Area::AdminStammdaten],
@@ -215,10 +221,12 @@ final class AuditPresenter
         'stair_sl_offset' => 'Treppe SL Versatz', 'stair_sr_offset' => 'Treppe SR Versatz', 'backwall_cm' => 'Abstand Rückwand (cm)',
         'other_info' => 'Sonstige Podeste (AppSheet)', 'stage_notes' => 'Anmerkungen Bühne', 'notes' => 'Anmerkungen (AppSheet)',
         'sold_out_award' => 'Sold-Out-Award',
-        // Betrieb
+        // Betrieb (Stromzähler und -verbrauch bis 15.10.2026, für ältere Einträge)
         'power_start_ref' => 'Strom Referenz Anfang', 'power_end_ref' => 'Strom Referenz Ende', 'power_meter_start' => 'Stromzähler Anfang',
         'power_meter_end' => 'Stromzähler Ende', 'power_consumption' => 'Stromverbrauch', 'backstages' => 'Backstages', 'offices' => 'Büros',
         'bus_power' => 'Bus-Strom', 'house_delay' => 'Haus-Delay',
+        // Zähler und Zählerstände
+        'per_event' => 'Je Event ablesen', 'meter_id' => 'Zähler', 'read_at' => 'Abgelesen', 'restart' => 'Zählerwechsel',
         // Personal, Gewerke, Räume, Rechnungen
         'role' => 'Rolle', 'assignee_type' => 'Art', 'assignee_id' => 'Person', 'service' => 'Leistung', 'provider_label' => 'Anbieter',
         'responsible' => 'Verantwortlich', 'group_key' => 'Leistungsgruppe', 'split_setup_teardown' => 'Auf-/Abbau getrennt',
@@ -260,12 +268,14 @@ final class AuditPresenter
         'inquiry_dates' => ['option_date' => 'Termin'],
         'calendar_entries' => ['calendar_key' => 'Ebene', 'all_day' => 'Ganztägig'],
         'promoter_contacts' => ['role' => 'Funktion'],
+        'meters' => ['number' => 'Zählernummer', 'location' => 'Standort'],
+        'meter_readings' => ['value' => 'Stand', 'position' => 'Event-Stand'],
     ];
 
     /** Felder mit ja/nein */
     private const BOOLEANS = ['closed', 'accounting_closed', 'power_ant', 'house_rig_early', 'briefing_complete', 'sold_out_award', 'house_delay',
         'stair_third', 'split_setup_teardown', 'is_active', 'is_archived', 'is_system', 'is_super', 'is_system_admin', 'is_shared', 'is_settled', 'is_fixed',
-        'is_received', 'hidden_from_externals', 'factor_from_pax', 'default_active', 'fixed_price'];
+        'is_received', 'hidden_from_externals', 'factor_from_pax', 'default_active', 'fixed_price', 'per_event', 'restart'];
 
     /** Fremdschlüssel → [Modell, Spalte(n) für den Namen] */
     private const REFERENCES = [
@@ -280,6 +290,7 @@ final class AuditPresenter
         'file_id' => [EventFile::class, 'title'],
         'article_id' => [Article::class, 'name'],
         'inventory_item_id' => [InventoryItem::class, 'name'],
+        'meter_id' => [Meter::class, 'name'],
     ];
 
     public static function subject(?string $subject): string
@@ -349,6 +360,7 @@ final class AuditPresenter
             'account_type' => AccountType::tryFrom((string) $value)?->getLabel(),
             'assignee_type' => ['contact' => 'Kontakt', 'employee' => 'Mitarbeiter', 'trade' => 'Gewerk', 'user' => 'Benutzer'][(string) $value] ?? null,
             'invoice_key' => EventIncomingInvoice::SLOTS[(string) $value] ?? null,
+            'position' => ['start' => 'Anfang', 'end' => 'Ende'][(string) $value] ?? null,
             default => null,
         };
         if ($label !== null) {

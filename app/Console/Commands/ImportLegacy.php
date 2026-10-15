@@ -299,8 +299,9 @@ class ImportLegacy extends Command
             $rows('vc_event_pr'),
         ), 'event_id');
 
+        // Stromverbrauch (power_consumption) gibt es seit 15.10.2026 nicht mehr: er ergibt sich aus den Zählerständen
         $this->sync('event_operations', array_map(
-            fn (object $o): array => $this->columns($o, ['event_id', 'power_start_ref', 'power_end_ref', 'power_consumption', 'backstages', 'offices', 'bus_power', 'house_delay']),
+            fn (object $o): array => $this->columns($o, ['event_id', 'power_start_ref', 'power_end_ref', 'backstages', 'offices', 'bus_power', 'house_delay']),
             $rows('vc_event_operations'),
         ), 'event_id');
 

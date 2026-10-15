@@ -7,6 +7,7 @@ use App\Models\Costing;
 use App\Models\Damage;
 use App\Models\Event;
 use App\Models\EventFile;
+use App\Models\Meter;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\EditRecord;
@@ -121,6 +122,13 @@ class SmokeRender extends Command
                 if (is_a($page, \App\Filament\Pages\Calendar::class, true)) {
                     foreach (['week', 'day', '4weeks'] as $view) {
                         $paths[] = $page::getUrl(['view' => $view], isAbsolute: false);
+                    }
+                }
+                // Zählerstände: jeder Zähler, dazu das Vorjahr
+                if (is_a($page, \App\Filament\Pages\Meters::class, true)) {
+                    foreach (Meter::query()->orderBy('id')->get() as $meter) {
+                        $paths[] = $page::getUrl(['zaehler' => $meter->id], isAbsolute: false);
+                        $paths[] = $page::getUrl(['zaehler' => $meter->id, 'jahr' => (int) date('Y') - 1], isAbsolute: false);
                     }
                 }
             } else {

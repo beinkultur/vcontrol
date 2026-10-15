@@ -6,6 +6,7 @@ use App\Access\Module;
 use App\Enums\RoomUsage;
 use App\Support\EventNumber;
 use App\Support\IncomingInvoices;
+use App\Support\MeterReadings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -71,6 +72,10 @@ class Event extends Model
             $old = $event->getOriginal('seating_plan_path');
             if ($event->wasChanged('seating_plan_path') && filled($old)) {
                 Storage::disk(SeatingPlan::DISK)->delete($old);
+            }
+            // Zählerstände des Events wandern mit seinen Tagen
+            if ($event->wasChanged(['starts_at', 'ends_at'])) {
+                MeterReadings::syncEventTimes($event);
             }
         });
     }
@@ -163,6 +168,12 @@ class Event extends Model
     public function operation(): HasOne
     {
         return $this->hasOne(EventOperation::class);
+    }
+
+    /** Zählerstände Anfang/Ende (Zähler „je Event“) @return HasMany<MeterReading, $this> */
+    public function meterReadings(): HasMany
+    {
+        return $this->hasMany(MeterReading::class);
     }
 
     /** @return HasOne<EventStage, $this> */

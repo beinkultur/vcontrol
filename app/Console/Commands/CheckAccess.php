@@ -52,6 +52,8 @@ class CheckAccess extends Command
         'GET /extern/kalender?view=month' => '/extern/kalender?view=month',
         'GET /extern/kalender?view=week' => '/extern/kalender?view=week',
         'GET /anfragen' => '/anfragen',
+        // Seit 15.10.2026: Zählerstände mit Auswertung, Zähler wählbar statt /zaehler/strom usw.
+        'GET /zaehler' => '/zaehler',
     ];
 
     /** Bewusst strenger als die PHP-Version: Diese Seiten erreicht hier nur der System-Admin. */
@@ -67,7 +69,7 @@ class CheckAccess extends Command
      * Seiten eines Bereichs: Ist er abgeschaltet oder sein Modul nicht
      * freigegeben (Verwaltung › System), erreicht sie niemand.
      */
-    private const AREA_PAGES = ['/buchhaltung' => Area::Buchhaltung];
+    private const AREA_PAGES = ['/buchhaltung' => Area::Buchhaltung, '/zaehler' => Area::Zaehler];
 
     public function handle(Kernel $kernel): int
     {

@@ -23,6 +23,8 @@ use App\Models\FieldOption;
 use App\Models\Inquiry;
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
+use App\Models\Meter;
+use App\Models\MeterReading;
 use App\Models\PriceList;
 use App\Models\Promoter;
 use App\Models\Role;
@@ -32,6 +34,7 @@ use App\Models\Setting;
 use App\Models\Trade;
 use App\Models\User;
 use App\Support\Daysheets;
+use App\Support\MeterReadings;
 use App\Support\ShowChecklist;
 use App\Support\StagePodests;
 use Dompdf\Dompdf;
@@ -51,7 +54,8 @@ use Random\Randomizer;
  * an dem der Befehl läuft. Vergangene sind abgeschlossen (Betrieb, Protokolle,
  * Schäden), kommende bestätigt, fraglich oder storniert. Optionen sind Anfragen
  * mit Wunschterminen (calendarData), dazu eigene Einträge auf den Ebenen
- * Wartung und Technik.
+ * Wartung und Technik. Zähler Strom (je Event), Wasser und Fernwärme mit
+ * Monatsablesungen über zwei Jahre (meterData).
  *
  * Nur über `php artisan vc:demo-data` und nur in einer leeren Installation.
  * Alle Namen sind erfunden, Mailadressen enden auf .example (gehen nirgends
@@ -93,6 +97,8 @@ final class DemoSeeder extends Seeder
 
     private float $meter = 482_350.0;
 
+    private ?Meter $power = null;
+
     public function __construct(private readonly string $venue = 'Be-In Arena')
     {
     }
@@ -115,6 +121,7 @@ final class DemoSeeder extends Seeder
             $this->event(...$row);
         }
         $this->calendarData($this->today);
+        $this->meterData($this->today);
         $this->accessCodes();
         Damage::create(['recorded_at' => $this->today->copy()->subDays(9)->setTime(11, 20), 'description' => 'Notausgangsleuchte im Treppenhaus Nord flackert.', 'recorded_by_name' => 'Jonas Becker', 'is_fixed' => false]);
     }
@@ -658,12 +665,14 @@ final class DemoSeeder extends Seeder
     {
         $consumption = $this->random->getInt($sport ? 900 : 2400, $sport ? 1600 : 5200);
         $event->operation()->create([
-            'power_meter_start' => $this->meter,
-            'power_meter_end' => $this->meter + $consumption,
-            'power_consumption' => $consumption,
             'bus_power' => $sport ? 0 : $this->random->getInt(1, 3),
             'house_delay' => !$sport && $this->random->getInt(0, 3) === 0,
         ]);
+        // Stromzähler (je Event): Stand Anfang und Ende, dazwischen die Zeit bis zum nächsten Event
+        $this->power ??= Meter::query()->where('name', 'Strom')->first()
+            ?? Meter::create(['name' => 'Strom', 'unit' => 'kWh', 'per_event' => true, 'sort_order' => 10]);
+        MeterReadings::saveForEvent($event, $this->power, MeterReading::START, $this->meter);
+        MeterReadings::saveForEvent($event, $this->power, MeterReading::END, $this->meter + $consumption);
         $this->meter += $consumption + $this->random->getInt(200, 900);
         $event->checklist()->updateOrCreate([], ['special_cleaning' => 'no', 'power_ant' => false, 'house_rig_early' => !$sport,
             'merch_fee' => $sport ? null : '20 %', 'merch_fee_check' => $sport ? 'na' : 'yes']);
@@ -807,6 +816,133 @@ final class DemoSeeder extends Seeder
                 },
             ]);
             $entry->forceFill(['created_by' => $author?->id, 'created_by_name' => $author?->getFilamentName()])->saveQuietly();
+        }
+    }
+
+    /**
+     * Zähler mit Ablesungen am Ersten jedes Monats (erfasst von der
+     * Eventmanagerin – der Hausmeister darf Zählerstände nur lesen), zwei Jahre
+     * bis $anchor: Strom (je Event; die Monatsstände passen zwischen die Stände
+     * der Events), Wasser (mit einem Zählerwechsel) und Fernwärme, jeweils mit
+     * Jahreszeiten. Für eine schon befüllte Demo mit dem Tag, an dem sie befüllt
+     * wurde; was es schon gibt, bleibt.
+     */
+    public function meterData(Carbon $anchor): void
+    {
+        $this->random ??= new Randomizer(new Mt19937(2028));
+        $today = $anchor->copy()->startOfDay();
+        $first = $today->copy()->startOfMonth()->subMonths(24);
+        $by = User::query()->whereHas('roles', fn ($roles) => $roles->where('slug', 'eventmanager'))->orderBy('id')->first();
+        $months = [];
+        for ($month = $first->copy()->setTime(7, 30); $month->lte($today); $month->addMonth()) {
+            $months[] = $month->copy();
+        }
+
+        // Strom: Monatsverbrauch ohne Events nach Jahreszeit; zwischen Event-Ständen linear
+        $power = Meter::query()->firstOrCreate(['name' => 'Strom'], ['unit' => 'kWh', 'per_event' => true, 'sort_order' => 10]);
+        $power->update(['number' => $power->number ?? '1EBZ 0104 4715', 'location' => $power->location ?? 'Hauptverteilung UG']);
+        if (!$power->readings()->whereNull('event_id')->exists()) {
+            $points = $power->readings()->orderBy('read_at')->get()->map(fn (MeterReading $reading): array => [$reading->read_at, (float) $reading->value])->all();
+            $values = $this->meterSeries($months, $points, [15500, 14000, 14500, 12500, 12000, 11000, 13500, 13000, 15000, 16500, 17500, 17000], 482_350.0, 0);
+            foreach ($values as $index => $value) {
+                $this->meterReading($power, $months[$index], $value, $by);
+            }
+        }
+
+        // Wasser: Zählerwechsel vor neun Monaten – erst der letzte Stand des alten, dann der neue bei fast 0
+        $water = Meter::query()->firstOrCreate(['name' => 'Wasser'], ['unit' => 'm³', 'number' => '19-447 812', 'location' => 'Hausanschlussraum', 'sort_order' => 20]);
+        if (!$water->readings()->exists()) {
+            $values = $this->meterSeries($months, [], [420, 390, 430, 460, 520, 560, 640, 610, 580, 540, 470, 450], 18_452.317, 3);
+            $swap = $months[count($months) - 10]->copy()->setDay(15)->setTime(10, 0);
+            $offset = null;
+            foreach ($values as $index => $value) {
+                if ($offset === null && $months[$index]->greaterThan($swap)) {
+                    // Altzähler bis zum Wechsel anteilig, dann ab 0,512 m³ weiter
+                    $old = round($values[$index - 1] + ($value - $values[$index - 1]) * ($swap->getTimestamp() - $months[$index - 1]->getTimestamp()) / ($months[$index]->getTimestamp() - $months[$index - 1]->getTimestamp()), 3);
+                    $this->meterReading($water, $swap, $old, $by, note: 'Letzter Stand des alten Zählers.');
+                    $this->meterReading($water, $swap->copy()->addMinutes(5), 0.512, $by, restart: true, note: 'Zählerwechsel durch die Stadtwerke (Eichfrist), neue Zählernummer 21-008 154.');
+                    $offset = $old - 0.512;
+                }
+                $this->meterReading($water, $months[$index], round($value - ($offset ?? 0), 3), $by);
+            }
+        }
+
+        $heat = Meter::query()->firstOrCreate(['name' => 'Fernwärme'], ['unit' => 'MWh', 'number' => '7731 0098', 'location' => 'Übergabestation Technikzentrale', 'sort_order' => 30]);
+        if (!$heat->readings()->exists()) {
+            foreach ($this->meterSeries($months, [], [96, 88, 71, 44, 19, 7, 5, 5, 14, 38, 67, 89], 4_210.54, 3) as $index => $value) {
+                $this->meterReading($heat, $months[$index], $value, $by);
+            }
+        }
+    }
+
+    /**
+     * Stände zu $months: zwischen vorhandenen Ständen ($points, [Zeit, Stand])
+     * linear, davor rückwärts und danach vorwärts mit dem Monatsverbrauch nach
+     * Jahreszeit (±8 %). Ohne $points beginnt die Reihe bei $start.
+     *
+     * @param  list<Carbon>  $months
+     * @param  list<array{Carbon, float}>  $points
+     * @param  list<int>  $perMonth  Verbrauch Januar bis Dezember
+     * @return list<float>
+     */
+    private function meterSeries(array $months, array $points, array $perMonth, float $start, int $decimals): array
+    {
+        $usage = fn (Carbon $from, Carbon $until): float => $perMonth[$from->month - 1] * $this->random->getInt(92, 108) / 100
+            * ($until->getTimestamp() - $from->getTimestamp()) / ($from->daysInMonth * 86400);
+        $values = [];
+        if ($points === []) {
+            $value = $start;
+            foreach ($months as $index => $month) {
+                $value += $index === 0 ? 0 : $usage($months[$index - 1], $month);
+                $values[] = round($value, $decimals);
+            }
+
+            return $values;
+        }
+
+        [$firstAt, $firstValue] = $points[0];
+        [$lastAt, $lastValue] = $points[count($points) - 1];
+        // Vor dem ersten Stand: rückwärts vom ersten Stand
+        $before = array_values(array_filter($months, fn (Carbon $month): bool => $month->lessThan($firstAt)));
+        $value = $firstValue;
+        $next = $firstAt;
+        foreach (array_reverse($before) as $month) {
+            $value -= $usage($month, $next);
+            $next = $month;
+            $values[$month->getTimestamp()] = round($value, $decimals);
+        }
+        foreach ($months as $month) {
+            if ($month->lessThan($firstAt)) {
+                continue;
+            }
+            if ($month->greaterThan($lastAt)) {
+                $lastValue += $usage($lastAt, $month);
+                $lastAt = $month;
+                $values[$month->getTimestamp()] = round($lastValue, $decimals);
+
+                continue;
+            }
+            // Zwischen den beiden umgebenden Ständen
+            foreach ($points as $index => [$at, $reading]) {
+                [$nextAt, $nextReading] = $points[$index + 1] ?? [$at, $reading];
+                if ($month->greaterThanOrEqualTo($at) && $month->lessThanOrEqualTo($nextAt)) {
+                    $share = $nextAt->equalTo($at) ? 0 : ($month->getTimestamp() - $at->getTimestamp()) / ($nextAt->getTimestamp() - $at->getTimestamp());
+                    $values[$month->getTimestamp()] = round($reading + ($nextReading - $reading) * $share, $decimals);
+
+                    break;
+                }
+            }
+        }
+        ksort($values);
+
+        return array_values($values);
+    }
+
+    private function meterReading(Meter $meter, Carbon $at, float $value, ?User $by, bool $restart = false, ?string $note = null): void
+    {
+        $reading = $meter->readings()->create(['read_at' => $at, 'value' => $value, 'restart' => $restart, 'note' => $note]);
+        if ($by !== null) {
+            $this->stamp($reading, $by);
         }
     }
 
