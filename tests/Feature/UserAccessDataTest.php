@@ -161,6 +161,8 @@ class UserAccessDataTest extends TestCase
     public function test_inhalt_der_mail(): void
     {
         Setting::put(Setting::MAIL_REPLY_TO, 'buero@be-in-arena.example');
+        // Adresse der jeweiligen Installation (APP_URL) – in Produktion nicht localhost
+        $login = Filament::getPanel('app')->getLoginUrl();
         // Sonderzeichen bleiben, wie sie sind – kein Markdown, kein HTML
         $mail = new AccessDataMail('Lena Hoffmann', 'lena.hoffmann@example.org', 'a*b*c_d_e<f>&g', true);
 
@@ -168,12 +170,13 @@ class UserAccessDataTest extends TestCase
         $mail->assertHasReplyTo('buero@be-in-arena.example');
         $mail->assertSeeInHtml('Guten Tag Lena Hoffmann,');
         $mail->assertSeeInHtml('für Sie gibt es jetzt einen Zugang zu VenueControl bei Be-In Arena.');
-        $mail->assertSeeInHtml('http://localhost/login');
+        $this->assertStringEndsWith('/login', $login);
+        $mail->assertSeeInHtml($login);
         $mail->assertSeeInHtml('lena.hoffmann@example.org');
         $mail->assertSeeInHtml('a*b*c_d_e&lt;f&gt;&amp;g', false);
         $mail->assertDontSeeInHtml('<em>', false);
         $mail->assertSeeInText('Passwort:       a*b*c_d_e<f>&g');
-        $mail->assertSeeInText('Anmeldung:      http://localhost/login');
+        $mail->assertSeeInText('Anmeldung:      ' . $login);
 
         $renewed = new AccessDataMail('Lena Hoffmann', 'lena.hoffmann@example.org', 'Xk7m-Pq2r-Tz9w-Hb4n', false, 'admin@example.org', 'Admin');
         $renewed->assertHasSubject('Ihr neues Passwort für VenueControl – Be-In Arena');
