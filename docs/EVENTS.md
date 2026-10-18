@@ -170,6 +170,16 @@ Bedienbar:
   aktive Konten, die „Persönlich“ lesen dürfen.
 - **Profil:** Standard-Ansicht des Kalenders (Monat, Woche, Tag, 4 Wochen) und die
   Abo-Adresse; das aktuelle Passwort fragt das Profil nur beim Passwortwechsel.
+- **Zugangsdaten** (Verwaltung › Benutzer, 18.10.2026): Abschnitt „Anmeldung“ mit
+  E-Mail und Passwort. „Passwort generieren“ füllt 16 Zufallszeichen in
+  Vierergruppen ohne verwechselbare Zeichen ein (`App\Support\AccessData`), das
+  Feld lässt sich anzeigen und kopieren. „Zugangsdaten per E-Mail senden“ (beim
+  Bearbeiten „Neues Passwort per E-Mail senden“, nur mit neuem Passwort und für
+  aktive Konten) schickt nach dem Speichern Adresse der Anmeldung, E-Mail und
+  Passwort (`App\Mail\AccessDataMail`, Absender die Halle, Antworten an ihre
+  Antwortadresse, sonst an den Admin). Geht die Mail nicht raus, bleibt das
+  Konto gespeichert, mit Hinweis. Im Änderungsprotokoll steht nur
+  „Zugangsdaten verschickt an …“, nie das Passwort.
 - **Personal: Benutzer, Kontakte, Gewerke** (14.10.2026, ersetzt die Mitarbeiter
   der Stammdaten und die Verknüpfung Konto ↔ Mitarbeiter vom 13.10.2026):
   - Personen-Konten (Kontotyp „Mitarbeiter der Venue“, vorher „… der Halle“, und

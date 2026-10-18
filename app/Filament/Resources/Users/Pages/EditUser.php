@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Access\AccountSafety;
 use App\Filament\Concerns\BoxedPage;
+use App\Filament\Resources\Users\Pages\Concerns\SendsAccessData;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
@@ -14,6 +15,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditUser extends EditRecord
 {
     use BoxedPage;
+    use SendsAccessData;
 
     protected static string $resource = UserResource::class;
 
@@ -38,6 +40,13 @@ class EditUser extends EditRecord
     /** @param  array<string, mixed>  $data */
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $this->rememberPassword($data);
+
         return UserForm::withLinks($data);
+    }
+
+    protected function afterSave(): void
+    {
+        $this->sendAccessDataIfRequested(isNew: false);
     }
 }

@@ -8,18 +8,25 @@ use App\Filament\Support\AccessFields;
 use App\Models\Role;
 use App\Models\Trade;
 use App\Models\User;
+use App\Support\AccessData;
+use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class UserForm
 {
+    /** Schalter „Zugangsdaten per E-Mail senden“ – nicht gespeichert, ausgewertet in CreateUser/EditUser */
+    public const SEND_ACCESS_DATA = 'send_access_data';
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -35,22 +42,6 @@ class UserForm
                             ->label('Nachname')
                             ->required()
                             ->maxLength(120),
-                        TextInput::make('email')
-                            ->label('E-Mail')
-                            ->email()
-                            ->required()
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true),
-                        TextInput::make('password')
-                            ->label('Passwort')
-                            ->password()
-                            ->revealable()
-                            ->minLength(8)
-                            ->required(fn (string $operation): bool => $operation === 'create')
-                            ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->helperText(fn (string $operation): ?string => $operation === 'edit'
-                                ? 'Leer lassen, um das Passwort nicht zu ändern.'
-                                : null),
                         TextInput::make('initials')
                             ->label('Kürzel')
                             ->helperText('Für die Projektleitung in der Event-Liste.')
@@ -60,6 +51,46 @@ class UserForm
                             ->helperText('Steht im Daysheet, wenn die Person im Personal eines Events eingetragen ist.')
                             ->tel()
                             ->maxLength(50),
+                    ]),
+                // Seit 18.10.2026: Passwort generieren lassen und die Zugangsdaten per Mail schicken (App\Support\AccessData)
+                Section::make('Anmeldung')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('email')
+                            ->label('E-Mail')
+                            ->helperText('Damit meldet sich die Person an.')
+                            ->email()
+                            ->required()
+                            ->maxLength(255)
+                            ->unique(ignoreRecord: true),
+                        TextInput::make('password')
+                            ->label('Passwort')
+                            ->password()
+                            ->revealable()
+                            ->copyable(copyMessage: 'Passwort kopiert')
+                            ->suffixAction(
+                                Action::make('generatePassword')
+                                    ->label('Passwort generieren')
+                                    ->tooltip('Passwort generieren')
+                                    ->icon(Heroicon::OutlinedSparkles)
+                                    ->action(function (Set $set): void {
+                                        $set('password', AccessData::password());
+                                        $set(self::SEND_ACCESS_DATA, true);
+                                    }),
+                            )
+                            ->minLength(8)
+                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->dehydrated(fn (?string $state): bool => filled($state))
+                            ->live(onBlur: true)
+                            ->helperText(fn (string $operation): string => $operation === 'edit'
+                                ? 'Leer lassen, um das Passwort nicht zu ändern. Generieren erzeugt ein sicheres neues.'
+                                : 'Mindestens 8 Zeichen – oder generieren lassen.'),
+                        Toggle::make(self::SEND_ACCESS_DATA)
+                            ->label(fn (string $operation): string => $operation === 'edit' ? 'Neues Passwort per E-Mail senden' : 'Zugangsdaten per E-Mail senden')
+                            ->helperText('Nach dem Speichern an die E-Mail-Adresse oben: Adresse der Anmeldung, E-Mail-Adresse und Passwort. Nur für aktive Konten.')
+                            ->dehydrated(false)
+                            ->visible(fn (Get $get, string $operation): bool => (bool) $get('is_active') && ($operation === 'create' || filled($get('password'))))
+                            ->columnSpanFull(),
                     ]),
                 Section::make('Zugang')
                     ->columns(2)
@@ -88,7 +119,8 @@ class UserForm
                             ->label('Aktiv')
                             ->helperText('Inaktive Konten können sich nicht anmelden.')
                             ->default(true)
-                            ->inline(false),
+                            ->inline(false)
+                            ->live(),
                         CheckboxList::make('positions')
                             ->label('Positionen')
                             ->helperText('Für welche Dienste die Person im Personal der Events zur Wahl steht: House Rep. braucht VL, VfV die Position VfV. Werte pflegen unter Stammdaten › Feldoptionen › Position.')

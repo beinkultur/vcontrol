@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Access\AccountSafety;
 use App\Filament\Concerns\BoxedPage;
+use App\Filament\Resources\Users\Pages\Concerns\SendsAccessData;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Notifications\Notification;
@@ -12,6 +13,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateUser extends CreateRecord
 {
     use BoxedPage;
+    use SendsAccessData;
 
     protected static string $resource = UserResource::class;
 
@@ -27,6 +29,13 @@ class CreateUser extends CreateRecord
     /** @param  array<string, mixed>  $data */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $this->rememberPassword($data);
+
         return UserForm::withLinks($data);
+    }
+
+    protected function afterCreate(): void
+    {
+        $this->sendAccessDataIfRequested(isNew: true);
     }
 }
