@@ -22,6 +22,8 @@ class UsersTable
                 TextColumn::make('last_name')
                     ->label('Name')
                     ->formatStateUsing(fn (string $state, User $record): string => $record->getFilamentName())
+                    // Passwort vom Admin, noch nicht durch ein eigenes ersetzt
+                    ->description(fn (User $record): ?string => $record->must_change_password ? 'Muss Passwort ändern' : null)
                     ->searchable(['first_name', 'last_name'])
                     ->sortable(),
                 TextColumn::make('email')

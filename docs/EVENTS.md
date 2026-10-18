@@ -180,6 +180,16 @@ Bedienbar:
   Antwortadresse, sonst an den Admin). Geht die Mail nicht raus, bleibt das
   Konto gespeichert, mit Hinweis. Im Änderungsprotokoll steht nur
   „Zugangsdaten verschickt an …“, nie das Passwort.
+- **Passwortwechsel beim ersten Anmelden** (18.10.2026): Hat ein Admin das
+  Passwort vergeben – beim Anlegen immer, beim Bearbeiten mit neuem Passwort für
+  ein fremdes Konto –, steht am Konto `must_change_password`. Bis die Person ein
+  eigenes festgelegt hat, führt jede angemeldete Seite (auch Druckansichten und
+  Downloads) auf „Neues Passwort festlegen“ (`/passwort-aendern`,
+  `RequirePasswordChange`, `ChangePassword`): neues Passwort zweimal, nicht das
+  bisherige; danach weiter zur angefragten Seite. Abmelden geht immer. Ein
+  eigenes Passwort im Profil oder über „Passwort vergessen?“ erfüllt die Pflicht
+  ebenso. Die Benutzerliste zeigt „Muss Passwort ändern“, solange es offen ist.
+  Bestehende Konten waren nicht betroffen.
 - **Personal: Benutzer, Kontakte, Gewerke** (14.10.2026, ersetzt die Mitarbeiter
   der Stammdaten und die Verknüpfung Konto ↔ Mitarbeiter vom 13.10.2026):
   - Personen-Konten (Kontotyp „Mitarbeiter der Venue“, vorher „… der Halle“, und

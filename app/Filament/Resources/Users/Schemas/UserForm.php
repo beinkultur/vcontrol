@@ -82,9 +82,7 @@ class UserForm
                             ->required(fn (string $operation): bool => $operation === 'create')
                             ->dehydrated(fn (?string $state): bool => filled($state))
                             ->live(onBlur: true)
-                            ->helperText(fn (string $operation): string => $operation === 'edit'
-                                ? 'Leer lassen, um das Passwort nicht zu ändern. Generieren erzeugt ein sicheres neues.'
-                                : 'Mindestens 8 Zeichen – oder generieren lassen.'),
+                            ->helperText(fn (string $operation, ?User $record): string => self::passwordHelp($operation, $record)),
                         Toggle::make(self::SEND_ACCESS_DATA)
                             ->label(fn (string $operation): string => $operation === 'edit' ? 'Neues Passwort per E-Mail senden' : 'Zugangsdaten per E-Mail senden')
                             ->helperText('Nach dem Speichern an die E-Mail-Adresse oben: Adresse der Anmeldung, E-Mail-Adresse und Passwort. Nur für aktive Konten.')
@@ -160,6 +158,20 @@ class UserForm
         $data['trade_id'] = ($type?->linksTrade() ?? false) && filled($data['trade_id'] ?? null) ? (int) $data['trade_id'] : null;
 
         return $data;
+    }
+
+    /** Hinweis am Passwort: Ein Passwort vom Admin muss die Person beim nächsten Anmelden ersetzen (ChangePassword). */
+    private static function passwordHelp(string $operation, ?User $record): string
+    {
+        if ($operation !== 'edit') {
+            return 'Mindestens 8 Zeichen – oder generieren lassen. Beim ersten Anmelden legt die Person ein eigenes fest.';
+        }
+        if ($record !== null && $record->is(self::actor())) {
+            return 'Leer lassen, um das Passwort nicht zu ändern.';
+        }
+
+        return ($record?->must_change_password ? 'Noch offen: Die Person hat das vergebene Passwort noch nicht durch ein eigenes ersetzt. ' : '')
+            . 'Leer lassen, um das Passwort nicht zu ändern. Ein neues muss die Person beim nächsten Anmelden durch ein eigenes ersetzen.';
     }
 
     private static function type(Get $get): ?AccountType

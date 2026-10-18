@@ -84,6 +84,8 @@ class UserAccessDataTest extends TestCase
 
         $user = User::query()->where('email', 'lena.hoffmann@example.org')->sole();
         $this->assertTrue(Hash::check($password, $user->password));
+        // Beim ersten Anmelden ersetzt die Person das Passwort (PasswordChangeRequiredTest)
+        $this->assertTrue($user->must_change_password);
         Mail::assertSent(AccessDataMail::class, fn (AccessDataMail $mail): bool => $mail->hasTo('lena.hoffmann@example.org')
             && $mail->password === $password && $mail->isNew && $mail->accountName === 'Lena Hoffmann');
         Mail::assertSentCount(1);
@@ -173,6 +175,7 @@ class UserAccessDataTest extends TestCase
         $this->assertStringEndsWith('/login', $login);
         $mail->assertSeeInHtml($login);
         $mail->assertSeeInHtml('lena.hoffmann@example.org');
+        $mail->assertSeeInHtml('Gleich nach der Anmeldung legen Sie ein eigenes Passwort fest');
         $mail->assertSeeInHtml('a*b*c_d_e&lt;f&gt;&amp;g', false);
         $mail->assertDontSeeInHtml('<em>', false);
         $mail->assertSeeInText('Passwort:       a*b*c_d_e<f>&g');

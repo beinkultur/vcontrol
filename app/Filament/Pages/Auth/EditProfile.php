@@ -91,6 +91,22 @@ class EditProfile extends BaseEditProfile
     }
 
     /**
+     * Ein selbst gewähltes Passwort erfüllt die Pflicht zum Wechsel
+     * (users.must_change_password, siehe ChangePassword).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        if (array_key_exists('password', $data)) {
+            $data['must_change_password'] = false;
+        }
+
+        return parent::mutateFormDataBeforeSave($data);
+    }
+
+    /**
      * Das aktuelle Passwort nur beim Passwortwechsel: Filament fragt es sonst auch,
      * sobald kein E-Mail-Feld im Formular steht – also bei jedem Speichern.
      */

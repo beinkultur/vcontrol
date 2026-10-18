@@ -10,6 +10,7 @@ use App\Support\Audit;
 use App\Support\StageSettings;
 use App\Support\Uploads;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event as Events;
@@ -48,6 +49,13 @@ class AppServiceProvider extends ServiceProvider
         Events::listen(Login::class, function (Login $event): void {
             if ($event->user instanceof User) {
                 $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
+            }
+        });
+
+        // „Passwort vergessen?“: wer sich so ein eigenes Passwort setzt, muss es nicht noch einmal ändern
+        Events::listen(PasswordReset::class, function (PasswordReset $event): void {
+            if ($event->user instanceof User && $event->user->must_change_password) {
+                $event->user->forceFill(['must_change_password' => false])->save();
             }
         });
 

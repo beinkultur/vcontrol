@@ -20,7 +20,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['first_name', 'last_name', 'initials', 'email', 'phone', 'password', 'account_type', 'positions', 'trade_id', 'is_active', 'calendar_permissions', 'calendar_view'])]
+#[Fillable(['first_name', 'last_name', 'initials', 'email', 'phone', 'password', 'must_change_password', 'account_type', 'positions', 'trade_id', 'is_active', 'calendar_permissions', 'calendar_view'])]
 #[Hidden(['password', 'remember_token', 'calendar_token', 'calendar_token_hash'])]
 class User extends Authenticatable implements FilamentUser, HasName
 {
@@ -39,6 +39,8 @@ class User extends Authenticatable implements FilamentUser, HasName
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            // Passwort vom Admin vergeben: beim nächsten Anmelden ein eigenes festlegen (RequirePasswordChange)
+            'must_change_password' => 'boolean',
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
             'account_type' => AccountType::class,

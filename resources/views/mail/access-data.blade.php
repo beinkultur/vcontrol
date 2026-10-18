@@ -7,9 +7,9 @@ Anmeldung:      {!! $loginUrl !!}
 E-Mail-Adresse: {!! $accountEmail !!}
 Passwort:       {!! $password !!}
 
-Bitte ändern Sie das Passwort nach der ersten Anmeldung: Menü oben rechts › Profil › Passwort ändern. Ein vergessenes Passwort setzen Sie auf der Anmeldeseite über „Passwort vergessen?“ selbst zurück.
+Gleich nach der Anmeldung legen Sie ein eigenes Passwort fest; das aus dieser E-Mail brauchen Sie danach nicht mehr. Ein vergessenes Passwort setzen Sie später auf der Anmeldeseite über „Passwort vergessen?“ selbst zurück.
 
-Diese E-Mail enthält Ihr Passwort – bitte nicht weiterleiten und löschen, sobald Sie es geändert haben.
+Diese E-Mail enthält Ihr Passwort – bitte nicht weiterleiten und löschen, sobald Sie ein eigenes festgelegt haben.
 
 --
 {!! $venue !!} · erstellt mit VenueControl ({!! config('venuecontrol.website') !!})

@@ -11,6 +11,7 @@ use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
 
 class EditUser extends EditRecord
 {
@@ -41,6 +42,11 @@ class EditUser extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $this->rememberPassword($data);
+        // Ein neues Passwort für jemand anderen: beim nächsten Anmelden ein eigenes festlegen.
+        // Das eigene Konto nicht – das Passwort hat man dann selbst gewählt.
+        if (filled($data['password'] ?? null) && !$this->getRecord()->is(Auth::user())) {
+            $data['must_change_password'] = true;
+        }
 
         return UserForm::withLinks($data);
     }

@@ -3,12 +3,14 @@
 namespace App\Providers\Filament;
 
 use App\Enums\ColorScheme;
+use App\Filament\Pages\Auth\ChangePassword;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Schemas\EventForm;
+use App\Http\Middleware\RequirePasswordChange;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Backups;
@@ -26,6 +28,7 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Livewire\Livewire;
@@ -123,6 +126,9 @@ class AppPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+                // Passwort vom Admin vergeben: erst ein eigenes festlegen (seit 18.10.2026)
+                RequirePasswordChange::class,
+            ])
+            ->authenticatedRoutes(fn () => Route::get('passwort-aendern', ChangePassword::class)->name('auth.password-change'));
     }
 }

@@ -30,6 +30,8 @@ class CreateUser extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $this->rememberPassword($data);
+        // Das Passwort kennt der Admin: beim ersten Anmelden ein eigenes festlegen
+        $data['must_change_password'] = true;
 
         return UserForm::withLinks($data);
     }

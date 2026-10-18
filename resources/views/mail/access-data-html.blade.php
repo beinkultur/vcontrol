@@ -30,9 +30,9 @@
 Anmelden
 </x-mail::button>
 
-<p>Bitte ändern Sie das Passwort nach der ersten Anmeldung: Menü oben rechts › Profil › Passwort ändern. Ein vergessenes Passwort setzen Sie auf der Anmeldeseite über „Passwort vergessen?“ selbst zurück.</p>
+<p>Gleich nach der Anmeldung legen Sie ein eigenes Passwort fest; das aus dieser E-Mail brauchen Sie danach nicht mehr. Ein vergessenes Passwort setzen Sie später auf der Anmeldeseite über „Passwort vergessen?“ selbst zurück.</p>
 
-<p>Diese E-Mail enthält Ihr Passwort – bitte nicht weiterleiten und löschen, sobald Sie es geändert haben.</p>
+<p>Diese E-Mail enthält Ihr Passwort – bitte nicht weiterleiten und löschen, sobald Sie ein eigenes festgelegt haben.</p>
 
 <x-slot:footer>
 <x-mail::footer>

@@ -247,7 +247,7 @@ final class AuditPresenter
         'promoter_rep' => 'Prom.-Rep.', 'promoter_rep_signature' => 'Unterschrift Prom.-Rep.', 'checks' => 'Prüfpunkte',
         // Codes, Benutzer, Rollen, Stammdaten
         'code' => 'Code', 'valid_from' => 'Gültig ab', 'valid_on' => 'Gültig am', 'email_verified_at' => 'E-Mail bestätigt',
-        'password' => 'Passwort', 'credentials_sent_to' => 'Zugangsdaten verschickt an', 'account_type' => 'Kontotyp', 'calendar_permissions' => 'Kalender-Rechte', 'calendar_view' => 'Kalender-Ansicht', 'calendar_token' => 'Kalender-Abo (Schlüssel)', 'calendar_token_hash' => 'Kalender-Abo (Prüfwert)', 'slug' => 'Kürzel',
+        'password' => 'Passwort', 'must_change_password' => 'Muss Passwort ändern', 'credentials_sent_to' => 'Zugangsdaten verschickt an', 'account_type' => 'Kontotyp', 'calendar_permissions' => 'Kalender-Rechte', 'calendar_view' => 'Kalender-Ansicht', 'calendar_token' => 'Kalender-Abo (Schlüssel)', 'calendar_token_hash' => 'Kalender-Abo (Prüfwert)', 'slug' => 'Kürzel',
         'is_super' => 'Admin', 'is_system_admin' => 'System-Admin', 'permissions' => 'Rechte', 'customer_no' => 'Kundennummer', 'logo_path' => 'Logo', 'initials' => 'Kürzel',
         'positions' => 'Positionen', 'categories' => 'Leistungsbereiche', 'field_key' => 'Feld', 'value' => 'Wert',
         'parent_value' => 'Übergeordnet', 'price' => 'Preis', 'key' => 'Schlüssel', 'color' => 'Farbe', 'freitermin_status' => 'Freitermin-Status',
@@ -275,7 +275,7 @@ final class AuditPresenter
     /** Felder mit ja/nein */
     private const BOOLEANS = ['closed', 'accounting_closed', 'power_ant', 'house_rig_early', 'briefing_complete', 'sold_out_award', 'house_delay',
         'stair_third', 'split_setup_teardown', 'is_active', 'is_archived', 'is_system', 'is_super', 'is_system_admin', 'is_shared', 'is_settled', 'is_fixed',
-        'is_received', 'hidden_from_externals', 'factor_from_pax', 'default_active', 'fixed_price', 'per_event', 'restart'];
+        'is_received', 'hidden_from_externals', 'factor_from_pax', 'default_active', 'fixed_price', 'per_event', 'restart', 'must_change_password'];
 
     /** Fremdschlüssel → [Modell, Spalte(n) für den Namen] */
     private const REFERENCES = [
