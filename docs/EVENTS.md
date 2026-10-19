@@ -73,14 +73,19 @@ Bedienbar:
   (rotes ! bei Finanz-Warnung), Veranstalter, VA-Kat., PL, PAX, Bestuhlung (🪑),
   Bühne, VA-ID, Fortschritt Buchung/Planung; nach Monaten gruppiert, schmale
   Zeilen, fraglich/abgesagt/vergangen farbig markiert. Filter Status, Zeitraum,
-  Jahr, Veranstalter (voreingestellt offen und zukünftig). Ein Klick öffnet
+  Jahr, Veranstalter (voreingestellt offen und zukünftig) und seit 19.10.2026
+  der Schalter „Abgesagte Events anzeigen“ (voreingestellt aus; abgesagt heißt
+  Status storniert, abgesagt oder cancelled, `Event::scopeWithoutCancelled`;
+  Kalender, Anfragen und Auswertungen sind davon nicht betroffen). Ein Klick öffnet
   das Event – zum Bearbeiten, wer darf, sonst nur lesend.
 - **Workspace** wie in der PHP-Version: Kopf mit Datum · Veranstalter · VA-ID ·
   Status, Reiter Übersicht | Buchung | Planung | Durchführung mit Fortschritt.
   Die Übersicht ist das Dashboard (Finanz-Warnung, Phasen-Karten mit
   Stichpunkten, Stammdaten, Planungsbereiche, Notizen). Unterbereiche als
   eigene Reiter: Buchung › Daten | Buchhaltung | PR, Planung › Zeiten |
-  Checkliste | Bühne | Kontakte (bis 19.10.2026 „Personal“) | Gewerke | Gästeliste | Dateien | Sonstiges,
+  Checkliste | Bühne | Kontakte (bis 19.10.2026 „Personal“) | Gewerke | Gästeliste |
+  Bestellscheine (seit 19.10.2026, dieselben wie unter Durchführung,
+  `bereich=bestellscheine-planung`) | Dateien | Sonstiges,
   Durchführung › Betrieb | Übergabeprotokolle | Bestellscheine | Checklisten |
   Schäden. Die Reiter stehen in der URL
   (`?phase=planung&bereich=buehne`). Leserollen sehen denselben Workspace nur
@@ -300,7 +305,9 @@ Bedienbar:
   Draufsicht mit Podest-Raster (Standard 14×8, Hausbestand, angemietet),
   Wings, Treppen, Raummitte, Raumbegrenzung und Rückwand; daneben
   Plan-Einstellungen (Versatz Wings und Treppen, Abstand Rückwand) und Zahlen.
-  Druckansicht A4 quer und SVG-Datei. Verlinkt im Kopf des Workspace, unter
+  Druckansicht A4 quer und SVG-Datei. Das Rollipodest steht nicht im Plan,
+  seit 19.10.2026 aber mit Maßen und Podesten in der Fußzeile („Rollipodest
+  4 × 3 m · 6 Podeste (nicht im Plan)“, ohne: „keins“) und bei den Zahlen. Verlinkt im Kopf des Workspace, unter
   Planung › Bühne und auf der Übersicht. Für alle 239 Events zeichengleich mit
   der PHP-Version geprüft (vor der Übernahme von „sonst. Podeste“, siehe
   unten). Der Planrahmen 25 × 15 m ist fest: keine echte Raumgröße, er legt nur

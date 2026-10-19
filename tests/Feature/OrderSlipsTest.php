@@ -51,7 +51,9 @@ class OrderSlipsTest extends TestCase
                 ['article_id' => $this->bier->id, 'quantity' => 1.5],
             ],
             'signature' => self::SIGNATURE,
-        ])->assertHasNoTableActionErrors();
+        ])->assertHasNoTableActionErrors()
+            // Die zweite Liste (Planung bzw. Durchführung) zeichnet sich neu
+            ->assertDispatched(OrderSlipsRelationManager::CHANGED);
 
         $slip = $this->event->orderSlips()->with('items')->firstOrFail();
         $this->assertSame('Backstage Catering', $slip->ordered_from);
@@ -86,7 +88,8 @@ class OrderSlipsTest extends TestCase
         $this->manager()
             ->assertTableActionVisible('sign', $slip)
             ->assertTableActionHidden('settle', $slip)
-            ->callTableAction('sign', $slip, data: ['signature' => self::SIGNATURE]);
+            ->callTableAction('sign', $slip, data: ['signature' => self::SIGNATURE])
+            ->assertDispatched(OrderSlipsRelationManager::CHANGED);
         $this->assertSame(self::SIGNATURE, $slip->fresh()->signature);
 
         $this->actingAs($this->userWith($this->role('buchhaltung', ['events' => 'read', 'buchhaltung' => 'edit', 'protokolle' => 'read'])));
@@ -97,6 +100,17 @@ class OrderSlipsTest extends TestCase
             ->assertCanSeeTableRecords([$slip])
             ->callTableAction('settle', $slip);
         $this->assertFalse($slip->fresh()->is_settled);
+    }
+
+    public function test_unter_planung_und_durchfuehrung(): void
+    {
+        $this->event->orderSlips()->create(['ordered_from' => 'Bar 2', 'ordered_at' => now()]);
+        $this->actingAs($this->admin());
+
+        $html = $this->get("/events/{$this->event->id}/edit?phase=planung&bereich=bestellscheine-planung")->assertOk()->getContent();
+        $this->assertSame(2, substr_count($html, 'Neuer Bestellschein'), 'je Phase eine Liste');
+        $this->assertSame(2, substr_count($html, 'Bar 2'));
+        $this->get("/events/{$this->event->id}/edit?phase=durchfuehrung&bereich=bestellscheine")->assertOk();
     }
 
     public function test_leserolle_sieht_aber_legt_nicht_an(): void

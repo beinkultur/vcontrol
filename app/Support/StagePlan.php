@@ -161,6 +161,8 @@ final class StagePlan
                 'over_limit' => $calc['total'] > $inventory,
                 'tier_counts' => $tierCounts,
             ],
+            // Steht nicht im Plan, nur mit Maßen in der Fußzeile (seit 19.10.2026)
+            'roll' => StagePodests::rollpodest($values),
             'title' => trim((string) $event->title) ?: 'Event',
             'headline' => trim(($event->starts_at?->format('d.m.Y') ?? '') . ' ' . $event->title),
             'notes' => trim((string) ($values['stage_notes'] ?? '')),
@@ -233,8 +235,17 @@ final class StagePlan
             $tiers['in_house'],
             $tiers['rented'],
         );
+        $roll = $plan['roll'];
+        $svg .= sprintf(
+            '<text x="%d" y="%d" font-size="5" fill="#000">%s</text>',
+            $textX,
+            (int) ($y0 + 19),
+            $roll['podests'] > 0
+                ? sprintf('Rollipodest %d × %d m · %d Podeste (nicht im Plan)', $roll['width'], $roll['depth'], $roll['podests'])
+                : 'Rollipodest: keins',
+        );
         if ($plan['notes'] !== '') {
-            $svg .= sprintf('<text x="%d" y="%d" font-size="5" font-style="italic" fill="#000">%s</text>', $textX, (int) ($y0 + 21), e($plan['notes']));
+            $svg .= sprintf('<text x="%d" y="%d" font-size="5" font-style="italic" fill="#000">%s</text>', $textX, (int) ($y0 + 28), e($plan['notes']));
         }
         if ($stats['over_limit']) {
             $svg .= sprintf('<text x="%d" y="%d" text-anchor="end" font-size="8" font-weight="700" fill="#dc2626">+%d angemietet nötig</text>', $w - 8, (int) ($y0 + 21), $stats['additional']);

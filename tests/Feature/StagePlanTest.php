@@ -132,7 +132,17 @@ class StagePlanTest extends TestCase
         $this->get(route('events.stage-plan-print', $this->event))
             ->assertOk()
             ->assertSee(StagePlan::documentTitle($this->event))
-            ->assertSee('<svg', escape: false);
+            ->assertSee('<svg', escape: false)
+            // Rollipodest steht nicht im Plan, aber mit Maßen in der Fußzeile (Standardgröße 4 × 3 m)
+            ->assertSee('Rollipodest 4 × 3 m · 6 Podeste (nicht im Plan)');
+        $this->get(EventResource::getUrl('stage-plan', ['record' => $this->event]))
+            ->assertOk()
+            ->assertSee('4 × 3 m · 6');
+
+        $this->event->stage->update(['rollpodest_width' => 6, 'rollpodest_depth' => 4]);
+        $this->get(route('events.stage-plan-svg', $this->event))->assertSee('Rollipodest 6 × 4 m · 12 Podeste (nicht im Plan)');
+        $this->event->stage->update(['rollpodest_width' => 0, 'rollpodest_depth' => 0]);
+        $this->get(route('events.stage-plan-svg', $this->event))->assertSee('Rollipodest: keins');
         $this->get(route('events.stage-plan-svg', $this->event))
             ->assertOk()
             ->assertHeader('Content-Type', 'image/svg+xml; charset=utf-8')

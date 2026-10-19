@@ -118,6 +118,24 @@ class EventListTest extends TestCase
             ->assertDontSeeHtml('vc-mini-progress__pct');
     }
 
+    public function test_abgesagte_erst_mit_dem_schalter(): void
+    {
+        $storniert = Event::create(['title' => 'Storniertes Konzert', 'status' => Event::STATUS_CANCELLED, 'starts_at' => now()->addDays(3)]);
+        $abgesagt = Event::create(['title' => 'Abgesagte Messe', 'status' => ' Abgesagt ', 'starts_at' => now()->addDays(4)]);
+        $ohneStatus = Event::create(['title' => 'Ohne Status', 'starts_at' => now()->addDays(5)]);
+
+        $component = Livewire::test(ListEvents::class)
+            ->assertSee('Abgesagte Events anzeigen')
+            ->assertCanSeeTableRecords([$this->kommend, $ohneStatus])
+            ->assertCanNotSeeTableRecords([$storniert, $abgesagt]);
+        $this->assertSame(0, $component->instance()->getTable()->getActiveFiltersCount(), 'ausgeblendet ist die Vorgabe');
+
+        $component->filterTable('cancelled', ['show_cancelled' => true])
+            ->assertCanSeeTableRecords([$this->kommend, $ohneStatus, $storniert, $abgesagt]);
+        $this->assertSame(1, $component->instance()->getTable()->getActiveFiltersCount());
+        $this->assertSame([$this->kommend->id, $ohneStatus->id], Event::query()->withoutCancelled()->whereIn('id', [$this->kommend->id, $ohneStatus->id, $storniert->id, $abgesagt->id])->orderBy('id')->pluck('id')->all());
+    }
+
     public function test_filter_symbol_zaehlt_abweichungen_von_der_vorgabe(): void
     {
         $component = Livewire::test(ListEvents::class);

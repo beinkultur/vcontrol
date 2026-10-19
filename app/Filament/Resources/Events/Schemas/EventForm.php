@@ -192,6 +192,9 @@ class EventForm
                                 Module::GuestList->isEnabled()
                                     ? self::tab('Gästeliste', 'gaeste')->schema([self::embedded(GuestsRelationManager::class)])
                                     : null,
+                                // Dieselben Bestellscheine wie unter Durchführung (seit 19.10.2026); Kennungen
+                                // in Adresse und Seite müssen sich unterscheiden, auch die der zweiten Liste
+                                self::tab('Bestellscheine', 'bestellscheine-planung')->schema([self::embedded(OrderSlipsRelationManager::class)->key('orderSlipsPlanung')]),
                                 self::tab('Dateien', 'dateien')->schema([
                                     self::embedded(FilesRelationManager::class),
                                     // Übergreifende Dateien hängen an mehreren Events, gepflegt werden sie zentral

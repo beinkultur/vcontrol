@@ -9,7 +9,9 @@
         <div><dt>Verfügbar im Plan</dt><dd>{{ $stats['available'] }} <span class="vc-muted">({{ $stats['inventory'] }} − Rollipodest)</span></dd></div>
         <div><dt>Gesamt inkl. Rollipodest</dt><dd>{{ $stats['total_used'] }} / {{ $stats['inventory'] }}</dd></div>
         @if ($stats['roll_reserved'] > 0)
-            <div><dt>Rollipodest</dt><dd>{{ $stats['roll_reserved'] }} <span class="vc-muted">nicht im Plan</span></dd></div>
+            <div><dt>Rollipodest</dt><dd>{{ $plan['roll']['width'] }} × {{ $plan['roll']['depth'] }} m · {{ $stats['roll_reserved'] }} <span class="vc-muted">nicht im Plan</span></dd></div>
+        @else
+            <div><dt>Rollipodest</dt><dd>keins</dd></div>
         @endif
         @if ($stats['extra_other'] > 0)
             <div><dt>Sonstige Podeste</dt><dd>{{ $stats['extra_other'] }}</dd></div>

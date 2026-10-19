@@ -28,11 +28,14 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 
 /**
  * Durchführung › Bestellscheine wie in der PHP-Version: „Bestellt von“, Artikel
  * mit Menge (Preis und Summe aus der Artikelliste), optional Unterschrift;
- * „abgerechnet“ setzt die Buchhaltung.
+ * „abgerechnet“ setzt die Buchhaltung. Seit 19.10.2026 auch unter Planung –
+ * dieselbe Liste zweimal auf der Seite, Änderungen in der einen zeigt die
+ * andere gleich mit (CHANGED).
  */
 class OrderSlipsRelationManager extends RelationManager
 {
@@ -43,6 +46,14 @@ class OrderSlipsRelationManager extends RelationManager
     protected static ?string $modelLabel = 'Bestellschein';
 
     protected static ?string $pluralModelLabel = 'Bestellscheine';
+
+    /** Ereignis nach Anlegen, Unterschreiben, Abrechnen: alle Listen der Seite neu zeichnen */
+    public const CHANGED = 'order-slips-changed';
+
+    #[On(self::CHANGED)]
+    public function refreshAfterChange(): void
+    {
+    }
 
     /**
      * Auch in der Ansicht des Events bearbeitbar: Event-Operationen sind wie in der
@@ -165,7 +176,8 @@ class OrderSlipsRelationManager extends RelationManager
                     ->label('Neuer Bestellschein')
                     ->icon(Heroicon::OutlinedPlus)
                     ->modalWidth('4xl')
-                    ->using(fn (array $data): OrderSlip => self::create($this->getOwnerRecord()->getKey(), $data)),
+                    ->using(fn (array $data): OrderSlip => self::create($this->getOwnerRecord()->getKey(), $data))
+                    ->after(fn () => $this->dispatch(self::CHANGED)),
             ])
             ->recordActions([
                 ViewAction::make()->modalWidth('4xl')->iconButton(),
@@ -177,14 +189,20 @@ class OrderSlipsRelationManager extends RelationManager
                     ->visible(fn (OrderSlip $record): bool => blank($record->signature))
                     ->schema([SignaturePad::make('signature')->label('Unterschrift')->required()])
                     ->modalSubmitActionLabel('Speichern')
-                    ->action(fn (OrderSlip $record, array $data) => $record->update(['signature' => $data['signature']])),
+                    ->action(function (OrderSlip $record, array $data): void {
+                        $record->update(['signature' => $data['signature']]);
+                        $this->dispatch(self::CHANGED);
+                    }),
                 Action::make('settle')
                     ->iconButton()
                     ->label(fn (OrderSlip $record): string => $record->is_settled ? 'Abrechnung zurücknehmen' : 'Abgerechnet')
                     ->icon(fn (OrderSlip $record): Heroicon => $record->is_settled ? Heroicon::OutlinedArrowUturnLeft : Heroicon::OutlinedCheckCircle)
                     ->color(fn (OrderSlip $record): string => $record->is_settled ? 'gray' : 'success')
                     ->visible(fn (): bool => self::canSettle())
-                    ->action(fn (OrderSlip $record) => $record->update(['is_settled' => !$record->is_settled])),
+                    ->action(function (OrderSlip $record): void {
+                        $record->update(['is_settled' => !$record->is_settled]);
+                        $this->dispatch(self::CHANGED);
+                    }),
             ]);
     }
 

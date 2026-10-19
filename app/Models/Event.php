@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Access\Module;
 use App\Enums\RoomUsage;
+use App\Support\EventDisplay;
 use App\Support\EventNumber;
 use App\Support\IncomingInvoices;
 use App\Support\MeterReadings;
@@ -336,6 +337,17 @@ class Event extends Model
     public function isOverdue(): bool
     {
         return !$this->closed && $this->starts_at !== null && $this->starts_at->lt(today());
+    }
+
+    /**
+     * Ohne abgesagte Events (Status wie in EventDisplay::statusKind), Events ohne Status bleiben.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeWithoutCancelled(Builder $query): void
+    {
+        $query->where(fn (Builder $q) => $q->whereNull('status')
+            ->orWhereRaw('LOWER(TRIM(status)) NOT IN (' . implode(', ', array_fill(0, count(EventDisplay::CANCELLED_STATUSES), '?')) . ')', EventDisplay::CANCELLED_STATUSES));
     }
 
     /** @param Builder<self> $query */

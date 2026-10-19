@@ -51,12 +51,17 @@ final class EventDisplay
         return $day->greaterThan($start) ? $day : $start;
     }
 
+    /** Status abgesagter Events, klein geschrieben (Event::scopeWithoutCancelled) */
+    public const CANCELLED_STATUSES = ['abgesagt', 'storniert', 'cancelled'];
+
     /** @return 'fraglich'|'cancelled'|null */
     public static function statusKind(?string $status): ?string
     {
-        return match (mb_strtolower(trim((string) $status))) {
-            'fraglich' => 'fraglich',
-            'abgesagt', 'storniert', 'cancelled' => 'cancelled',
+        $status = mb_strtolower(trim((string) $status));
+
+        return match (true) {
+            $status === 'fraglich' => 'fraglich',
+            in_array($status, self::CANCELLED_STATUSES, true) => 'cancelled',
             default => null,
         };
     }

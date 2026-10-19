@@ -21,12 +21,7 @@ final class StagePodests
         $main = self::fromArea($stage['width'] ?? null, $stage['depth'] ?? null);
         $wingSl = self::fromArea($stage['wing_sl_width'] ?? null, $stage['wing_sl_depth'] ?? null);
         $wingSr = self::fromArea($stage['wing_sr_width'] ?? null, $stage['wing_sr_depth'] ?? null);
-        // Ohne Angabe steht das Rollipodest in Standardgröße; 0 heißt: keins.
-        $settings = StageSettings::current();
-        $roll = self::fromArea(
-            self::meters($stage['rollpodest_width'] ?? null) ?? $settings->rollWidth,
-            self::meters($stage['rollpodest_depth'] ?? null) ?? $settings->rollDepth,
-        );
+        $roll = self::rollpodest($stage)['podests'];
         $other = max(0, self::meters($stage['extra_platforms'] ?? null) ?? 0);
 
         return [
@@ -37,6 +32,25 @@ final class StagePodests
             'other' => $other,
             'total' => $main + $wingSl + $wingSr + $roll + $other,
         ];
+    }
+
+    /**
+     * Maße und Podeste des Rollipodests. Ohne Angabe steht es in Standardgröße
+     * (StageSettings), 0 heißt: keins – dann sind alle Werte 0.
+     *
+     * @param  array<string, mixed>  $stage  Werte wie in event_stages
+     * @return array{width: int, depth: int, podests: int}
+     */
+    public static function rollpodest(array $stage): array
+    {
+        $settings = StageSettings::current();
+        $width = self::meters($stage['rollpodest_width'] ?? null) ?? $settings->rollWidth;
+        $depth = self::meters($stage['rollpodest_depth'] ?? null) ?? $settings->rollDepth;
+        $podests = self::fromArea($width, $depth);
+
+        return $podests > 0
+            ? ['width' => $width, 'depth' => $depth, 'podests' => $podests]
+            : ['width' => 0, 'depth' => 0, 'podests' => 0];
     }
 
     public static function inventory(): int
