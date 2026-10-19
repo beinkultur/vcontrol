@@ -1139,7 +1139,10 @@ a.vc-card:hover {
    Standardgröße hinein. Bricht die Menüzeile um, wird die Kopfzeile zweizeilig
    und oben und unten ungleich – deshalb wird sie mit abnehmender Breite
    schrittweise schmaler (Stufen unten, geprüft bei 1024, 1100, 1200, 1280 und
-   1440 px). */
+   1440 px). Firefox setzt dieselben Menüpunkte etwas breiter als Safari und
+   Chrome und brach mit „Inselpark Arena“ bei 1280, 1366 und 1440 px um –
+   deshalb reichen die Stufen seit 19.10.2026 weiter nach oben (geprüft in
+   Firefox in 16-px-Schritten von 1024 bis 1920 px). */
 .fi-body {
     --topbar-height: 3.125rem;
 }
@@ -1178,8 +1181,8 @@ a.vc-card:hover {
     filter: invert(1);
 }
 
-/* 1024–1439 px: Menüpunkte enger */
-@media (min-width: 64rem) and (max-width: 89.999rem) {
+/* 1024–1599 px: Menüpunkte enger */
+@media (min-width: 64rem) and (max-width: 99.999rem) {
     .fi-topbar-start {
         margin-inline-end: 0.75rem;
     }
@@ -1194,8 +1197,8 @@ a.vc-card:hover {
     }
 }
 
-/* 1024–1279 px: Menüpunkte ohne Symbole, Suche schmaler */
-@media (min-width: 64rem) and (max-width: 79.999rem) {
+/* 1024–1439 px: Menüpunkte ohne Symbole, Suche schmaler */
+@media (min-width: 64rem) and (max-width: 89.999rem) {
     .fi-topbar-item-btn > .fi-topbar-item-icon {
         display: none;
     }
@@ -1205,10 +1208,17 @@ a.vc-card:hover {
     }
 }
 
-/* 1024–1199 px: nur das Logo, ohne Venue-Namen */
-@media (min-width: 64rem) and (max-width: 74.999rem) {
+/* 1024–1279 px: nur das Logo, ohne Venue-Namen */
+@media (min-width: 64rem) and (max-width: 79.999rem) {
     .fi-topbar-start .vc-brand__name {
         display: none;
+    }
+}
+
+/* 1024–1087 px: Suche noch schmaler */
+@media (min-width: 64rem) and (max-width: 67.999rem) {
+    .fi-topbar .fi-global-search-field {
+        width: 8rem;
     }
 }
 

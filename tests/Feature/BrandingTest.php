@@ -29,7 +29,11 @@ class BrandingTest extends TestCase
             ->assertSee('--vc-buchung:#2563eb;--vc-planung:#0d9488;--vc-durchfuehrung:#d97706;', false)
             ->assertSee(asset('css/scheme-vc-basic.css') . '?v=', false)
             ->assertDontSee(Color::convertToOklch('#5c0a5a'), false)
-            ->assertDontSee('scheme-lila-gruen.css', false);
+            ->assertDontSee('scheme-lila-gruen.css', false)
+            // Eigene Skripte (Doppelklick-Schutz der Menügruppen), einmal je Sitzung im SPA-Modus
+            ->assertSee('<script src="' . asset('js/vcontrol.js') . '?v=', false)
+            ->assertSee('defer data-navigate-once></script>', false);
+        $this->assertFileExists(public_path('js/vcontrol.js'));
     }
 
     public function test_lila_gruen_mit_den_farben_des_t1x_backends(): void

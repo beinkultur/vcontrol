@@ -71,6 +71,12 @@ class AppPanelProvider extends PanelProvider
             // Farbschema, das der System-Admin unter Verwaltung › System wählt
             ->colors(fn (): array => ColorScheme::current()->colors())
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('partials.icons')->render())
+            // Eigene Skripte ohne Build-Schritt (Doppelklick-Schutz der Menügruppen), Version = Änderungszeit
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => sprintf(
+                '<script src="%s?v=%d" defer data-navigate-once></script>',
+                e(asset('js/vcontrol.js')),
+                @filemtime(public_path('js/vcontrol.js')) ?: 0,
+            ))
             ->spa()
             // Wer ein Formular mit ungespeicherten Änderungen verlässt, wird gefragt –
             // auch beim Wechsel über die Navigation (SPA). Reiterwechsel im Event bleiben
