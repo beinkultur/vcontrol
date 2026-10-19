@@ -581,8 +581,7 @@ class EventForm
                 ->columns(['default' => 1, 'md' => 2, 'xl' => 3])
                 ->schema([
                     self::yesNo('checklist', 'special_cleaning', 'Sonderreinigung', textValues: true),
-                    self::yesNo('operation', 'house_delay', 'Haus-Delay')
-                        ->helperText('Bei ja erwartet die Buchhaltung immer die Rechnung „Cobra – Haus-Delay“.'),
+                    self::yesNo('operation', 'house_delay', 'Haus-Delay'),
                     self::yesNo('checklist', 'power_ant', 'Miete Elektro-Ameise'),
                     self::yesNo('checklist', 'house_rig_early', 'Haus-Rig ab 7 Uhr'),
                     self::yesNo('stage', 'sold_out_award', 'Sold-Out-Award'),

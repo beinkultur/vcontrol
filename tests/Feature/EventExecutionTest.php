@@ -81,6 +81,8 @@ class EventExecutionTest extends TestCase
 
         $this->form()
             ->assertSchemaStateSet(['special_cleaning' => null, 'house_delay' => null, 'power_ant' => null])
+            // Ohne Hinweis auf die Cobra-Rechnung (Vorgabe vom 19.10.2026)
+            ->assertDontSee('erwartet die Buchhaltung immer')
             ->fillForm(['house_delay' => 1, 'power_ant' => 0, 'house_rig_early' => 1, 'sold_out_award' => 1])
             ->call('save')
             ->assertHasNoFormErrors();
