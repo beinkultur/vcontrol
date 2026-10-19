@@ -1222,6 +1222,25 @@ a.vc-card:hover {
     }
 }
 
+/* Event-Liste: Schalter „Abgesagte Events anzeigen“ neben den Aktionen der Kopfzeile
+   (filament.events.cancelled-toggle), Schrift wie die Beschriftung der Filter */
+.vc-header-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-inline-end: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    color: var(--gray-950);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.dark .vc-header-toggle {
+    color: var(--color-white);
+}
+
 /* Erledigt-Haken im Dashboard (z. B. Daysheet versendet), wie die Spalte „DS“ der Event-Liste */
 .vc-ok {
     color: var(--success-600);

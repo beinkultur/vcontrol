@@ -9,6 +9,7 @@ use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Http\Middleware\RequirePasswordChange;
 use App\Models\Setting;
@@ -110,6 +111,14 @@ class AppPanelProvider extends PanelProvider
                     'cancelUrl' => (($page = Livewire::current()) instanceof EditEvent ? $page->previousUrl : null) ?? EventResource::getUrl(),
                 ])->render(),
                 scopes: EditEvent::class,
+            )
+            // Event-Liste: Schalter „Abgesagte Events anzeigen“ links neben den Aktionen der Kopfzeile
+            ->renderHook(
+                PanelsRenderHook::PAGE_HEADER_ACTIONS_BEFORE,
+                fn (): string => ($page = Livewire::current()) instanceof ListEvents
+                    ? view('filament.events.cancelled-toggle', ['on' => $page->showCancelled])->render()
+                    : '',
+                scopes: ListEvents::class,
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

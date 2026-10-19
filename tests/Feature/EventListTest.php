@@ -124,15 +124,30 @@ class EventListTest extends TestCase
         $abgesagt = Event::create(['title' => 'Abgesagte Messe', 'status' => ' Abgesagt ', 'starts_at' => now()->addDays(4)]);
         $ohneStatus = Event::create(['title' => 'Ohne Status', 'starts_at' => now()->addDays(5)]);
 
-        $component = Livewire::test(ListEvents::class)
+        // Schalter in der Kopfzeile, nicht bei den Filtern (dort bleibt die Suche in ihrer Zeile)
+        $this->get(EventResource::getUrl())
+            ->assertOk()
             ->assertSee('Abgesagte Events anzeigen')
+            ->assertSee('wire:click="toggleCancelled"', false)
+            ->assertSee('aria-checked="false"', false);
+        $component = Livewire::test(ListEvents::class)
             ->assertCanSeeTableRecords([$this->kommend, $ohneStatus])
             ->assertCanNotSeeTableRecords([$storniert, $abgesagt]);
-        $this->assertSame(0, $component->instance()->getTable()->getActiveFiltersCount(), 'ausgeblendet ist die Vorgabe');
+        $this->assertSame(0, $component->instance()->getTable()->getActiveFiltersCount());
+        $this->assertNull($component->instance()->getTable()->getFilter('cancelled'));
 
-        $component->filterTable('cancelled', ['show_cancelled' => true])
+        $component->call('toggleCancelled')
+            ->assertSet('showCancelled', true)
             ->assertCanSeeTableRecords([$this->kommend, $ohneStatus, $storniert, $abgesagt]);
-        $this->assertSame(1, $component->instance()->getTable()->getActiveFiltersCount());
+        $component->call('toggleCancelled')
+            ->assertCanNotSeeTableRecords([$storniert, $abgesagt]);
+
+        // In der Adresse: Neuladen behält den Schalter
+        Livewire::withQueryParams(['abgesagte' => '1'])->test(ListEvents::class)
+            ->assertSet('showCancelled', true)
+            ->assertCanSeeTableRecords([$storniert]);
+        $this->get(EventResource::getUrl() . '?abgesagte=1')->assertSee('aria-checked="true"', false);
+
         $this->assertSame([$this->kommend->id, $ohneStatus->id], Event::query()->withoutCancelled()->whereIn('id', [$this->kommend->id, $ohneStatus->id, $storniert->id, $abgesagt->id])->orderBy('id')->pluck('id')->all());
     }
 

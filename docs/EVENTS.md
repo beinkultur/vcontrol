@@ -74,7 +74,8 @@ Bedienbar:
   Bühne, VA-ID, Fortschritt Buchung/Planung; nach Monaten gruppiert, schmale
   Zeilen, fraglich/abgesagt/vergangen farbig markiert. Filter Status, Zeitraum,
   Jahr, Veranstalter (voreingestellt offen und zukünftig) und seit 19.10.2026
-  der Schalter „Abgesagte Events anzeigen“ (voreingestellt aus; abgesagt heißt
+  der Schalter „Abgesagte Events anzeigen“ in der Kopfzeile neben den Aktionen
+  (voreingestellt aus, in der Adresse `?abgesagte=1`; abgesagt heißt
   Status storniert, abgesagt oder cancelled, `Event::scopeWithoutCancelled`;
   Kalender, Anfragen und Auswertungen sind davon nicht betroffen). Ein Klick öffnet
   das Event – zum Bearbeiten, wer darf, sonst nur lesend.

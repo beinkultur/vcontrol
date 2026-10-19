@@ -4,11 +4,11 @@ namespace App\Filament\Resources\Events\Tables;
 
 use App\Access\Module;
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Models\Event;
 use App\Support\EventDisplay;
 use App\Support\StagePodests;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\IconSize;
@@ -28,7 +28,8 @@ use Illuminate\Support\HtmlString;
 /**
  * Die Event-Liste – Herzstück der App. Spalten, Reihenfolge und Filter wie in
  * der PHP-Version: nach Monaten gruppiert, voreingestellt offen und ab heute,
- * seit 19.10.2026 ohne abgesagte Events (Schalter „Abgesagte Events anzeigen“),
+ * seit 19.10.2026 ohne abgesagte Events (Schalter „Abgesagte Events anzeigen“
+ * über der Liste, ListEvents::$showCancelled),
  * schmale Zeilen (Stil in public/css/vcontrol.css), ein Klick öffnet das Event.
  * Auf dem Handy nur Datum, Status und Veranstaltung, ab Tablet (md) und Laptop
  * (lg) nach und nach die übrigen Spalten.
@@ -140,6 +141,10 @@ class EventsTable
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
                 ->with(['promoter', 'finance', 'pr', 'schedule', 'checklist', 'stage', 'services', 'assignments.assignee', 'seatingPlan'])
                 ->withMax(['daysheets as daysheet_sent_at' => fn (Builder $daysheets): Builder => $daysheets->whereNull('revoked_at')], 'created_at'))
+            // Abgesagte nur mit dem Schalter über der Liste; ein einzelnes Event (Aktionen) findet sich immer
+            ->modifyQueryUsing(fn (Builder $query, $livewire, bool $isResolvingRecord): Builder => $isResolvingRecord || ($livewire instanceof ListEvents && $livewire->showCancelled)
+                ? $query
+                : $query->withoutCancelled())
             ->defaultGroup(
                 Group::make('month')
                     ->label('Monat')
@@ -203,15 +208,6 @@ class EventsTable
                     ->relationship('promoter', 'name')
                     ->searchable()
                     ->preload(),
-                // Voreingestellt aus: Abgesagte stehen erst mit dem Schalter in der Liste
-                Filter::make('cancelled')
-                    ->schema([
-                        Toggle::make('show_cancelled')
-                            ->label('Abgesagte Events anzeigen')
-                            ->default(false),
-                    ])
-                    ->query(fn (Builder $query, array $data): Builder => ($data['show_cancelled'] ?? false) ? $query : $query->withoutCancelled())
-                    ->indicateUsing(fn (array $data): ?string => ($data['show_cancelled'] ?? false) ? 'Mit abgesagten Events' : null),
             ], layout: FiltersLayout::AboveContentCollapsible) // auf dem Handy hinter dem Filter-Symbol, sonst immer offen (vcontrol.css)
             // Handy: zwei Filter je Zeile statt vier untereinander
             ->filtersFormColumns(['default' => 2, 'lg' => 4])

@@ -12,11 +12,27 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Url;
 
 /** Offen/Abgeschlossen/Alle steht wie in der PHP-Version im Filter „Status“, nicht in Reitern. */
 class ListEvents extends ListRecords
 {
     protected static string $resource = EventResource::class;
+
+    /**
+     * Abgesagte Events in der Liste (seit 19.10.2026, voreingestellt aus): Schalter
+     * in der Kopfzeile neben den Aktionen (filament.events.cancelled-toggle, Render-
+     * Hook im AppPanelProvider), nicht bei den Filtern – dort bliebe die Suche nicht
+     * in ihrer Zeile. Steht in der Adresse, damit Neuladen und Zurück ihn behalten.
+     */
+    #[Url(as: 'abgesagte', except: false)]
+    public bool $showCancelled = false;
+
+    public function toggleCancelled(): void
+    {
+        $this->showCancelled = !$this->showCancelled;
+        $this->resetPage();
+    }
 
     /** Kein Pfad über der Liste – jede Zeile zählt. */
     public function getBreadcrumbs(): array
