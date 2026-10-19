@@ -44,7 +44,8 @@ final class EventProgress
             'checkliste' => collect(['hands', 'cleaning', 'chairs_ordered', 'pvc_setup', 'traffic'])
                 ->contains(fn (string $field): bool => self::answered($c?->{$field})),
             'buehne' => Module::StagePlan->isEnabled() ? self::hasStageSize($event) : null,
-            'personal' => $event->assignments->contains(fn (EventAssignment $a): bool => $a->role !== AssignmentRole::ProjectLead),
+            'kontakte' => $event->assignments->contains(fn (EventAssignment $a): bool => $a->role !== AssignmentRole::ProjectLead)
+                || $event->hasOnsiteContact(),
             'gewerke' => self::filledServices($event) > 0,
             'gaeste' => Module::GuestList->isEnabled() ? $guestCount > 0 : null,
             'dateien' => $fileCount > 0,

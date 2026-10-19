@@ -45,6 +45,9 @@ class EditEvent extends EditRecord
      */
     public function mount(int|string $record): void
     {
+        if ($this->redirectRenamedSection($record)) {
+            return;
+        }
         $event = $this->resolveRecord($record);
         if (!EventResource::canEdit($event) && EventResource::canView($event)) {
             $this->record = $event;

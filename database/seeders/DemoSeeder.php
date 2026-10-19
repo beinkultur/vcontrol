@@ -512,7 +512,11 @@ final class DemoSeeder extends Seeder
             },
             'seating_plan_id' => $fill >= 1 ? $this->plans[$seating]?->id : null,
             'price_list_id' => $listKey !== null ? $this->lists[$listKey]->id : null,
-            'onsite_contact' => $fill >= 2 ? $promoter->contacts->last()?->first_name . ' ' . $promoter->contacts->last()?->last_name . ' (' . $promoter->short_name . ')' : null,
+            // Ansprechpartner vor Ort: der letzte Ansprechpartner des Veranstalters
+            'onsite_first_name' => $fill >= 2 ? $promoter->contacts->last()?->first_name : null,
+            'onsite_last_name' => $fill >= 2 ? $promoter->contacts->last()?->last_name : null,
+            'onsite_phone' => $fill >= 2 ? $promoter->contacts->last()?->phone : null,
+            'onsite_email' => $fill >= 2 ? $promoter->contacts->last()?->email : null,
             'wlan' => $fill >= 2 ? 'BIA-Production' : null,
             'wlan_password' => $fill >= 2 ? 'Hafenblick-' . $this->random->getInt(1000, 9999) : null,
             'closed' => $past && $offset < -7,
@@ -684,7 +688,7 @@ final class DemoSeeder extends Seeder
         }
         $end = $start->copy()->addHours(4);
         $this->stamp($event->showChecklists()->create(['checked_at' => $end, 'house_rep' => $lead->first_name . ' ' . $lead->last_name, 'house_rep_signature' => $this->signature(1),
-            'promoter_rep' => (string) $event->onsite_contact ?: 'Produktionsleitung', 'promoter_rep_signature' => $this->signature(2), 'checks' => $checks,
+            'promoter_rep' => $event->onsiteContactName() ?? 'Produktionsleitung', 'promoter_rep_signature' => $this->signature(2), 'checks' => $checks,
             'remarks' => $mark === 'damage' ? 'Schaden aufgenommen, siehe Schäden.' : null]), $lead);
 
         $protocol = $this->stamp($event->handoverProtocols()->create(['handed_to' => $sport ? 'Kai Neumann (HL)' : 'Max Brenner (Lichtwerk)', 'handed_at' => $start->copy()->setTime(9, 0),
@@ -695,7 +699,7 @@ final class DemoSeeder extends Seeder
         }
 
         if (!$sport) {
-            $slip = $this->stamp($event->orderSlips()->create(['ordered_from' => (string) $event->onsite_contact ?: 'Produktion', 'ordered_at' => $start->copy()->setTime(14, 30),
+            $slip = $this->stamp($event->orderSlips()->create(['ordered_from' => $event->onsiteContactName() ?? 'Produktion', 'ordered_at' => $start->copy()->setTime(14, 30),
                 'signature' => $this->signature(4), 'is_settled' => $event->closed]), $lead);
             foreach ([[$this->articles[0], 48], [$this->articles[2], 24], [$this->articles[7], 2]] as $index => [$article, $quantity]) {
                 $slip->items()->create(['article_id' => $article->id, 'category_id' => $article->category_id, 'category_name' => $article->category?->name,

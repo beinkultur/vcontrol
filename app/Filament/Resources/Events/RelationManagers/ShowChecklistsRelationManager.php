@@ -69,7 +69,7 @@ class ShowChecklistsRelationManager extends RelationManager
                     ->maxLength(120),
                 TextInput::make('promoter_rep')
                     ->label('Prom.-Rep.')
-                    ->default(fn (): ?string => $this->event()->onsite_contact)
+                    ->default(fn (): ?string => $this->event()->onsiteContactName())
                     ->maxLength(120),
                 ...array_map(
                     fn (string $group, array $items): Section => Section::make($group)

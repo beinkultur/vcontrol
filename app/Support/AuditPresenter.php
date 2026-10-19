@@ -41,7 +41,7 @@ final class AuditPresenter
         'event_checklists' => 'Checkliste',
         'event_stages' => 'Bühne',
         'event_operations' => 'Betrieb',
-        'event_assignments' => 'Personal',
+        'event_assignments' => 'Rollen am Event',
         'event_services' => 'Gewerke',
         'event_service_groups' => 'Leistungsgruppe',
         'event_incoming_invoices' => 'Eingangsrechnung',
@@ -197,6 +197,7 @@ final class AuditPresenter
         'starts_at' => 'Beginn', 'ends_at' => 'Ende', 'pax_expected' => 'PAX erwartet', 'pax' => 'PAX abgerechnet', 'areas' => 'Bereiche',
         'seating' => 'Bestuhlung', 'ticketing' => 'Ticketing', 'wlan' => 'WLAN', 'wlan_password' => 'WLAN-Passwort',
         'booking_notes' => 'Notizen Buchung', 'onsite_contact' => 'Ansprechpartner vor Ort', 'closed' => 'Event abgeschlossen',
+        'onsite_first_name' => 'Vor Ort: Vorname', 'onsite_last_name' => 'Vor Ort: Name', 'onsite_phone' => 'Vor Ort: Telefon', 'onsite_email' => 'Vor Ort: E-Mail',
         'seating_plan_id' => 'Standard-Saalplan', 'seating_plan_path' => 'Eigener Saalplan', 'seating_plan_original_name' => 'Saalplan-Datei',
         'seating_plan_mime_type' => 'Saalplan-Typ', 'price_list_id' => 'Preisliste',
         // Preislisten, Costings

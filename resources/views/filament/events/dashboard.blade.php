@@ -28,7 +28,7 @@
         $event->starts_at !== null && $event->starts_at->copy()->endOfDay()->isFuture() => 'Daysheet noch nicht versendet',
         default => null,
     };
-    $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
+    $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'kontakte' => 'Kontakte', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
     // Preisliste und Costing: nur mit ihrem Modul, das Costing nur für die Rollen unter Verwaltung › Venue (CostingSettings)

@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\Storage;
 #[Fillable([
     'va_nr', 'va_id', 'title', 'promoter_id', 'status', 'event_type1', 'event_type2',
     'starts_at', 'ends_at', 'pax_expected', 'pax', 'areas', 'seating', 'ticketing',
-    'wlan', 'wlan_password', 'description', 'booking_notes', 'onsite_contact',
+    'wlan', 'wlan_password', 'description', 'booking_notes',
+    'onsite_first_name', 'onsite_last_name', 'onsite_phone', 'onsite_email',
     'closed', 'seating_plan_id', 'seating_plan_path', 'seating_plan_original_name', 'price_list_id',
 ])]
 class Event extends Model
@@ -94,6 +95,23 @@ class Event extends Model
             'seating' => 'array',
             'closed' => 'boolean',
         ];
+    }
+
+    /**
+     * Ansprechpartner vor Ort als „Vorname Name“ (Planung › Kontakte, seit
+     * 19.10.2026 in vier Feldern); null ohne Namen.
+     */
+    public function onsiteContactName(): ?string
+    {
+        $name = trim(trim((string) $this->onsite_first_name) . ' ' . trim((string) $this->onsite_last_name));
+
+        return $name === '' ? null : $name;
+    }
+
+    /** Irgendein Feld des Ansprechpartners vor Ort ist ausgefüllt. */
+    public function hasOnsiteContact(): bool
+    {
+        return filled($this->onsite_first_name) || filled($this->onsite_last_name) || filled($this->onsite_phone) || filled($this->onsite_email);
     }
 
     /** @return BelongsTo<Promoter, $this> */

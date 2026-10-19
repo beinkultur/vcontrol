@@ -133,7 +133,7 @@ class ExternEventResource extends Resource
             ->recordUrl(fn (ExternEvent $record): string => static::getUrl('view', ['record' => $record]))
             ->paginated([25, 50, 100])
             ->emptyStateHeading('Keine Events')
-            ->emptyStateDescription('Hier erscheinen die Events, bei denen dein Konto im Personal oder als Gewerk eingetragen ist.');
+            ->emptyStateDescription('Hier erscheinen die Events, bei denen dein Konto in einer Rolle oder als Gewerk eingetragen ist.');
     }
 
     /** Nur die Events, an denen das angemeldete Konto beteiligt ist – auch für Admins. */

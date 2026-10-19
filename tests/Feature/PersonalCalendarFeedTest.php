@@ -77,7 +77,7 @@ class PersonalCalendarFeedTest extends TestCase
         // Fragliches Event: vorläufig; nach der Umstellung auf Winterzeit UTC+1
         $this->assertStringContainsString("DTSTART:20261103T160000Z\r\nDTEND:20261103T223000Z\r\nSUMMARY:House Rep. spät · Comedy Abend\r\n", $ics);
         $this->assertStringContainsString('STATUS:TENTATIVE', $ics);
-        $this->assertStringContainsString('/events/' . $this->concert->id . '/edit?phase=planung&bereich=personal', $ics);
+        $this->assertStringContainsString('/events/' . $this->concert->id . '/edit?phase=planung&bereich=kontakte', $ics);
         // Nur die eigenen, ohne Projektleitung, ohne Altes
         $this->assertSame(3, substr_count($ics, 'BEGIN:VEVENT'));
         $this->assertStringNotContainsString('Altes Konzert', $ics);

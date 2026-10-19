@@ -36,6 +36,7 @@ use App\Models\EventStage;
 use App\Models\PriceList;
 use App\Models\SeatingPlan;
 use App\Support\EventProgress;
+use App\Support\OnsiteContact;
 use App\Support\StagePlan;
 use App\Support\StagePodests;
 use App\Support\StageSettings;
@@ -104,6 +105,9 @@ class EventForm
 
     public const CHECK_OPTIONS = ['yes' => 'ja', 'no' => 'nein', 'na' => 'entfällt'];
 
+    /** Umbenannte Bereiche: alte Kennung in der Adresse → neue (HasEventHeading::redirectRenamedSection) */
+    public const RENAMED_SECTIONS = ['personal' => 'kontakte'];
+
     public static function configure(Schema $schema): Schema
     {
         // Neu anlegen wie in der PHP-Version: nur die Daten der Buchung. Den
@@ -171,10 +175,13 @@ class EventForm
                                         self::stage(),
                                     ])
                                     : null,
-                                self::tab('Personal', 'personal')->schema([
-                                    Section::make()
+                                // Bis 19.10.2026 „Personal“ (bereich=personal leitet weiter, RENAMED_SECTIONS)
+                                self::tab('Kontakte', 'kontakte')->schema([
+                                    Section::make('Rollen')
+                                        ->description('Wer auf- und abschließt, House Rep. und VfV – mit Uhrzeit.')
                                         ->columns(2)
                                         ->schema(AssignmentFields::all(except: [AssignmentRole::ProjectLead])),
+                                    self::onsiteContact(),
                                 ]),
                                 self::tab('Gewerke', 'gewerke')->schema([
                                     Section::make()
@@ -212,7 +219,7 @@ class EventForm
     /** Beschreibung der Phasen wie im Phasen-Stepper der PHP-Version. */
     private const PHASES = [
         'buchung' => ['1', 'Buchung', 'Event anlegen und vertragliche Stammdaten'],
-        'planung' => ['2', 'Planung', 'Advancing, Zeiten, Personal und Gewerke'],
+        'planung' => ['2', 'Planung', 'Advancing, Zeiten, Kontakte und Gewerke'],
         'durchfuehrung' => ['3', 'Durchführung', 'Show Day – Betrieb und Räume'],
     ];
 
@@ -547,6 +554,63 @@ class EventForm
             ));
     }
 
+    /**
+     * Planung › Kontakte: Ansprechpartner vor Ort (bis 19.10.2026 ein Textfeld
+     * unter Sonstiges). Das Suchfeld übernimmt Vorname, Name, Telefon und E-Mail
+     * aus den Ansprechpartnern der Veranstalter, den Kontakten und den Gewerken
+     * (OnsiteContact) – ohne Suchbegriff die des Veranstalters dieses Events.
+     * Übernommen wird eine Kopie, die Felder lassen sich danach ändern.
+     */
+    private static function onsiteContact(): Section
+    {
+        return Section::make('Ansprechpartner vor Ort')
+            ->description('Vom Veranstalter oder der Produktion, für Rückfragen am Veranstaltungstag – steht im Daysheet und bei „Meine Events“.')
+            ->columns(['default' => 1, 'md' => 2, 'xl' => 4])
+            ->schema([
+                Select::make('onsite_lookup')
+                    ->label('Übernehmen aus Veranstaltern, Kontakten oder Gewerken')
+                    ->placeholder('Name, Firma, Telefon oder E-Mail suchen …')
+                    ->searchable()
+                    ->options(fn (Get $get): array => OnsiteContact::suggestions(self::promoterId($get)))
+                    ->getSearchResultsUsing(fn (string $search, Get $get): array => OnsiteContact::search($search, self::promoterId($get)))
+                    ->noSearchResultsMessage('Nichts gefunden – die Felder lassen sich auch frei ausfüllen.')
+                    ->live()
+                    ->afterStateUpdated(function (?string $state, Set $set): void {
+                        foreach (OnsiteContact::pick($state) ?? [] as $field => $value) {
+                            $set($field, $value);
+                        }
+                        $set('onsite_lookup', null);
+                    })
+                    ->dehydrated(false)
+                    // In der Lese-Ansicht gibt es nichts zu übernehmen
+                    ->visible(fn ($livewire): bool => $livewire instanceof EditEvent)
+                    ->columnSpanFull(),
+                TextInput::make('onsite_first_name')
+                    ->label('Vorname')
+                    ->maxLength(100),
+                TextInput::make('onsite_last_name')
+                    ->label('Name')
+                    ->maxLength(120),
+                // Ohne Prüfung des Formats: übernommene Nummern stehen oft mit Zusätzen da
+                TextInput::make('onsite_phone')
+                    ->label('Telefon')
+                    ->type('tel')
+                    ->maxLength(50),
+                TextInput::make('onsite_email')
+                    ->label('E-Mail')
+                    ->email()
+                    ->maxLength(255),
+            ]);
+    }
+
+    /** Veranstalter im Formular (Buchung › Daten), sonst der gespeicherte. */
+    private static function promoterId(Get $get): ?int
+    {
+        $id = $get('promoter_id');
+
+        return filled($id) ? (int) $id : null;
+    }
+
     /** Planung › Sonstiges: in der PHP-Version WLAN; dazu, was keinen eigenen Platz hat. */
     private static function other(): Section
     {
@@ -561,9 +625,6 @@ class EventForm
                     ->label('WLAN-Passwort')
                     ->maxLength(120)
                     ->visible(fn (): bool => self::can(Area::Events, Level::Edit)),
-                TextInput::make('onsite_contact')
-                    ->label('Ansprechpartner vor Ort')
-                    ->maxLength(120),
                 Textarea::make('description')
                     ->label('Beschreibung')
                     ->rows(3)

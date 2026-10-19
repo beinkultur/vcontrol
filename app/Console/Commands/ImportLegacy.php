@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Damage;
 use App\Models\EventFile;
 use App\Support\Audit;
+use App\Support\OnsiteContact;
 use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
@@ -262,7 +263,8 @@ class ImportLegacy extends Command
             'wlan_password' => $e->wlan_password,
             'description' => $e->description,
             'booking_notes' => $e->booking_notes,
-            'onsite_contact' => $e->onsite_contact,
+            // In der PHP-Version ein Textfeld, hier seit 19.10.2026 Vorname, Name, Telefon, E-Mail
+            ...OnsiteContact::parse($e->onsite_contact),
             'closed' => (bool) $e->closed,
             'created_at' => $e->created_at,
             'updated_at' => $e->updated_at,

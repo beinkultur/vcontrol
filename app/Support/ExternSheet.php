@@ -166,8 +166,10 @@ final class ExternSheet
                     ];
                 });
         }
-        if (filled($event->onsite_contact)) {
-            $rows[] = ['label' => 'Ansprechpartner vor Ort', 'name' => (string) $event->onsite_contact, 'time' => null, 'phone' => null, 'email' => null];
+        if ($event->hasOnsiteContact()) {
+            $rows[] = ['label' => 'Ansprechpartner vor Ort', 'name' => $event->onsiteContactName() ?? '–', 'time' => null,
+                'phone' => filled($event->onsite_phone) ? (string) $event->onsite_phone : null,
+                'email' => filled($event->onsite_email) ? (string) $event->onsite_email : null];
         }
 
         return $rows;

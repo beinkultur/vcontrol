@@ -45,7 +45,7 @@ class ExternPortalTest extends TestCase
         $this->freelancer->update(['account_type' => AccountType::Freelancer]);
 
         $this->mine = Event::create(['title' => 'Konzert Nord', 'status' => 'bestätigt', 'starts_at' => now()->addDays(3),
-            'booking_notes' => 'Intern: Gage nachverhandeln', 'wlan_password' => 'geheimwlan', 'onsite_contact' => 'Max Tourleiter']);
+            'booking_notes' => 'Intern: Gage nachverhandeln', 'wlan_password' => 'geheimwlan', 'onsite_first_name' => 'Max', 'onsite_last_name' => 'Tourleiter', 'onsite_phone' => '0170 5555 123', 'onsite_email' => 'max@tour.example']);
         $this->other = Event::create(['title' => 'Geheime Messe', 'status' => 'bestätigt', 'starts_at' => now()->addDays(4)]);
 
         // Beteiligt als Konto im Personal
@@ -99,6 +99,9 @@ class ExternPortalTest extends TestCase
             ->assertSee('House Rep. früh')
             ->assertSee('14:00–23:00')
             ->assertSee('Max Tourleiter')
+            // Ansprechpartner vor Ort mit Telefon und E-Mail (seit 19.10.2026)
+            ->assertSee('0170 5555 123')
+            ->assertSee('max@tour.example')
             ->assertSee('Ladehof über Tor 3')
             ->assertSee('Rider.pdf')
             ->assertDontSee('Nur fürs Team')

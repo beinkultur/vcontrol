@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events\Pages\Concerns;
 use App\Access\Module;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Filament\Resources\ExternEvents\ExternEventResource;
 use App\Support\EventDisplay;
 use Filament\Actions\Action;
@@ -29,6 +30,33 @@ trait HasEventHeading
             'meta' => EventDisplay::meta($this->getRecord()),
             'actions' => $this->getCachedHeaderActions(),
         ]);
+    }
+
+    /**
+     * Alte Links auf einen umbenannten Bereich (?bereich=personal, seit
+     * 19.10.2026 „kontakte“ – etwa aus abonnierten Kalendern) landen im neuen.
+     * Nur für, wer das Event sehen darf; die Reihenfolge der Adresse bleibt.
+     */
+    protected function redirectRenamedSection(int|string $record): bool
+    {
+        $section = request()->query('bereich');
+        if (!is_string($section) || !isset(EventForm::RENAMED_SECTIONS[$section])) {
+            return false;
+        }
+        $event = $this->resolveRecord($record);
+        if (!EventResource::canView($event)) {
+            return false;
+        }
+
+        $this->record = $event;
+        $query = (string) preg_replace(
+            '/(^|&)bereich=' . preg_quote($section, '/') . '(?=&|$)/',
+            '$1bereich=' . EventForm::RENAMED_SECTIONS[$section],
+            (string) request()->server('QUERY_STRING'),
+        );
+        $this->redirect(static::getUrl(['record' => $event]) . '?' . $query);
+
+        return true;
     }
 
     /** Änderungsprotokoll dieses Events, für alle mit Recht „Audit“ */

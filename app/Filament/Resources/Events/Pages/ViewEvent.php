@@ -16,6 +16,15 @@ class ViewEvent extends ViewRecord
 
     protected static string $resource = EventResource::class;
 
+    public function mount(int|string $record): void
+    {
+        if ($this->redirectRenamedSection($record)) {
+            return;
+        }
+
+        parent::mount($record);
+    }
+
     /**
      * Das Formular bekommt alle Spalten des Events in den Seitenzustand – das
      * WLAN-Passwort sehen wie in der PHP-Version aber nur Bearbeiter.

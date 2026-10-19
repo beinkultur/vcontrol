@@ -266,7 +266,7 @@ final class CalendarItems
             lastDay: $day,
             time: $timed ? $start : null,
             endTime: $timed ? $end : null,
-            url: EventResource::getUrl('edit', ['record' => $event]) . '?phase=planung&bereich=personal',
+            url: EventResource::getUrl('edit', ['record' => $event]) . '?phase=planung&bereich=kontakte',
             tooltip: $title,
             status: EventDisplay::statusKind($event->status),
             eventId: $event->id,

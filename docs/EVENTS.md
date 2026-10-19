@@ -25,7 +25,7 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 
 | Neu | Quelle | Inhalt |
 |---|---|---|
-| `events` | `vc_events` | Titel, VA-NR/VA-ID, Veranstalter, Status, Kategorie 1/2, Beginn/Ende, PAX erwartet/abgerechnet, Bereiche (Liste), Bestuhlung (Liste), Ticketing, WLAN, Beschreibung, Buchungsnotizen, Ansprechpartner vor Ort, Abschluss-Schalter |
+| `events` | `vc_events` | Titel, VA-NR/VA-ID, Veranstalter, Status, Kategorie 1/2, Beginn/Ende, PAX erwartet/abgerechnet, Bereiche (Liste), Bestuhlung (Liste), Ticketing, WLAN, Beschreibung, Buchungsnotizen, Ansprechpartner vor Ort (seit 19.10.2026 Vorname, Name, Telefon, E-Mail), Abschluss-Schalter |
 | `event_finances` | `vc_event_finance` | Vertragsstatus, FIBU-Status (Liste), Preisliste, Miete, Rechnungsnummern (Liste statt drei Spalten), Abrechnung abgeschlossen |
 | `event_schedules` | `vc_event_schedules` | Einlass, Beginn, Ende, Curfew, Get-in, Load-in, Load-out, VIP-Einlass |
 | `event_stages` | `vc_event_stage` | Bühnenmaße, Seitenbühnen, Podeste, Treppen, Rückwand, Notizen |
@@ -80,7 +80,7 @@ Bedienbar:
   Die Übersicht ist das Dashboard (Finanz-Warnung, Phasen-Karten mit
   Stichpunkten, Stammdaten, Planungsbereiche, Notizen). Unterbereiche als
   eigene Reiter: Buchung › Daten | Buchhaltung | PR, Planung › Zeiten |
-  Checkliste | Bühne | Personal | Gewerke | Gästeliste | Dateien | Sonstiges,
+  Checkliste | Bühne | Kontakte (bis 19.10.2026 „Personal“) | Gewerke | Gästeliste | Dateien | Sonstiges,
   Durchführung › Betrieb | Übergabeprotokolle | Bestellscheine | Checklisten |
   Schäden. Die Reiter stehen in der URL
   (`?phase=planung&bereich=buehne`). Leserollen sehen denselben Workspace nur
@@ -152,7 +152,7 @@ Bedienbar:
   je Wunschtermin mit Rang „1️⃣ Titel (1. Opt.)“; Tage, die ein bestätigtes Event
   belegt, fehlen), **Veranstaltungsleitung** und **Technik** (die Dienste aus dem
   Personal aller Events – Auf-/Abschließen und House Rep. bzw. VfV, „🔗 Person ·
-  Rolle (Event)“, Link auf Planung › Personal – dazu eigene Einträge),
+  Rolle (Event)“, Link auf Planung › Kontakte – dazu eigene Einträge),
   **Persönlich** (nur die eigenen Dienste: als Konto selbst oder über das
   verknüpfte Gewerk; sieht jeder mit Kalender-Recht – ein eigener
   Dienst steht nur einmal da, schräg gestreift in den Farben beider Ebenen),
@@ -221,6 +221,22 @@ Bedienbar:
     Tamara Beck in ihre Konten, sechs Kontakte.
   - Daysheet und „Meine Events“ zeigen bei den Ansprechpartnern (Projektleitung,
     Auf-/Abschließen, House Rep. früh/spät) Telefon und E-Mail.
+- **Planung › Kontakte** (19.10.2026, vorher „Personal“; alte Links mit
+  `bereich=personal` leiten auf `bereich=kontakte` weiter): oben die Rollen wie
+  bisher, darunter der **Ansprechpartner vor Ort** – bis dahin ein Textfeld unter
+  Sonstiges, jetzt Vorname, Name, Telefon und E-Mail. Das Suchfeld „Übernehmen
+  aus Veranstaltern, Kontakten oder Gewerken“ sucht in den Ansprechpartnern der
+  Veranstalter (auch nach Firma), in Stammdaten › Kontakte und in den Gewerken
+  (ohne Archivierte) und füllt die vier Felder mit einer Kopie; ohne Suchbegriff
+  stehen die Ansprechpartner des Veranstalters dieses Events zur Wahl
+  (`App\Support\OnsiteContact`). Telefon ohne Formatprüfung. Daysheet und
+  „Meine Events“ zeigen ihn mit Telefon und E-Mail, die Show-Checkliste belegt
+  „Prom.-Rep.“ mit seinem Namen vor. Die Migration `2026_10_19_130000` teilt den
+  alten Text auf (`OnsiteContact::parse()`: Telefon = erste Ziffernfolge mit
+  mindestens sechs Ziffern, E-Mail = erste Adresse, vom Rest das erste Wort
+  Vorname, alles danach Name, ein einzelnes Wort Name; „Name, Vorname“ wird
+  gedreht). Zum Fortschritt zählt der Bereich, sobald eine Rolle (außer PL)
+  oder der Ansprechpartner eingetragen ist.
 - **Zählerstände** (`/zaehler`, Recht „Zählerstände“, 15.10.2026; in der
   PHP-Version je Zähler `/zaehler/strom` usw.): Welche Zähler es gibt, legt die
   Venue unter Stammdaten › Zähler fest (Recht „Stammdaten“): Name, Einheit,

@@ -48,7 +48,7 @@ class UserForm
                             ->maxLength(20),
                         TextInput::make('phone')
                             ->label('Telefon')
-                            ->helperText('Steht im Daysheet, wenn die Person im Personal eines Events eingetragen ist.')
+                            ->helperText('Steht im Daysheet, wenn die Person bei einem Event unter Planung › Kontakte eingetragen ist.')
                             ->tel()
                             ->maxLength(50),
                     ]),
@@ -121,14 +121,14 @@ class UserForm
                             ->live(),
                         CheckboxList::make('positions')
                             ->label('Positionen')
-                            ->helperText('Für welche Dienste die Person im Personal der Events zur Wahl steht: House Rep. braucht VL, VfV die Position VfV. Werte pflegen unter Stammdaten › Feldoptionen › Position.')
+                            ->helperText('Für welche Rollen die Person bei den Events (Planung › Kontakte) zur Wahl steht: House Rep. braucht VL, VfV die Position VfV. Werte pflegen unter Stammdaten › Feldoptionen › Position.')
                             ->options(fn (?User $record): array => ContactResource::positionOptions($record?->positions))
                             ->columns(3)
                             ->visible(fn (Get $get): bool => self::type($get)?->hasPositions() ?? false)
                             ->columnSpanFull(),
                         Select::make('trade_id')
                             ->label('Gewerk')
-                            ->helperText('Das Konto sieht alles, woran dieses Gewerk beteiligt ist (Personal und Leistungen der Events) – unter „Meine Events“ und im Kalender. Mehrere Konten je Gewerk sind möglich.')
+                            ->helperText('Das Konto sieht alles, woran dieses Gewerk beteiligt ist (Rollen und Leistungen der Events) – unter „Meine Events“ und im Kalender. Mehrere Konten je Gewerk sind möglich.')
                             ->options(fn (?User $record): array => self::tradeOptions($record))
                             ->searchable()
                             ->visible(fn (Get $get): bool => self::type($get)?->linksTrade() ?? false),

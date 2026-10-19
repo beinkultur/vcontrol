@@ -66,7 +66,7 @@ final class PersonalIcsFeed
         // Der Feed läuft außerhalb des Panels – das Panel deshalb ausdrücklich
         $url = $extern
             ? ExternEventResource::getUrl('view', ['record' => $event], panel: 'app')
-            : EventResource::getUrl('edit', ['record' => $event], panel: 'app') . '?phase=planung&bereich=personal';
+            : EventResource::getUrl('edit', ['record' => $event], panel: 'app') . '?phase=planung&bereich=kontakte';
         $description = array_filter([
             'Event: ' . $event->title,
             'Beginn: ' . $event->starts_at->format('d.m.Y') . ($event->starts_at->format('H:i') !== '00:00' ? ', ' . $event->starts_at->format('H:i') . ' Uhr' : ''),

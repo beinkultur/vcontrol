@@ -21,7 +21,7 @@ class ShowChecklistsTest extends TestCase
     {
         parent::setUp();
         Filament::setCurrentPanel(Filament::getPanel('app'));
-        $this->event = Event::create(['title' => 'Konzert', 'starts_at' => now(), 'onsite_contact' => 'Kim Tour']);
+        $this->event = Event::create(['title' => 'Konzert', 'starts_at' => now(), 'onsite_first_name' => 'Kim', 'onsite_last_name' => 'Tour']);
     }
 
     private function manager(string $page = EditEvent::class)
