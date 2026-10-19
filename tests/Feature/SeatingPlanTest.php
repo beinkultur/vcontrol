@@ -54,6 +54,7 @@ class SeatingPlanTest extends TestCase
         Livewire::test(ManageSeatingPlans::class)
             ->callAction('create', data: [
                 'name' => 'Konzert bestuhlt',
+                'capacity' => '4200',
                 'path' => UploadedFile::fake()->createWithContent('Konzert.pdf', '%PDF-1.4 Saalplan'),
                 'areas' => ['Innenraum', 'Oberrang A-D'],
                 'seating' => ['bestuhlt'],
@@ -61,21 +62,57 @@ class SeatingPlanTest extends TestCase
             ->assertHasNoActionErrors();
 
         $plan = SeatingPlan::query()->sole();
+        $this->assertSame(4200, $plan->capacity);
         $this->assertSame('Konzert.pdf', $plan->original_name);
         $this->assertSame(['Innenraum', 'Oberrang A-D'], $plan->areas);
         $this->assertSame(['bestuhlt'], $plan->seating);
         $this->assertTrue($plan->isPdf());
         Storage::disk(SeatingPlan::DISK)->assertExists($plan->path);
 
-        // Nur PDFs
+        // Nur PDFs, Kapazität als ganze Zahl ab 1
         Livewire::test(ManageSeatingPlans::class)
-            ->callAction('create', data: ['name' => 'Bild', 'path' => UploadedFile::fake()->image('plan.png')])
-            ->assertHasActionErrors(['path']);
+            ->callAction('create', data: ['name' => 'Bild', 'path' => UploadedFile::fake()->image('plan.png'), 'capacity' => '0'])
+            ->assertHasActionErrors(['path', 'capacity']);
 
         // Die Pläne pflegt, wer die Stammdaten der Halle bearbeitet – nicht der Eventmanager
         $this->actingAs($this->userWith($this->role('eventmanager', ['events' => 'edit'])))
             ->get('/saalplaene')
             ->assertForbidden();
+    }
+
+    public function test_warnung_wenn_pax_erwartet_ueber_der_kapazitaet(): void
+    {
+        $plan = $this->plan();
+        $plan->update(['capacity' => 1000]);
+        $event = Event::create(['title' => 'Konzert', 'status' => 'bestätigt', 'starts_at' => now()->addWeek(), 'seating_plan_id' => $plan->id, 'pax_expected' => 1200]);
+        $warning = 'PAX erwartet 1.200 liegt über der Kapazität des Saalplans „Konzert bestuhlt“ (1.000).';
+        $this->assertSame($warning, $event->capacityWarning());
+        $this->actingAs($this->userWith($this->role('eventmanager', ['events' => 'edit'])));
+
+        // Am Feld, auf der Übersicht und in der Liste – nur eine Warnung, Speichern geht
+        Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
+            ->assertSee('Über Kapazität (1.000)')
+            ->assertSee($warning)
+            ->fillForm(['pax_expected' => 900])
+            ->assertDontSee('Über Kapazität')
+            ->fillForm(['pax_expected' => 1500])
+            ->assertSee('Über Kapazität (1.000)')
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame(1500, $event->fresh()->pax_expected);
+        $this->get('/events')->assertOk()->assertSee('liegt über der Kapazität des Saalplans', false);
+
+        // Genau die Kapazität, ein Plan ohne Kapazität oder ein eigener Plan: keine Warnung
+        $event->update(['pax_expected' => 1000]);
+        $this->assertNull($event->fresh()->capacityWarning());
+        $event->update(['pax_expected' => 5000]);
+        $plan->update(['capacity' => null]);
+        $this->assertNull($event->fresh()->capacityWarning());
+        $plan->update(['capacity' => 1000]);
+        Storage::disk(SeatingPlan::DISK)->put('seating-plans/events/eigen.pdf', '%PDF-1.4 eigener Plan');
+        $event->update(['seating_plan_path' => 'seating-plans/events/eigen.pdf']);
+        $this->assertNull($event->fresh()->capacityWarning());
+        Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])->assertDontSee('Über Kapazität');
     }
 
     public function test_event_waehlt_standard_saalplan_und_passt_bereiche_und_bestuhlung_an(): void

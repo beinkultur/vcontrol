@@ -56,6 +56,14 @@ class SeatingPlanResource extends Resource
                     ->required()
                     ->maxLength(120)
                     ->unique(ignoreRecord: true),
+                TextInput::make('capacity')
+                    ->label('Kapazität')
+                    ->helperText('Personen, die der Plan fasst. Liegt „PAX erwartet“ eines Events darüber, warnt das Event.')
+                    ->numeric()
+                    ->integer()
+                    ->minValue(1)
+                    ->maxValue(1_000_000)
+                    ->suffix('PAX'),
                 SeatingPlanFields::pdfUpload('path')
                     ->label('Saalplan (PDF)')
                     ->directory(SeatingPlan::DIRECTORY)
@@ -91,6 +99,11 @@ class SeatingPlanResource extends Resource
                     ->label('Saalplan')
                     ->weight('medium')
                     ->searchable(),
+                TextColumn::make('capacity')
+                    ->label('Kapazität')
+                    ->numeric(thousandsSeparator: '.')
+                    ->placeholder('–')
+                    ->alignEnd(),
                 TextColumn::make('areas')
                     ->label('Bereiche')
                     ->badge()

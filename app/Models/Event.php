@@ -285,6 +285,20 @@ class Event extends Model
      * Rahmenvertrag) oder die 2. Rate ist nicht gezahlt. Nur mit dem Modul
      * Buchhaltung – ohne lässt sich beides nicht eintragen.
      */
+    /**
+     * PAX erwartet über der Kapazität des Standard-Saalplans (Modul Saalplan) –
+     * Hinweis für Übersicht und Liste, sonst null. Eigene PDF-Pläne kennen keine
+     * Kapazität.
+     */
+    public function capacityWarning(): ?string
+    {
+        if (!Module::SeatingPlan->isEnabled() || $this->hasCustomSeatingPlan()) {
+            return null;
+        }
+
+        return SeatingPlan::capacityWarning($this->seatingPlan, $this->pax_expected);
+    }
+
     public function hasFinanceAlert(): bool
     {
         if (!Module::Accounting->isEnabled()

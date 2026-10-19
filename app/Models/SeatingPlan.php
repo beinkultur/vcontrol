@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\Storage;
  * (Event::seatingPlan…); Bereiche und Bestuhlung übernimmt es beim Auswählen
  * und passt sie bei Bedarf an. Die Datei liegt nicht öffentlich
  * (Disk wie EventFile), ausgeliefert wird über SeatingPlanController.
+ * Mit Kapazität (seit 19.10.2026) warnt ein Event, dessen PAX erwartet darüber
+ * liegt (capacityWarning).
  */
-#[Fillable(['name', 'path', 'original_name', 'areas', 'seating', 'is_active'])]
+#[Fillable(['name', 'capacity', 'path', 'original_name', 'areas', 'seating', 'is_active'])]
 class SeatingPlan extends Model
 {
     public const DISK = EventFile::DISK;
@@ -55,7 +57,22 @@ class SeatingPlan extends Model
             'seating' => 'array',
             'is_active' => 'boolean',
             'size' => 'integer',
+            'capacity' => 'integer',
         ];
+    }
+
+    /**
+     * „PAX erwartet 4.500 liegt über der Kapazität des Saalplans „Vollbestuhlung“
+     * (4.200).“ – oder null, wenn der Plan keine Kapazität hat oder sie reicht.
+     */
+    public static function capacityWarning(?self $plan, mixed $pax): ?string
+    {
+        if ($plan === null || $plan->capacity === null || !is_numeric($pax) || (int) $pax <= $plan->capacity) {
+            return null;
+        }
+
+        return 'PAX erwartet ' . number_format((int) $pax, 0, ',', '.') . ' liegt über der Kapazität des Saalplans „'
+            . $plan->name . '“ (' . number_format($plan->capacity, 0, ',', '.') . ').';
     }
 
     /** @return HasMany<Event, $this> */

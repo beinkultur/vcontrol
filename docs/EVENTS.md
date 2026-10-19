@@ -38,7 +38,7 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `event_assignments` | `vc_event_role_assignments` | Rollen am Event (VL, VfV …) an Benutzer, Kontakt oder Gewerk, mit Zeiten (Kontakte statt Mitarbeiter seit 14.10.2026) |
 | `contacts` | `vc_employees` (bis 14.10.2026 `employees`) | Kontakte ohne Anmeldung: Person oder Funktion („Hallenmeister“), Kürzel, Telefon, E-Mail, Positionen, Notiz, archiviert |
 | `event_incoming_invoices` | `vc_event_incoming_invoices` | die sechs erwarteten Eingangsrechnungen |
-| `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Venue: PDF, Name, genutzte Bereiche, Bestuhlung, aktiv |
+| `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Venue: PDF, Name, Kapazität (seit 19.10.2026), genutzte Bereiche, Bestuhlung, aktiv |
 | `meters` | neu (15.10.2026) | Zähler der Venue: Name, Einheit, Zählernummer, Standort, je Event ablesen, aktiv, Reihenfolge |
 | `meter_readings` | neu (15.10.2026), Strom aus `event_operations` | Stände: Zähler, Event mit Anfang/Ende oder frei, Zeitpunkt, Stand (3 Nachkommastellen), Zählerwechsel, Notiz |
 
@@ -396,6 +396,13 @@ Freitermin-Suche, Sortierung
   Saalplan mit den genutzten Bereichen und der Bestuhlung; ausgeliefert wird über
   `SeatingPlanController` (Rechte wie bei den Event-Dateien, Daysheet über den
   Schlüssel), angezeigt nur, was am Inhalt als PDF erkannt ist.
+  Seit 19.10.2026 mit **Kapazität** je Standard-Saalplan
+  (`seating_plans.capacity`, leer = keine Angabe). Liegt „PAX erwartet“ darüber,
+  warnt das Event, ohne das Speichern zu verhindern: am Feld („Über Kapazität
+  (4.200)“, sofort beim Tippen und beim Wechsel des Plans), als roter Hinweis
+  auf der Übersicht und rot mit Tooltip in der Event-Liste
+  (`Event::capacityWarning`). Eigene PDF-Pläne haben keine Kapazität. In den
+  Demodaten liegen zwei Events darüber.
 - **Module (13.10.2026):** Bühnenplan, Saalplan, Gästeliste und Buchhaltung gibt
   der System-Admin je Venue frei, je nachdem, was sie gebucht hat (Verwaltung ›
   System, `App\Access\Module`). Ohne Freigabe fehlen sie für alle. Bühnenplan:

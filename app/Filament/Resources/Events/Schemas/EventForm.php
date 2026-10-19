@@ -34,6 +34,7 @@ use App\Models\EventOperation;
 use App\Models\EventPr;
 use App\Models\EventStage;
 use App\Models\PriceList;
+use App\Models\SeatingPlan;
 use App\Support\EventProgress;
 use App\Support\StagePlan;
 use App\Support\StagePodests;
@@ -334,7 +335,12 @@ class EventForm
                         TextInput::make('pax_expected')
                             ->label('PAX erwartet')
                             ->numeric()
-                            ->minValue(0),
+                            ->minValue(0)
+                            // Über der Kapazität des gewählten Standard-Saalplans: Warnung, kein Fehler
+                            ->live(onBlur: true)
+                            ->hint(fn (Get $get): ?string => self::capacityHint($get))
+                            ->hintColor('danger')
+                            ->hintIcon(fn (Get $get): ?Heroicon => self::capacityHint($get) !== null ? Heroicon::OutlinedExclamationTriangle : null),
                         Select::make('ticketing')
                             ->label('Ticketing')
                             ->options(fn (?Event $record): array => OptionChoices::for(OptionField::Ticketing, $record?->ticketing))
@@ -396,6 +402,19 @@ class EventForm
      * bearbeiten darf, ändert hier Saalplan, Bereiche und Bestuhlung – dieselben
      * Felder wie beim Bearbeiten (SeatingPlanFields).
      */
+    /** „Über Kapazität (4.200)“, solange PAX erwartet den gewählten Standard-Saalplan übersteigt */
+    private static function capacityHint(Get $get): ?string
+    {
+        if (!Module::SeatingPlan->isEnabled() || $get('seating_plan_source') === 'custom' || blank($get('seating_plan_id'))) {
+            return null;
+        }
+        $plan = SeatingPlan::query()->find($get('seating_plan_id'));
+
+        return SeatingPlan::capacityWarning($plan, $get('pax_expected')) !== null
+            ? 'Über Kapazität (' . number_format((int) $plan->capacity, 0, ',', '.') . ')'
+            : null;
+    }
+
     private static function changeSeatingPlan(): Action
     {
         return Action::make('changeSeatingPlan')

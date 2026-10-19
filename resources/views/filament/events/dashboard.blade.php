@@ -84,6 +84,9 @@
             Buchhaltung: Zahlungsstatus fehlt – das Event beginnt in weniger als 14 Tagen.
         </div>
     @endif
+    @if ($capacity = $event->capacityWarning())
+        <div class="vc-dash__alert" role="status">{{ $capacity }}</div>
+    @endif
 
     <div class="vc-dash__phases">
         @foreach ($cards as $phase => $card)

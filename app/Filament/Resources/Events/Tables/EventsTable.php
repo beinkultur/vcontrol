@@ -88,6 +88,10 @@ class EventsTable
                     ->label('PAX')
                     ->visibleFrom('md')
                     ->numeric(thousandsSeparator: '.')
+                    // Rot über der Kapazität des Standard-Saalplans (Event::capacityWarning)
+                    ->color(fn (Event $record): ?string => $record->capacityWarning() !== null ? 'danger' : null)
+                    ->weight(fn (Event $record): ?FontWeight => $record->capacityWarning() !== null ? FontWeight::Bold : null)
+                    ->tooltip(fn (Event $record): ?string => $record->capacityWarning())
                     ->alignEnd(),
                 TextColumn::make('seated')
                     ->label('Best.')
@@ -132,7 +136,7 @@ class EventsTable
                     ->view('filament.events.list-progress'),
             ])
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
-                ->with(['promoter', 'finance', 'pr', 'schedule', 'checklist', 'stage', 'services', 'assignments.assignee'])
+                ->with(['promoter', 'finance', 'pr', 'schedule', 'checklist', 'stage', 'services', 'assignments.assignee', 'seatingPlan'])
                 ->withMax(['daysheets as daysheet_sent_at' => fn (Builder $daysheets): Builder => $daysheets->whereNull('revoked_at')], 'created_at'))
             ->defaultGroup(
                 Group::make('month')

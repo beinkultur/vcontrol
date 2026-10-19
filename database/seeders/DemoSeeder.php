@@ -373,15 +373,16 @@ final class DemoSeeder extends Seeder
 
     private function seatingPlans(): void
     {
+        // Kapazität so, dass zwei Events darüber liegen und die Warnung zeigen
         $plans = [
-            'unbestuhlt' => ['Konzert unbestuhlt', ['Innenraum', 'Unterrang Nord', 'Unterrang Süd', 'Oberrang']],
-            'bestuhlt' => ['Vollbestuhlung', ['Innenraum', 'Unterrang Nord', 'Unterrang Süd', 'Oberrang', 'Logen']],
-            'teilbestuhlt' => ['Sport und Rang', ['Unterrang Nord', 'Unterrang Süd', 'Oberrang', 'Logen']],
+            'unbestuhlt' => ['Konzert unbestuhlt', 7000, ['Innenraum', 'Unterrang Nord', 'Unterrang Süd', 'Oberrang']],
+            'bestuhlt' => ['Vollbestuhlung', 3500, ['Innenraum', 'Unterrang Nord', 'Unterrang Süd', 'Oberrang', 'Logen']],
+            'teilbestuhlt' => ['Sport und Rang', 4500, ['Unterrang Nord', 'Unterrang Süd', 'Oberrang', 'Logen']],
         ];
-        foreach ($plans as $seating => [$name, $areas]) {
+        foreach ($plans as $seating => [$name, $capacity, $areas]) {
             $path = SeatingPlan::DIRECTORY . '/' . Str::slug($name) . '.pdf';
             Storage::disk(SeatingPlan::DISK)->put($path, $this->seatingPlanPdf($name, $seating));
-            $this->plans[$seating] = SeatingPlan::create(['name' => $name, 'path' => $path, 'original_name' => Str::slug($name) . '.pdf',
+            $this->plans[$seating] = SeatingPlan::create(['name' => $name, 'capacity' => $capacity, 'path' => $path, 'original_name' => Str::slug($name) . '.pdf',
                 'areas' => $areas, 'seating' => [$seating], 'is_active' => true]);
         }
     }
