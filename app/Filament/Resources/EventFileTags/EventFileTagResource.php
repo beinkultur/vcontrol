@@ -19,7 +19,10 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
-/** Tags der Event-Dateien wie in der PHP-Version (/dateien/tags): benutzte werden archiviert statt gelöscht. */
+/**
+ * Tags der Event-Dateien wie in der PHP-Version (/dateien/tags): benutzte werden
+ * archiviert statt gelöscht. Alphabetisch (seit 19.10.2026, vorher von Hand sortiert).
+ */
 class EventFileTagResource extends Resource
 {
     protected static ?string $model = EventFileTag::class;
@@ -78,8 +81,8 @@ class EventFileTagResource extends Resource
                         false: fn (Builder $query): Builder => $query->where('is_archived', false),
                     ),
             ])
-            ->reorderable('sort_order')
-            ->defaultSort('sort_order')
+            // Alphabetisch ohne Rücksicht auf Groß-/Kleinschreibung (MySQL tut es ohnehin, SQLite nicht)
+            ->defaultSort(fn (Builder $query): Builder => $query->orderByRaw('LOWER(name)'))
             ->paginated(false)
             ->recordActions([
                 EditAction::make(),

@@ -267,6 +267,14 @@ Bedienbar:
   Stammdaten (archivieren statt löschen, sobald benutzt). Übergreifende
   Dateien werden angezeigt; die zentrale Bibliothek zum Verknüpfen
   (PHP: `/dateien`) folgt noch.
+  Seit 19.10.2026: „Dateien hochladen“ nimmt bis zu 20 Dateien auf einmal,
+  auch per Ziehen. Ein Tag für alle ist dabei optional (Migration
+  `2026_10_19_110000`: `event_files.tag_id` darf leer sein). Dateien ohne Tag
+  stehen oben, das Tag wird direkt in der Zeile gewählt oder für mehrere
+  markierte Dateien über „Tag vergeben“. In Übersicht, Extern-Bereich und
+  Daysheet zuletzt („Ohne Tag“ bzw. „Sonstiges“). Datei-Tags sind überall
+  alphabetisch sortiert, ohne Rücksicht auf Groß-/Kleinschreibung und Umlaute;
+  das Sortieren von Hand entfällt.
 - **Bühnenplan** (`/events/{id}/buehnenplan`) wie in der PHP-Version:
   Draufsicht mit Podest-Raster (Standard 14×8, Hausbestand, angemietet),
   Wings, Treppen, Raummitte, Raumbegrenzung und Rückwand; daneben

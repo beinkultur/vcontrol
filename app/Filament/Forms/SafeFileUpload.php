@@ -40,4 +40,26 @@ class SafeFileUpload extends FileUpload
 
         return $this;
     }
+
+    /**
+     * Bei mehreren Dateien hinterlässt ein schon beim Hochladen abgewiesener
+     * Upload eine leere Stelle im Feld – Filaments Prüfung je Datei bricht daran
+     * mit einem Fehler ab. Deshalb vorher abweisen und dann nicht weiterprüfen.
+     *
+     * @return array<mixed>
+     */
+    public function getValidationRules(): array
+    {
+        return [
+            'bail',
+            function (string $attribute, mixed $value, Closure $fail): void {
+                if (is_array($value) && in_array(null, $value, true)) {
+                    $fail(self::REJECTED_MESSAGE);
+                }
+            },
+            ...parent::getValidationRules(),
+        ];
+    }
+
+    public const REJECTED_MESSAGE = 'Mindestens eine Datei wurde abgewiesen: Endung, Inhalt oder Größe passen nicht.';
 }

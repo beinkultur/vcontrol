@@ -23,11 +23,6 @@ class EventFileTagPolicy extends AreaPolicy
         return $user->access()->canEdit($this->area());
     }
 
-    public function reorder(User $user): bool
-    {
-        return $user->access()->canEdit($this->area());
-    }
-
     public function delete(User $user, Model $record): bool
     {
         return $user->access()->canEdit($this->area())

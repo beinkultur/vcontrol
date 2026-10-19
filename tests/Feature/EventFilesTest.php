@@ -43,8 +43,7 @@ class EventFilesTest extends TestCase
 
         $this->manager()->callTableAction('create', data: [
             'tag_id' => $this->rider->id,
-            'title' => '',
-            'upload' => UploadedFile::fake()->create('Rider V1.pdf', 120, 'application/pdf'),
+            'uploads' => [UploadedFile::fake()->create('Rider V1.pdf', 120, 'application/pdf')],
         ])->assertHasNoTableActionErrors();
 
         $file = $this->event->files()->firstOrFail();
@@ -78,14 +77,19 @@ class EventFilesTest extends TestCase
 
         $this->manager()->callTableAction('create', data: [
             'tag_id' => $this->rider->id,
-            'upload' => UploadedFile::fake()->create('virus.exe', 10),
-        ])->assertHasTableActionErrors(['upload']);
+            'uploads' => [UploadedFile::fake()->create('virus.exe', 10)],
+        ])->assertHasTableActionErrors(['uploads']);
 
         // Archive nur für Admins, wie in der PHP-Version
         $this->manager()->callTableAction('create', data: [
             'tag_id' => $this->rider->id,
-            'upload' => UploadedFile::fake()->create('plaene.zip', 10, 'application/zip'),
-        ])->assertHasTableActionErrors(['upload']);
+            'uploads' => [UploadedFile::fake()->create('plaene.zip', 10, 'application/zip')],
+        ])->assertHasTableActionErrors(['uploads']);
+
+        // Eine verbotene unter mehreren: nichts wird gespeichert
+        $this->manager()->callTableAction('create', data: [
+            'uploads' => [UploadedFile::fake()->create('ok.pdf', 10, 'application/pdf'), UploadedFile::fake()->create('virus.exe', 10)],
+        ])->assertHasTableActionErrors(['uploads']);
         $this->assertSame(0, $this->event->files()->count());
     }
 
@@ -157,14 +161,21 @@ class EventFilesTest extends TestCase
         // HTML als „.pdf“ (im Test liefert Livewire den angegebenen statt des erkannten Typs)
         $this->manager()->callTableAction('create', data: [
             'tag_id' => $this->rider->id,
-            'upload' => UploadedFile::fake()->create('plan.pdf', 1, 'text/html'),
-        ])->assertHasTableActionErrors(['upload']);
+            'uploads' => [UploadedFile::fake()->create('plan.pdf', 1, 'text/html')],
+        ])->assertHasTableActionErrors(['uploads']);
 
         // Pfad einer vorhandenen fremden Datei statt eines Uploads
         $this->manager()->callTableAction('create', data: [
             'tag_id' => $this->rider->id,
-            'upload' => ['damages/foto.jpg'],
-        ])->assertHasTableActionErrors(['upload']);
+            'uploads' => ['damages/foto.jpg'],
+        ])->assertHasTableActionErrors(['uploads']);
+
+        // Beim Bearbeiten (neue Version) ebenso
+        $file = $this->event->files()->create(['tag_id' => $this->rider->id, 'path' => 'event-files/1/rider.pdf', 'original_name' => 'rider.pdf']);
+        $this->manager()->callTableAction('edit', $file, data: ['upload' => ['damages/foto.jpg']])
+            ->assertHasTableActionErrors(['upload']);
+        $this->assertSame('event-files/1/rider.pdf', $file->fresh()->path);
+        $file->deleteQuietly();
 
         $this->assertSame(0, $this->event->files()->count());
         Storage::disk(EventFile::DISK)->assertExists('damages/foto.jpg');
@@ -200,5 +211,70 @@ class EventFilesTest extends TestCase
         $this->assertStringStartsWith('inline', (string) $response->headers->get('Content-Disposition'));
         $this->assertSame('application/pdf', $response->headers->get('Content-Type'));
         $this->assertFalse($response->headers->has('Content-Security-Policy'));
+    }
+
+    public function test_mehrere_auf_einmal_und_tags_danach(): void
+    {
+        $this->actingAs($this->userWith($this->role('technik', ['events' => 'edit'])));
+        $plan = EventFileTag::create(['name' => 'Bühnenplan']);
+
+        $this->manager()->callTableAction('create', data: [
+            'uploads' => [
+                UploadedFile::fake()->create('Ablauf.pdf', 20, 'application/pdf'),
+                UploadedFile::fake()->create('Bühne.pdf', 30, 'application/pdf'),
+                UploadedFile::fake()->create('Catering.xlsx', 10, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+            ],
+            'hidden_from_externals' => true,
+        ])->assertHasNoTableActionErrors()->assertNotified('3 Dateien hochgeladen – Tags in der Liste vergeben');
+
+        $files = $this->event->files()->orderBy('original_name')->get();
+        $this->assertSame(['Ablauf.pdf', 'Bühne.pdf', 'Catering.xlsx'], $files->pluck('original_name')->all());
+        $this->assertSame([null, null, null], $files->pluck('tag_id')->all());
+        $this->assertTrue($files->every(fn (EventFile $file): bool => $file->hidden_from_externals && $file->version === 1));
+        foreach ($files as $file) {
+            Storage::disk(EventFile::DISK)->assertExists($file->path);
+        }
+
+        // Ohne Tag stehen oben; Tag direkt in der Zeile oder für mehrere markierte
+        $tagged = $this->event->files()->create(['tag_id' => $this->rider->id, 'path' => 'event-files/1/a.pdf', 'original_name' => 'Aaa.pdf']);
+        $this->manager()
+            ->assertCanSeeTableRecords([...$files, $tagged], inOrder: true)
+            // „Ohne Tag“ ist als Auswahl vorbelegt, nicht das erste Tag
+            ->assertSeeHtml('<option value="">Ohne Tag</option>')
+            ->call('updateTableColumnState', 'tag_id', (string) $files[0]->getKey(), (string) $plan->id);
+        $this->assertSame($plan->id, $files[0]->fresh()->tag_id);
+        // Ein Tag, das es nicht gibt, wird abgewiesen
+        $this->manager()->call('updateTableColumnState', 'tag_id', (string) $files[0]->getKey(), '999999');
+        $this->assertSame($plan->id, $files[0]->fresh()->tag_id);
+
+        $this->manager()->callTableBulkAction('assignTag', [$files[1], $files[2]], data: ['tag_id' => $this->rider->id])
+            ->assertHasNoTableBulkActionErrors();
+        $this->assertSame([$plan->id, $this->rider->id, $this->rider->id], $this->event->files()->orderBy('original_name')->whereKeyNot($tagged->id)->pluck('tag_id')->all());
+
+        // Leser ändern nichts
+        $this->actingAs($this->userWith($this->role('catering', ['events' => 'read'])));
+        $this->manager(ViewEvent::class)
+            ->assertTableBulkActionHidden('assignTag')
+            ->call('updateTableColumnState', 'tag_id', (string) $files[0]->getKey(), (string) $this->rider->id);
+        $this->assertSame($plan->id, $files[0]->fresh()->tag_id);
+    }
+
+    public function test_tags_alphabetisch(): void
+    {
+        $this->actingAs($this->admin());
+        $ablauf = EventFileTag::create(['name' => 'ablaufplan', 'sort_order' => 90]);
+        $aerzte = EventFileTag::create(['name' => 'Ärzte', 'sort_order' => 80]);
+        $zeit = EventFileTag::create(['name' => 'Zeitplan', 'sort_order' => 1]);
+
+        $this->assertSame(['ablaufplan', 'Ärzte', 'Technical Rider', 'Zeitplan'], array_values(EventFileTag::options()));
+        Livewire::test(ManageEventFileTags::class)->assertCanSeeTableRecords([$ablauf, $this->rider, $zeit], inOrder: true);
+
+        // Übersicht: nach Tag alphabetisch, ohne Tag zuletzt
+        foreach ([[$zeit, 'z.pdf'], [null, 'lose.pdf'], [$aerzte, 'a.pdf']] as [$tag, $name]) {
+            $this->event->files()->create(['tag_id' => $tag?->id, 'path' => 'event-files/1/' . $name, 'original_name' => $name]);
+        }
+        $this->get(EventResource::getUrl('edit', ['record' => $this->event]))
+            ->assertOk()
+            ->assertSeeInOrder(['Ärzte', 'a.pdf', 'Zeitplan', 'z.pdf', 'Ohne Tag', 'lose.pdf']);
     }
 }

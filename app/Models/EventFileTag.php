@@ -6,8 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
-/** Art einer Event-Datei (Running Order, Plan, Riggingplot …); wird archiviert statt gelöscht, sobald benutzt. */
+/**
+ * Art einer Event-Datei (Running Order, Plan, Riggingplot …); wird archiviert
+ * statt gelöscht, sobald benutzt. Überall alphabetisch sortiert (seit
+ * 19.10.2026, vorher von Hand; sort_order bleibt ungenutzt stehen).
+ */
 #[Fillable(['name', 'sort_order', 'is_archived'])]
 class EventFileTag extends Model
 {
@@ -29,7 +34,8 @@ class EventFileTag extends Model
     }
 
     /**
-     * Wählbar: aktive Tags plus der aktuelle, falls er inzwischen archiviert ist.
+     * Wählbar: aktive Tags plus der aktuelle, falls er inzwischen archiviert ist –
+     * alphabetisch, ohne Rücksicht auf Groß-/Kleinschreibung und Umlaute.
      *
      * @return array<int, string>
      */
@@ -37,9 +43,15 @@ class EventFileTag extends Model
     {
         return self::query()
             ->where(fn (Builder $query): Builder => $query->where('is_archived', false)->orWhere('id', $current))
-            ->orderBy('sort_order')
-            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->sortBy(fn (self $tag): string => self::sortKey($tag->name), SORT_NATURAL)
             ->pluck('name', 'id')
             ->all();
+    }
+
+    /** Sortierschlüssel: „Ä“ wie „A“, klein wie groß */
+    public static function sortKey(string $name): string
+    {
+        return Str::lower(Str::ascii($name));
     }
 }

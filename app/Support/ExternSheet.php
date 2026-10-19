@@ -225,7 +225,7 @@ final class ExternSheet
             ->concat($event->linkedFiles()->with('tag')->where('event_files.hidden_from_externals', false)->get());
 
         return $files
-            ->sortBy(fn (EventFile $file): string => sprintf('%05d %s', $file->tag?->sort_order ?? 99999, mb_strtolower($file->displayName())))
+            ->sortBy(fn (EventFile $file): string => $file->sortKey(), SORT_NATURAL)
             ->groupBy(fn (EventFile $file): string => $file->tag?->name ?? 'Sonstiges')
             ->map(fn ($group): array => $group->map(fn (EventFile $file): array => [
                 'name' => $file->displayName(),

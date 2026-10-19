@@ -73,7 +73,7 @@ class UploadsTest extends TestCase
         $manager = $this->filesManager();
 
         $this->actingAs($this->userWith($this->role('technik', ['events' => 'edit'])));
-        $manager()->mountTableAction('create')->assertFormFieldExists('upload', function (SafeFileUpload $field): bool {
+        $manager()->mountTableAction('create')->assertFormFieldExists('uploads', function (SafeFileUpload $field): bool {
             $types = $field->getAcceptedFileTypes();
 
             return in_array('.pdf', $types, true) && in_array('.dwg', $types, true)
@@ -85,7 +85,7 @@ class UploadsTest extends TestCase
         // Archive bietet die Auswahl nur Admins an, wie in der PHP-Version
         $this->actingAs($this->admin());
         $manager()->mountTableAction('create')
-            ->assertFormFieldExists('upload', fn (SafeFileUpload $field): bool => in_array('.zip', $field->getAcceptedFileTypes(), true));
+            ->assertFormFieldExists('uploads', fn (SafeFileUpload $field): bool => in_array('.zip', $field->getAcceptedFileTypes(), true));
     }
 
     public function test_zeichnungen_und_tabellen_gehen_durch_zu_grosse_dateien_nicht(): void
@@ -96,12 +96,12 @@ class UploadsTest extends TestCase
 
         // Endungen, deren Inhalt der Server je nach Version anders erkennt als der Browser
         foreach ([['Hallenplan.dwg', 'image/vnd.dwg'], ['Gästeliste.csv', 'text/csv']] as [$name, $type]) {
-            $manager()->callTableAction('create', data: ['tag_id' => $tag->id, 'upload' => UploadedFile::fake()->create($name, 500, $type)])
+            $manager()->callTableAction('create', data: ['tag_id' => $tag->id, 'uploads' => [UploadedFile::fake()->create($name, 500, $type)]])
                 ->assertHasNoTableActionErrors();
         }
 
-        $manager()->callTableAction('create', data: ['tag_id' => $tag->id, 'upload' => UploadedFile::fake()->create('Rider.pdf', Uploads::MAX_KB + 1, 'application/pdf')])
-            ->assertHasTableActionErrors(['upload']);
+        $manager()->callTableAction('create', data: ['tag_id' => $tag->id, 'uploads' => [UploadedFile::fake()->create('Rider.pdf', Uploads::MAX_KB + 1, 'application/pdf')]])
+            ->assertHasTableActionErrors(['uploads']);
 
         $this->assertSame(['Gästeliste.csv', 'Hallenplan.dwg'], EventFile::query()->orderBy('original_name')->pluck('original_name')->all());
     }

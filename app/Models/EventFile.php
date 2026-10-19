@@ -97,6 +97,15 @@ class EventFile extends Model
         return filled($this->title) ? (string) $this->title : $this->original_name;
     }
 
+    /**
+     * Für Übersicht und Externe: nach Tag alphabetisch, Dateien ohne Tag zuletzt,
+     * darin nach Anzeigename.
+     */
+    public function sortKey(): string
+    {
+        return ($this->tag !== null ? '0 ' . EventFileTag::sortKey($this->tag->name) : '1') . ' ' . mb_strtolower($this->displayName());
+    }
+
     /** „Stand: 29.06.2026 14:12 · v2“ wie in der PHP-Version. */
     public function standLabel(): string
     {

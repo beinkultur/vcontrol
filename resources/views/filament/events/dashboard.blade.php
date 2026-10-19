@@ -7,12 +7,12 @@
     $guestCount = $guestList ? $event->guests()->count() : 0;
     $guestTickets = $guestList ? (int) $event->guests()->sum('free_tickets') : 0;
     $services = \App\Support\EventProgress::filledServices($event);
-    // Dateien direkt am Event und übergreifende, nach Tag gruppiert wie in der PHP-Version
+    // Dateien direkt am Event und übergreifende, nach Tag gruppiert (alphabetisch, ohne Tag zuletzt)
     $files = $event->files()->with('tag')->get()->each(fn ($file) => $file->setAttribute('linked', false))
         ->concat($event->linkedFiles()->with('tag')->get()->each(fn ($file) => $file->setAttribute('linked', true)));
     $filesByTag = $files
-        ->sortBy(fn ($file) => sprintf('%05d %s', $file->tag?->sort_order ?? 99999, mb_strtolower($file->displayName())))
-        ->groupBy(fn ($file) => $file->tag?->name ?? 'Sonstiges');
+        ->sortBy(fn ($file) => $file->sortKey(), SORT_NATURAL)
+        ->groupBy(fn ($file) => $file->tag?->name ?? 'Ohne Tag');
     $areas = \App\Support\EventProgress::planningAreas($event, $guestCount, $files->count());
     $slips = $event->orderSlips()->with('items')->get();
     $openHandovers = $event->handoverProtocols()->where('status', \App\Models\HandoverProtocol::OPEN)->count();
