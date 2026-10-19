@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Preislisten pflegt, wer die Stammdaten der Venue bearbeitet (in der Regel der
- * Admin). Lesen darf außerdem die Buchhaltung und, wer Events bearbeitet – der
- * Eventmanager wählt die Preisliste am Event und rechnet danach. Gelöscht wird
- * nur eine Preisliste, die kein Event und kein Costing nutzt – sonst
- * deaktivieren. Alles nur mit dem Modul Preislisten & Costing.
+ * Admin), seit 19.10.2026 auch, wer die Buchhaltung bearbeitet (Rolle
+ * Buchhaltung). Lesen darf außerdem die Buchhaltung mit „Nur lesen“ und, wer
+ * Events bearbeitet – der Eventmanager wählt die Preisliste am Event und rechnet
+ * danach. Gelöscht wird nur eine Preisliste, die kein Event und kein Costing
+ * nutzt – sonst deaktivieren. Alles nur mit dem Modul Preislisten & Costing.
  */
 class PriceListPolicy extends AreaPolicy
 {
@@ -32,7 +33,8 @@ class PriceListPolicy extends AreaPolicy
 
     public function create(User $user): bool
     {
-        return Module::PriceLists->isEnabled() && parent::create($user);
+        return Module::PriceLists->isEnabled()
+            && (parent::create($user) || $user->access()->canEdit(Area::Buchhaltung));
     }
 
     public function delete(User $user, Model $record): bool

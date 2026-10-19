@@ -441,8 +441,9 @@ Freitermin-Suche, Sortierung
   Abschnitten mit Hinweis, Einheit, Preis (leer: nach Aufwand; Einheit „%“:
   Zuschlag, im Costing ist der Faktor dann der Betrag in €), Mindestbetrag,
   Vorgabe-Faktor, „Faktor = PAX erwartet“ und „Im Costing“ (aus: startet im
-  neuen Costing ausgeschaltet, etwa Alternativen wie die Grundmiete bestuhlt). Pflegen mit Stammdaten-Recht, lesen
-  auch Buchhaltung und Eventmanager. Das Event wählt seine Preisliste unter
+  neuen Costing ausgeschaltet, etwa Alternativen wie die Grundmiete bestuhlt). Pflegen
+  (anlegen, ändern, ungenutzte löschen) mit Stammdaten-Recht oder – seit 19.10.2026 –
+  Buchhaltung „Bearbeiten“, lesen auch Buchhaltung „Nur lesen“ und Eventmanager. Das Event wählt seine Preisliste unter
   Buchung › Daten (`events.price_list_id`); bis 13.10.2026 war sie eine Feldoption
   der Buchhaltung (`event_finances.price_list`) – die Migration hat jeden Wert zu
   einer Preisliste ohne Kostenpunkte gemacht. Das Costing (`costings`,

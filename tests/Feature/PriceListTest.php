@@ -95,7 +95,7 @@ class PriceListTest extends TestCase
             ->assertHasFormErrors(['items.record-' . $rent->id . '.price']);
     }
 
-    public function test_lesen_duerfen_buchhaltung_und_eventmanager_pflegen_nur_admins(): void
+    public function test_lesen_duerfen_buchhaltung_und_eventmanager_pflegen_admins_und_buchhaltung(): void
     {
         $list = $this->priceList();
 
@@ -105,8 +105,34 @@ class PriceListTest extends TestCase
         $this->get(PriceListResource::getUrl('create'))->assertForbidden();
         $this->get(PriceListResource::getUrl('edit', ['record' => $list]))->assertForbidden();
 
-        $this->actingAs($this->userWith($this->role('buchhaltung', ['events' => 'read', 'buchhaltung' => 'edit'])));
+        // Buchhaltung mit „Bearbeiten“ pflegt Preislisten (seit 19.10.2026), mit „Nur lesen“ nicht
+        $this->actingAs($accounting = $this->userWith($this->role('buchhaltung', ['events' => 'read', 'buchhaltung' => 'edit'])));
         $this->get(PriceListResource::getUrl('view', ['record' => $list]))->assertOk();
+        $this->get(PriceListResource::getUrl('create'))->assertOk();
+        $this->get(PriceListResource::getUrl('edit', ['record' => $list]))->assertOk();
+        Livewire::test(EditPriceList::class, ['record' => $list->getRouteKey()])
+            ->fillForm(['name' => 'Konzert-Preisliste 2025-10'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame('Konzert-Preisliste 2025-10', $list->fresh()->name);
+        $undoRepeaterFake = Repeater::fake();
+        Livewire::test(CreatePriceList::class)
+            ->fillForm(['name' => 'Sport-Preisliste', 'valid_from' => '2026-01-01', 'is_active' => true,
+                'items' => [['section' => 'Mietkosten', 'name' => 'Grundmiete Sport', 'description' => null, 'unit' => 'pauschal', 'price' => '1900', 'minimum' => null, 'default_factor' => '1', 'factor_from_pax' => false, 'default_active' => true]]])
+            ->call('create')
+            ->assertHasNoFormErrors();
+        $undoRepeaterFake();
+        $sport = PriceList::query()->where('name', 'Sport-Preisliste')->sole();
+        $this->assertTrue($accounting->can('delete', $sport));
+        Livewire::test(EditPriceList::class, ['record' => $sport->getRouteKey()])
+            ->callAction('delete');
+        $this->assertNull(PriceList::query()->find($sport->id));
+        Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek(), 'price_list_id' => $list->id]);
+        $this->assertFalse($accounting->can('delete', $list->fresh()), 'genutzte bleibt');
+
+        $this->actingAs($this->userWith($this->role('controlling', ['buchhaltung' => 'read'])));
+        $this->get(PriceListResource::getUrl('view', ['record' => $list]))->assertOk();
+        $this->get(PriceListResource::getUrl('create'))->assertForbidden();
         $this->get(PriceListResource::getUrl('edit', ['record' => $list]))->assertForbidden();
 
         // Nur lesen ohne Buchhaltung: nichts
