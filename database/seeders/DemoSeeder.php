@@ -48,7 +48,7 @@ use Random\Engine\Mt19937;
 use Random\Randomizer;
 
 /**
- * Demodaten einer erfundenen Halle („Be-In Arena“) für demo.vcontrol.eu:
+ * Demodaten einer erfundenen Venue („Be-In Arena“) für demo.vcontrol.eu:
  * Rollen und Konten, Feldoptionen, Räume, Gewerke, Veranstalter, Preislisten,
  * Saalpläne und rund 35 Events vom Sommer bis ins Frühjahr – relativ zum Tag,
  * an dem der Befehl läuft. Vergangene sind abgeschlossen (Betrieb, Protokolle,

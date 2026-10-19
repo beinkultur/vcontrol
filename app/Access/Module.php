@@ -3,7 +3,7 @@
 namespace App\Access;
 
 /**
- * Module, die eine Halle bucht. Der System-Admin gibt sie unter Verwaltung ›
+ * Module, die eine Venue bucht. Der System-Admin gibt sie unter Verwaltung ›
  * System frei (App\Access\Modules). Ohne Freigabe ist ein Modul für alle
  * ausgeblendet, auch für Admins und System-Admins – Eingegebenes bleibt
  * erhalten und ist wieder da, sobald das Modul frei ist.
@@ -31,11 +31,11 @@ enum Module: string
     public function description(): string
     {
         return match ($this) {
-            self::StagePlan => 'Planung › Bühne je Event mit Maßen, Podest-Rechnung und dem Plan mit Podest-Raster (Drucken, SVG), die Bühnenwerte unter Verwaltung › Halle, die Bühne für Externe und im Daysheet.',
-            self::SeatingPlan => 'Standard-Saalpläne der Halle und eigene Pläne je Event (PDF), auch für Externe und im Daysheet. Bereiche und Bestuhlung gibt es immer.',
+            self::StagePlan => 'Planung › Bühne je Event mit Maßen, Podest-Rechnung und dem Plan mit Podest-Raster (Drucken, SVG), die Bühnenwerte unter Verwaltung › Venue, die Bühne für Externe und im Daysheet.',
+            self::SeatingPlan => 'Standard-Saalpläne der Venue und eigene Pläne je Event (PDF), auch für Externe und im Daysheet. Bereiche und Bestuhlung gibt es immer.',
             self::GuestList => 'Gäste mit Freikarten je Event und die Liste zum Drucken für den Einlass.',
             self::Accounting => 'Finanzen, FIBU-Status und Eingangsrechnungen je Event, die Buchhaltungsliste und die Finanz-Warnung.',
-            self::PriceLists => 'Preislisten der Halle mit Kostenpunkten, die Preisliste je Event und das Costing, das der Eventmanager daraus erstellt und als PDF verschickt. Die Buchhaltung sieht beides.',
+            self::PriceLists => 'Preislisten der Venue mit Kostenpunkten, die Preisliste je Event und das Costing, das der Eventmanager daraus erstellt und als PDF verschickt. Die Buchhaltung sieht beides.',
         };
     }
 

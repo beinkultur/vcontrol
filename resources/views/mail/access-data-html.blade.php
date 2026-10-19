@@ -1,6 +1,6 @@
 {{--
     HTML-Fassung der Zugangsdaten (App\Mail\AccessDataMail), aufgebaut wie die
-    Daysheet-Mail: im Kopf das Logo der Halle, im Fuß „… erstellt mit
+    Daysheet-Mail: im Kopf das Logo der Venue, im Fuß „… erstellt mit
     VenueControl“ mit dessen Logo. Texte und Werte stehen als eigenes HTML mit
     e(), damit Markdown sie nicht umdeutet – ein „*“ oder „_“ im Passwort bleibt,
     was es ist. Nicht einrücken: Markdown macht sonst Code daraus.

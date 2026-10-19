@@ -95,7 +95,7 @@ class UserSafetyTest extends TestCase
         $system = $this->systemAdmin();
 
         // Seit 12.10.2026 auch nicht mehr ansehen: weder Admin der Halle noch das Recht „Rollen & Rechte“
-        foreach (['Rollenpfleger' => $rollenpfleger, 'Admin der Halle' => $admin] as $wer => $user) {
+        foreach (['Rollenpfleger' => $rollenpfleger, 'Admin der Venue' => $admin] as $wer => $user) {
             $this->assertFalse(Gate::forUser($user)->allows('viewAny', Role::class), $wer);
             $this->assertFalse(Gate::forUser($user)->allows('view', $catering), $wer);
             $this->assertFalse(Gate::forUser($user)->allows('create', Role::class), $wer);
@@ -111,7 +111,7 @@ class UserSafetyTest extends TestCase
         $this->assertTrue(Gate::forUser($system)->allows('update', $adminRolle));
 
         $this->actingAs($system);
-        $this->get('/rollen')->assertOk()->assertSee('Admins der Halle sehen diese Seite nicht');
+        $this->get('/rollen')->assertOk()->assertSee('Admins der Venue sehen diese Seite nicht');
         Livewire::test(EditRole::class, ['record' => $catering->getRouteKey()])
             ->fillForm(['permissions' => ['kalender' => 'read', 'events' => 'read']])
             ->call('save')

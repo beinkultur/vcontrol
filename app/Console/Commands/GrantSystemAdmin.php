@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 
 /**
  * Macht ein Konto zum System-Admin (Betreiber von VenueControl). Der erste
- * System-Admin einer Halle entsteht nur hier, über die Server-Konsole – in der
+ * System-Admin einer Venue entsteht nur hier, über die Server-Konsole – in der
  * Oberfläche vergeben die Rolle nur System-Admins. Die Rolle legt der Befehl
  * beim ersten Mal an.
  *

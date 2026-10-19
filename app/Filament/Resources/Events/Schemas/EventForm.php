@@ -138,7 +138,7 @@ class EventForm
                                 self::can(Area::Buchhaltung)
                                     ? self::tab('Buchhaltung', 'buchhaltung')->schema(self::accounting())
                                     : null,
-                                // Nur mit dem Modul Preislisten & Costing, für die Rollen unter Verwaltung › Halle (CostingSettings)
+                                // Nur mit dem Modul Preislisten & Costing, für die Rollen unter Verwaltung › Venue (CostingSettings)
                                 CostingResource::canAccess()
                                     ? self::tab('Costing', 'costing')->schema([self::embedded(CostingsRelationManager::class)])
                                     : null,
@@ -276,7 +276,7 @@ class EventForm
 
     /**
      * Buchung › Daten, auch das Formular zum Anlegen. Links, was das Event ist
-     * und für wen (Veranstaltung) und wie es in der Halle läuft (Halle &
+     * und für wen (Veranstaltung) und wie es in der Venue läuft (Venue &
      * Publikum), rechts daneben Termin und Internes – auf dem Handy in dieser
      * Reihenfolge untereinander. VA-ID, laufende Nummer und „abgeschlossen“ gibt
      * es erst, wenn das Event existiert.
@@ -327,7 +327,7 @@ class EventForm
                             ->seconds(false)
                             ->afterOrEqual('starts_at'),
                     ]),
-                Section::make('Halle & Publikum')
+                Section::make('Venue & Publikum')
                     ->columnSpan(['lg' => 2])
                     ->columns(2)
                     ->schema([

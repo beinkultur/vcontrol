@@ -11,8 +11,8 @@ use Illuminate\Mail\Mailables\Envelope;
 /**
  * Daysheet-Mail (App\Support\Daysheets): Betreff und Text so, wie der
  * Eventmanager sie im Versand-Dialog freigegeben hat, mit dem Link darin.
- * Absender ist die Halle (MailIdentity). Antworten gehen an die Antwortadresse
- * der Halle, ohne sie an den Eventmanager, der verschickt hat.
+ * Absender ist die Venue (MailIdentity). Antworten gehen an die Antwortadresse
+ * der Venue, ohne sie an den Eventmanager, der verschickt hat.
  *
  * Zwei Fassungen: HTML im Stil von Laravels Mails (wie „Passwort vergessen“),
  * mit der Schaltfläche „Daysheet öffnen“ an der Stelle des Links, und reiner

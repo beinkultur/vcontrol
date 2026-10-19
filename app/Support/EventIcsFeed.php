@@ -9,7 +9,7 @@ use App\Models\Setting;
  * ICS-Feed aller bestätigten Veranstaltungen zum Abonnieren in Kalender-Apps,
  * wie in der PHP-Version (EventIcsFeed). Kalender-Apps schicken keine Session
  * mit, deshalb hängt der Zugriff an einem geheimen Schlüssel (Einstellung der
- * Halle). Ohne Schlüssel ist der Feed aus – nie versehentlich öffentlich.
+ * Venue). Ohne Schlüssel ist der Feed aus – nie versehentlich öffentlich.
  *
  * Alle Events sind ganztägig. DTEND ist exklusiv (eintägiges Event = Folgetag);
  * fehlt das Ende oder liegt es nicht nach dem Beginn, gilt Beginn + 1 Tag.

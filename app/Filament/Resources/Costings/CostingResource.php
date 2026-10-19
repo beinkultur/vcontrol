@@ -47,7 +47,7 @@ use UnitEnum;
  * für die Rollen dafür), dazu Bearbeiten (Entwürfe) und Ansehen – auch für die
  * Rollen, die das Costing am Event sehen. Erstellt wird ein Costing im Event
  * unter Buchung › Costing (CostingsRelationManager), verschickt mit
- * CostingActions. Rechte: CostingPolicy, Rollen unter Verwaltung › Halle.
+ * CostingActions. Rechte: CostingPolicy, Rollen unter Verwaltung › Venue.
  */
 class CostingResource extends Resource
 {

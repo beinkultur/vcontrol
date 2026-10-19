@@ -1,7 +1,7 @@
 {{--
     Was Externe von einem Event sehen (App\Support\ExternSheet): im Extern-Bereich
     und im Daysheet. Stile: public/css/sheet.css. $showHead: Titelzeile zeigen
-    (im Panel steht sie schon im Seitenkopf). $logo: Logo der Halle rechts
+    (im Panel steht sie schon im Seitenkopf). $logo: Logo der Venue rechts
     daneben (VenueLogo::fitted, in Pixeln), nur auf der Daysheet-Seite.
 --}}
 @php
@@ -164,7 +164,7 @@
         </section>
     @endif
 
-    {{-- Nur mit dem Modul Preislisten & Costing und wenn die Halle es freigibt (Verwaltung › Halle) --}}
+    {{-- Nur mit dem Modul Preislisten & Costing und wenn die Venue es freigibt (Verwaltung › Venue) --}}
     @if ($sheet['costing'] !== null)
         <section>
             <h2>Costing</h2>

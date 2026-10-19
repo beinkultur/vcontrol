@@ -18,7 +18,7 @@ use InvalidArgumentException;
  * Daysheets versenden: kurz vor der Veranstaltung ein Link auf die Event-Infos
  * für Externe (App\Support\ExternSheet), gültig ab Versand bis zum Ende des Tages
  * nach der Veranstaltung (validUntil). Vorbelegt wird mit den
- * Standards der Halle (Verwaltung › Halle) und den E-Mail-Adressen der
+ * Standards der Venue (Verwaltung › Venue) und den E-Mail-Adressen der
  * beteiligten Gewerke im BCC.
  *
  * Gespeichert werden Betreff und Text mit dem Platzhalter {link} – der
@@ -28,9 +28,9 @@ final class Daysheets
 {
     public const DEFAULT_SUBJECT = 'Daysheet {event} – {datum}';
 
-    public const DEFAULT_TEXT = "Hallo,\n\nhier ist das Daysheet für {event} am {datum} in der {halle}:\n{link}\n\nDer Link ist bis {gueltig_bis} gültig. Auf der Seite lassen sich die Infos drucken oder als PDF speichern.\n\nViele Grüße\n{halle}";
+    public const DEFAULT_TEXT = "Hallo,\n\nhier ist das Daysheet für {event} am {datum} in der {venue}:\n{link}\n\nDer Link ist bis {gueltig_bis} gültig. Auf der Seite lassen sich die Infos drucken oder als PDF speichern.\n\nViele Grüße\n{venue}";
 
-    public const PLACEHOLDER_HELP = '{event}, {datum} und {halle} werden ersetzt, beim Versand auch {link} und {gueltig_bis}. Fehlt {link}, steht der Link am Ende.';
+    public const PLACEHOLDER_HELP = '{event}, {datum} und {venue} werden ersetzt, beim Versand auch {link} und {gueltig_bis}. Fehlt {link}, steht der Link am Ende.';
 
     /**
      * Vorbelegung des Versand-Dialogs.
@@ -80,10 +80,13 @@ final class Daysheets
      */
     public static function fill(string $text, Event $event, ?string $link = null, ?CarbonInterface $validUntil = null): string
     {
+        $venue = Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name');
         $replace = [
             '{event}' => (string) $event->title,
             '{datum}' => $event->starts_at ? EventDisplay::weekday($event->starts_at) . ', ' . $event->starts_at->format('d.m.Y') : 'Datum offen',
-            '{halle}' => Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name'),
+            '{venue}' => $venue,
+            // Bis 19.10.2026 hieß der Platzhalter {halle}; ältere Texte nutzen ihn noch
+            '{halle}' => $venue,
         ];
         if ($link !== null) {
             $replace['{link}'] = $link;

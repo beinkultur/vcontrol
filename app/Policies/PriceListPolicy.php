@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Preislisten pflegt, wer die Stammdaten der Halle bearbeitet (in der Regel der
+ * Preislisten pflegt, wer die Stammdaten der Venue bearbeitet (in der Regel der
  * Admin). Lesen darf außerdem die Buchhaltung und, wer Events bearbeitet – der
  * Eventmanager wählt die Preisliste am Event und rechnet danach. Gelöscht wird
  * nur eine Preisliste, die kein Event und kein Costing nutzt – sonst

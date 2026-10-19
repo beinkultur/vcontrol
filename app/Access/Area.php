@@ -100,7 +100,7 @@ enum Area: string
     }
 
     /**
-     * Unter System einzeln abschaltbar? Benutzer, Rollen & Rechte und die Halle
+     * Unter System einzeln abschaltbar? Benutzer, Rollen & Rechte und die Venue
      * bleiben immer an – ohne sie ließe sich nichts mehr einrichten. Bereiche
      * eines Moduls kommen und gehen mit dem Modul.
      */

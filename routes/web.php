@@ -35,8 +35,12 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
     Route::get('/saalplaene/{plan}/pdf', [SeatingPlanController::class, 'standard'])->name('seating-plans.pdf');
     Route::get('/costings/{costing}/pdf', [CostingController::class, 'pdf'])->name('costings.pdf');
     Route::get('/events/{event}/costing', [CostingController::class, 'event'])->name('events.costing');
-    Route::get('/halle/logo', VenueLogoController::class)->name('venue.logo');
+    Route::get('/venue/logo', VenueLogoController::class)->name('venue.logo');
 });
+
+// Bis 19.10.2026 hieß die Seite „Halle“: alte Lesezeichen führen weiter
+Route::redirect('/halle', '/venue', 301);
+Route::redirect('/halle/logo', '/venue/logo', 301);
 
 // Daysheet: ohne Konto, der Schlüssel im Link berechtigt (bis zum Tag nach der
 // Veranstaltung, sperrbar).

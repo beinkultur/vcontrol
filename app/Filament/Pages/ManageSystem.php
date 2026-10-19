@@ -33,10 +33,10 @@ use UnitEnum;
 
 /**
  * Einstellungen des Betreibers, nur für System-Admins: Farbschema
- * (App\Enums\ColorScheme), welche Module die Halle gebucht hat, welche Bereiche
+ * (App\Enums\ColorScheme), welche Module die Venue gebucht hat, welche Bereiche
  * aus sind (App\Access\Modules) und die nächtliche Sicherung
- * (App\Support\Backups). Alles, was die Halle selbst einstellt, steht unter
- * Verwaltung › Halle.
+ * (App\Support\Backups). Alles, was die Venue selbst einstellt, steht unter
+ * Verwaltung › Venue.
  *
  * @property-read Schema $form
  */
@@ -66,7 +66,7 @@ class ManageSystem extends Page
 
     public function getSubheading(): ?string
     {
-        return 'Nur für System-Admins. Was die Halle selbst einstellt, steht unter Verwaltung › Halle.';
+        return 'Nur für System-Admins. Was die Venue selbst einstellt, steht unter Verwaltung › Venue.';
     }
 
     public function mount(): void
@@ -94,7 +94,7 @@ class ManageSystem extends Page
             ->statePath('data')
             ->components([
                 Section::make('Farbschema')
-                    ->description('Gilt für alle Benutzer dieser Halle, auch auf der Anmeldeseite und der Daysheet-Seite.')
+                    ->description('Gilt für alle Benutzer dieser Venue, auch auf der Anmeldeseite und der Daysheet-Seite.')
                     ->schema([
                         Radio::make('color_scheme')
                             ->label('Farbschema')
@@ -109,7 +109,7 @@ class ManageSystem extends Page
                             ->required(),
                     ]),
                 Section::make('Module')
-                    ->description('Was die Halle gebucht hat. Ein Modul ohne Haken ist für alle ausgeblendet, auch für Admins und System-Admins; '
+                    ->description('Was die Venue gebucht hat. Ein Modul ohne Haken ist für alle ausgeblendet, auch für Admins und System-Admins; '
                         . 'Eingegebenes bleibt erhalten und ist wieder da, sobald das Modul freigegeben ist.')
                     ->schema([
                         CheckboxList::make('modules')
@@ -121,7 +121,7 @@ class ManageSystem extends Page
                     ]),
                 Section::make('Bereiche')
                     ->description(fn (): string => 'Angehakt = an. Abgeschaltete Bereiche sind für alle gesperrt, auch für Admins und System-Admins; '
-                        . 'vergebene Rechte bleiben erhalten und wirken wieder, sobald der Bereich an ist. Benutzer, Rollen & Rechte und Halle bleiben immer an, '
+                        . 'vergebene Rechte bleiben erhalten und wirken wieder, sobald der Bereich an ist. Benutzer, Rollen & Rechte und Venue bleiben immer an, '
                         . 'die Buchhaltung kommt mit ihrem Modul.'
                         . (Modules::current()->isStored() ? '' : ' Bisher gilt die Server-Konfiguration (VC_DISABLED_AREAS) – ab dem ersten Speichern diese Auswahl.'))
                     ->schema(array_map(

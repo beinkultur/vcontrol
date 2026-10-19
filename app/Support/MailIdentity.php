@@ -6,9 +6,9 @@ use App\Models\Setting;
 use Illuminate\Mail\Mailables\Address;
 
 /**
- * Wer Mails der Halle verschickt und wohin Antworten gehen. Absender ist die
+ * Wer Mails der Venue verschickt und wohin Antworten gehen. Absender ist die
  * Adresse aus der Server-Konfiguration (MAIL_FROM_ADDRESS, no-reply@…) mit dem
- * Namen der Halle; die Antwortadresse legt die Halle unter Verwaltung › Halle
+ * Namen der Venue; die Antwortadresse legt die Venue unter Verwaltung › Venue
  * fest (Setting::MAIL_REPLY_TO).
  */
 final class MailIdentity
@@ -18,7 +18,7 @@ final class MailIdentity
         return new Address((string) config('mail.from.address'), self::venue());
     }
 
-    /** Antwortadresse der Halle; null, solange keine (gültige) eingetragen ist. */
+    /** Antwortadresse der Venue; null, solange keine (gültige) eingetragen ist. */
     public static function replyTo(): ?Address
     {
         $address = mb_strtolower(trim((string) Setting::lookup(Setting::MAIL_REPLY_TO)));

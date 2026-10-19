@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Standard-Saalplan der Halle: ein PDF mit Namen, den Bereichen, die der Plan
+ * Standard-Saalplan der Venue: ein PDF mit Namen, den Bereichen, die der Plan
  * nutzt, und seiner Bestuhlung (Werte der Feldoptionen „Bereiche“ und
  * „Bestuhlung“). Ein Event wählt einen davon oder lädt einen eigenen hoch
  * (Event::seatingPlan…); Bereiche und Bestuhlung übernimmt es beim Auswählen

@@ -12,7 +12,7 @@ use Illuminate\Mail\Mailables\Envelope;
 /**
  * Zugangsdaten eines Kontos (App\Support\AccessData): Adresse der Anmeldung,
  * E-Mail-Adresse und Passwort – für ein neues Konto oder nach einem neuen
- * Passwort. Absender ist die Halle (MailIdentity), Antworten gehen an ihre
+ * Passwort. Absender ist die Venue (MailIdentity), Antworten gehen an ihre
  * Antwortadresse, sonst an den Admin, der verschickt hat. Aufgebaut wie die
  * Daysheet-Mail: HTML im Stil von Laravels Mails und reiner Text.
  */

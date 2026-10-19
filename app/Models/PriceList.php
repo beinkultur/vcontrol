@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Preisliste der Halle (Modul Preislisten & Costing), etwa „Konzert/Comedy
+ * Preisliste der Venue (Modul Preislisten & Costing), etwa „Konzert/Comedy
  * 2025-09“, mit ihren Kostenpunkten. Events wählen eine unter Buchung › Daten,
  * ein Costing übernimmt daraus Kostenpunkte, Preise und Vorgabe-Faktoren.
  * Kopf (intro) und Anmerkungen (notes) stehen im Costing-PDF über und unter den

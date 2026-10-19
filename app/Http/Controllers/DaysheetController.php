@@ -84,7 +84,7 @@ class DaysheetController extends Controller
         return $response;
     }
 
-    /** Costing über den Daysheet-Link, wenn die Halle es fürs Daysheet freigibt – die zuletzt verschickte Fassung */
+    /** Costing über den Daysheet-Link, wenn die Venue es fürs Daysheet freigibt – die zuletzt verschickte Fassung */
     public function costing(string $token): Response
     {
         $daysheet = Daysheet::findByToken($token);
@@ -126,7 +126,7 @@ class DaysheetController extends Controller
         return Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name');
     }
 
-    /** Logo der Halle für den Kopf, in Pixeln (VenueLogo) */
+    /** Logo der Venue für den Kopf, in Pixeln (VenueLogo) */
     private static function logo(): ?array
     {
         return VenueLogo::fitted(200, 64);

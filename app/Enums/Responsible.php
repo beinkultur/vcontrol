@@ -13,7 +13,7 @@ enum Responsible: string implements HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Arena => 'Halle',
+            self::Arena => 'Venue',
             self::Promoter => 'Veranstalter',
         };
     }

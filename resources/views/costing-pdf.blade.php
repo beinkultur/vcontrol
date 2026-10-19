@@ -1,7 +1,7 @@
 {{--
     Costing als PDF (App\Support\CostingPdf, Dompdf): Dompdf kann nur CSS 2.1 –
     deshalb Tabellen statt Flex/Grid, Schrift DejaVu Sans (hat €, Umlaute).
-    Seitenzahlen setzt CostingPdf. Kopf (Logo der Halle, mittig) und Fuß stehen
+    Seitenzahlen setzt CostingPdf. Kopf (Logo der Venue, mittig) und Fuß stehen
     mit position: fixed im Seitenrand und damit auf jeder Seite.
 --}}
 @php
@@ -59,7 +59,7 @@
     @endif
     <div class="footer">{{ $venue }} · erstellt mit VenueControl</div>
 
-    {{-- Ohne Logo steht der Name der Halle über dem Titel --}}
+    {{-- Ohne Logo steht der Name der Venue über dem Titel --}}
     @if (!$venueLogo)
         <div class="venue">{{ $venue }}</div>
     @endif

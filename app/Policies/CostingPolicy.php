@@ -10,7 +10,7 @@ use App\Support\CostingSettings;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Wer Costings sieht, stellt der Admin unter Verwaltung › Halle ein
+ * Wer Costings sieht, stellt der Admin unter Verwaltung › Venue ein
  * (CostingSettings): die Liste aller Costings (Menüpunkt) und das Costing am
  * Event je nach Rolle. Erstellen, ändern und verschicken darf davon, wer Events
  * bearbeitet. Eine verschickte Fassung ändert niemand mehr, gelöscht werden nur

@@ -1,7 +1,7 @@
 {{--
     Benachrichtigungen per Mail (bisher nur „Passwort vergessen“): Laravels
-    notifications::email, aber im Kopf das Logo der Halle (x-mail::venue, ohne
-    Logo „VenueControl“) und mit dem Fuß der Daysheet-Mail – „Halle · erstellt
+    notifications::email, aber im Kopf das Logo der Venue (x-mail::venue, ohne
+    Logo „VenueControl“) und mit dem Fuß der Daysheet-Mail – „Venue · erstellt
     mit VenueControl“, darunter das Logo (x-mail::logo). Deshalb das Layout
     direkt statt x-mail::message, dessen Fuß fest „© … Alle Rechte vorbehalten“
     ist. Dient auch als Textfassung; nicht einrücken, Markdown macht sonst Code

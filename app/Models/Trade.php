@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-/** Gewerk – Dienstleister der Halle. */
+/** Gewerk – Dienstleister der Venue. */
 #[Fillable(['short_name', 'name', 'categories', 'email', 'phone', 'address1', 'address2', 'zip', 'city', 'is_archived'])]
 class Trade extends Model
 {

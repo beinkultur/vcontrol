@@ -29,7 +29,7 @@ class CostingsRelationManager extends RelationManager
 
     protected static ?string $pluralModelLabel = 'Costings';
 
-    /** Die Rollen fürs Event (Verwaltung › Halle) – Filament prüfte sonst den Menüpunkt (viewAny) */
+    /** Die Rollen fürs Event (Verwaltung › Venue) – Filament prüfte sonst den Menüpunkt (viewAny) */
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
         return CostingResource::canAccess();

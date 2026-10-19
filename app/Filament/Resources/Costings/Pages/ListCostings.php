@@ -10,7 +10,7 @@ class ListCostings extends ListRecords
 {
     protected static string $resource = CostingResource::class;
 
-    /** Die Liste nur mit dem Menüpunkt (Rollen unter Verwaltung › Halle) – einzelne Costings sehen auch die Rollen fürs Event */
+    /** Die Liste nur mit dem Menüpunkt (Rollen unter Verwaltung › Venue) – einzelne Costings sehen auch die Rollen fürs Event */
     protected function authorizeAccess(): void
     {
         abort_unless(CostingResource::canViewAny(), 403);

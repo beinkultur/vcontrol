@@ -33,12 +33,12 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `event_pr` | `vc_event_pr` | PR-Datum, PR-Status |
 | `event_checklists` | `vc_event_checklist` | 15 Punkte ja/nein/entfällt |
 | `event_room` | `vc_event_rooms` | Raumbelegung mit Art (Backstage/Büro) |
-| `event_services` | `vc_event_trades` | Leistungen je Event (4.465 Zeilen): Leistungscode, Gewerk oder freier Anbieter, verantwortlich Halle/Veranstalter, Notiz |
+| `event_services` | `vc_event_trades` | Leistungen je Event (4.465 Zeilen): Leistungscode, Gewerk oder freier Anbieter, verantwortlich Venue/Veranstalter, Notiz |
 | `event_service_groups` | `vc_event_trade_active`, `vc_event_trade_groups` | welche Leistungsgruppen aktiv sind |
 | `event_assignments` | `vc_event_role_assignments` | Rollen am Event (VL, VfV …) an Benutzer, Kontakt oder Gewerk, mit Zeiten (Kontakte statt Mitarbeiter seit 14.10.2026) |
 | `contacts` | `vc_employees` (bis 14.10.2026 `employees`) | Kontakte ohne Anmeldung: Person oder Funktion („Hallenmeister“), Kürzel, Telefon, E-Mail, Positionen, Notiz, archiviert |
 | `event_incoming_invoices` | `vc_event_incoming_invoices` | die sechs erwarteten Eingangsrechnungen |
-| `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Halle: PDF, Name, genutzte Bereiche, Bestuhlung, aktiv |
+| `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Venue: PDF, Name, genutzte Bereiche, Bestuhlung, aktiv |
 | `meters` | neu (15.10.2026) | Zähler der Venue: Name, Einheit, Zählernummer, Standort, je Event ablesen, aktiv, Reihenfolge |
 | `meter_readings` | neu (15.10.2026), Strom aus `event_operations` | Stände: Zähler, Event mit Anfang/Ende oder frei, Zeitpunkt, Stand (3 Nachkommastellen), Zählerwechsel, Notiz |
 
@@ -125,7 +125,7 @@ Bedienbar:
   bis 20 Fotos (je 25 MB), „behoben“ setzen Event-Operationen oder die
   Buchhaltung; nicht löschbar. Übersicht unter Protokolle › Schäden, dort auch
   allgemeine Schäden ohne Event. Neue Schäden gehen per Mail an die
-  Empfänger unter Verwaltung › Halle › E-Mail, sonst an alle aktiven Benutzer
+  Empfänger unter Verwaltung › Venue › E-Mail, sonst an alle aktiven Benutzer
   mit der Rolle „hausmeister“. Fotos liegen nicht öffentlich, Auslieferung über
   `/schaeden/{id}/foto/{n}` mit Rechteprüfung; `vc:import` übernimmt die
   Schäden samt Fotos (50 Schäden, 1 Foto, bytegleich geprüft).
@@ -176,7 +176,7 @@ Bedienbar:
   Feld lässt sich anzeigen und kopieren. „Zugangsdaten per E-Mail senden“ (beim
   Bearbeiten „Neues Passwort per E-Mail senden“, nur mit neuem Passwort und für
   aktive Konten) schickt nach dem Speichern Adresse der Anmeldung, E-Mail und
-  Passwort (`App\Mail\AccessDataMail`, Absender die Halle, Antworten an ihre
+  Passwort (`App\Mail\AccessDataMail`, Absender die Venue, Antworten an ihre
   Antwortadresse, sonst an den Admin). Geht die Mail nicht raus, bleibt das
   Konto gespeichert, mit Hinweis. Im Änderungsprotokoll steht nur
   „Zugangsdaten verschickt an …“, nie das Passwort.
@@ -190,6 +190,13 @@ Bedienbar:
   eigenes Passwort im Profil oder über „Passwort vergessen?“ erfüllt die Pflicht
   ebenso. Die Benutzerliste zeigt „Muss Passwort ändern“, solange es offen ist.
   Bestehende Konten waren nicht betroffen.
+- **„Venue“ statt „Halle“** (19.10.2026): Oberfläche, Mails, Hilfetexte, Doku und
+  Kommentare sagen „Venue“. Die Seite Verwaltung › Venue liegt unter `/venue`,
+  das Logo unter `/venue/logo`; `/halle` und `/halle/logo` leiten dauerhaft
+  weiter. Der Platzhalter `{venue}` ersetzt `{halle}` in den Vorgaben für
+  Daysheet- und Costing-Mails; `{halle}` wird weiter ersetzt, gespeicherte Texte
+  stellt die Migration `2026_10_19_100000` um. `vc:demo-data` nimmt `--venue=`.
+  Bezeichnungen in Daten bleiben, etwa der Kontakt „Hallenmeister“.
 - **Personal: Benutzer, Kontakte, Gewerke** (14.10.2026, ersetzt die Mitarbeiter
   der Stammdaten und die Verknüpfung Konto ↔ Mitarbeiter vom 13.10.2026):
   - Personen-Konten (Kontotyp „Mitarbeiter der Venue“, vorher „… der Halle“, und
@@ -248,8 +255,8 @@ Bedienbar:
   (PromoterPrefix) fehlt.
 - **Kalender-Feed** `/kalender/events.ics` wie in der PHP-Version: alle
   bestätigten Events ganztägig, Zugriff mit geheimem Schlüssel (Einstellung der
-  Halle) oder angemeldet mit Kalender-Recht. Adresse unter Events › „Kalender
-  abonnieren“ und Verwaltung › Halle (neu erzeugen, ausschalten).
+  Venue) oder angemeldet mit Kalender-Recht. Adresse unter Events › „Kalender
+  abonnieren“ und Verwaltung › Venue (neu erzeugen, ausschalten).
 - **Dateien** wie in der PHP-Version: Planung › Dateien zum Hochladen (Tag,
   Anzeigename, max. 25 MB, Archive nur für Admins; die Dateiauswahl bietet nur
   erlaubte Endungen an), neue Version hochladen
@@ -269,7 +276,7 @@ Bedienbar:
   der PHP-Version geprüft (vor der Übernahme von „sonst. Podeste“, siehe
   unten). Der Planrahmen 25 × 15 m ist fest: keine echte Raumgröße, er legt nur
   das Seitenverhältnis von Bühne zu Plan fest.
-- **Bühnen-Stammdaten je Halle** (Verwaltung › Halle, `App\Support\StageSettings`,
+- **Bühnen-Stammdaten je Venue** (Verwaltung › Venue, `App\Support\StageSettings`,
   01.10.2026): Standardbühne (14 × 8 m), Zusatzpodeste im Hausbestand (24 × 2×1 m,
   2 × 1×1 m), Rollipodest in Standardgröße (4 × 3 m), Standardhöhe (1,4 m) und
   wählbare Höhen, Podest-Bestand (86) und Mietanteil (62), Beschriftung im Plan
@@ -329,17 +336,18 @@ Bedienbar:
   Kalender), Schichten extern fehlen noch.
 - **Daysheet** (02.10.2026): „Daysheet“ im Event-Kopf bzw. Durchführung ›
   Daysheets, nur mit Schreibrecht auf Events. Vorbelegt: „An“ mit dem
-  Standard-Empfänger der Halle, BCC mit den E-Mail-Adressen der beteiligten
-  Gewerke, Betreff und Text aus Verwaltung › Halle (Platzhalter {event},
-  {datum}, {halle}, {link}, {gueltig_bis}) – alles vor dem Versand änderbar.
+  Standard-Empfänger der Venue, BCC mit den E-Mail-Adressen der beteiligten
+  Gewerke, Betreff und Text aus Verwaltung › Venue (Platzhalter {event},
+  {datum}, {venue}, {link}, {gueltig_bis}; bis 19.10.2026 hieß {venue} {halle},
+  das gilt weiter) – alles vor dem Versand änderbar.
   Die Empfänger bekommen einen Link ohne Konto, gültig ab Versand bis 23:59 Uhr
   am Tag nach der Veranstaltung (mehrtägig: nach dem letzten Tag; Vorgabe vom
   02.10.2026), jederzeit sperrbar; die Seite lässt sich drucken oder als PDF
   speichern. Gespeichert wird nur der Hash des Schlüssels. Inhalt vorläufig wie
   der Extern-Bereich, wird noch festgelegt – an einer Stelle
   (`App\Support\ExternSheet`). Versand per SMTP über all-inkl von
-  no-reply@vcontrol.eu mit dem Namen der Halle (`App\Support\MailIdentity`);
-  Antworten gehen an die Antwortadresse unter Verwaltung › Halle › E-Mail, ohne
+  no-reply@vcontrol.eu mit dem Namen der Venue (`App\Support\MailIdentity`);
+  Antworten gehen an die Antwortadresse unter Verwaltung › Venue › E-Mail, ohne
   sie an den Eventmanager, der verschickt hat. Gilt auch für Schadensmeldungen. Status: in der
   Event-Liste Spalte „DS“ mit grünem Haken, sobald ein Daysheet verschickt ist
   (gesperrte Links zählen nicht), im Dashboard (Karte Durchführung) „Daysheet
@@ -352,7 +360,7 @@ Freitermin-Suche, Sortierung
 
 - **Leistungen:** Die PHP-Version legt je Event alle 19 Leistungen an
   (4.465 Zeilen), in keiner einzigen ist ein Gewerk oder Anbieter eingetragen.
-  Inhalt tragen 1.252 Zeilen (wer stellt die Leistung: Halle 341,
+  Inhalt tragen 1.252 Zeilen (wer stellt die Leistung: Venue 341,
   Veranstalter 827; dazu 214 Notizen). Übernommen werden nur diese plus die
   Aktiv-Schalter (zusammen 1.259); eine fehlende Zeile heißt „nicht festgelegt“.
 - **Rollen** mit Uhrzeit von/bis (im Bestand 5 von 367, z. B. VfV 03:00–17:30).
@@ -370,8 +378,8 @@ Freitermin-Suche, Sortierung
 - **Räume:** Ein Raum, den ein Event belegt, lässt sich nicht mehr löschen
   (Policy und Fremdschlüssel). Die PHP-Version löschte ihn samt Belegungen.
 - **Saalplan (neu, 12.10.2026):** Standard-Saalpläne pflegt, wer die Stammdaten
-  der Halle bearbeitet (Stammdaten › Saalpläne, `SeatingPlanPolicy`): PDF, Name,
-  genutzte Bereiche, Bestuhlung. Je Event unter Buchung › Daten („Halle &
+  der Venue bearbeitet (Stammdaten › Saalpläne, `SeatingPlanPolicy`): PDF, Name,
+  genutzte Bereiche, Bestuhlung. Je Event unter Buchung › Daten („Venue &
   Publikum“) entweder einer davon – Bereiche und Bestuhlung werden übernommen
   und lassen sich anpassen – oder ein eigener PDF-Plan (`events.seating_plan_id` bzw.
   `seating_plan_path`; das eine löst das andere ab, `Event::booted`). Wer Events
@@ -381,10 +389,10 @@ Freitermin-Suche, Sortierung
   `SeatingPlanController` (Rechte wie bei den Event-Dateien, Daysheet über den
   Schlüssel), angezeigt nur, was am Inhalt als PDF erkannt ist.
 - **Module (13.10.2026):** Bühnenplan, Saalplan, Gästeliste und Buchhaltung gibt
-  der System-Admin je Halle frei, je nachdem, was sie gebucht hat (Verwaltung ›
+  der System-Admin je Venue frei, je nachdem, was sie gebucht hat (Verwaltung ›
   System, `App\Access\Module`). Ohne Freigabe fehlen sie für alle. Bühnenplan:
   der Reiter Planung › Bühne mit Maßen und Podest-Rechnung, die Bühnenplan-Seite
-  mit Druck und SVG, die Bühnenwerte unter Verwaltung › Halle, die Spalten Bühne
+  mit Druck und SVG, die Bühnenwerte unter Verwaltung › Venue, die Spalten Bühne
   (Event-Liste) und Zus. Podeste (Buchhaltung) und die Bühne für Externe – der
   Sold-Out-Award unter Betrieb bleibt. Saalplan: Standard-Saalpläne, Auswahl oder
   Upload am Event und der Abschnitt Saalplan für Externe (Bereiche und
@@ -392,7 +400,7 @@ Freitermin-Suche, Sortierung
   Buchhaltung: Liste, Reiter, Finanz-Warnung und ihre Feldoptionen – die
   Fortschrittsprüfungen Vertrag und Preisliste entfallen dann. Gespeichertes
   bleibt und ist mit der Freigabe wieder da.
-- **Preislisten & Costing (13.10.2026, Modul):** Preislisten der Halle unter
+- **Preislisten & Costing (13.10.2026, Modul):** Preislisten der Venue unter
   Stammdaten › Preislisten (`price_lists`, `price_list_items`): Kostenpunkte nach
   Abschnitten mit Hinweis, Einheit, Preis (leer: nach Aufwand; Einheit „%“:
   Zuschlag, im Costing ist der Faktor dann der Betrag in €), Mindestbetrag,
@@ -414,14 +422,14 @@ Freitermin-Suche, Sortierung
   dazu, gerechnet in Cent (`Costing::percentOf`). Beträge stehen in Formularen mit
   Tausenderpunkt (`MoneyInput`, `App\Support\Money`). Einheiten sind die
   Feldoption „Einheit (Preislisten)“.
-- **Costing-Einstellungen (Verwaltung › Halle, `CostingSettings`):** welche Rollen
+- **Costing-Einstellungen (Verwaltung › Venue, `CostingSettings`):** welche Rollen
   den Menüpunkt Costings sehen (die Liste und darin jedes Costing) und welche das
   Costing am Event; Admins immer. Bis zum ersten Speichern gilt: wer Events
   bearbeitet oder die Buchhaltung sieht. Erstellen und verschicken darf davon,
   wer Events bearbeitet. Zwei Schalter, ob die Ansicht für Externe und das
   Daysheet das zuletzt verschickte Costing als PDF zeigen (Vorgabe: nein;
   `events.costing`, `daysheet.costing`). Dazu Betreff, Text und feste BCC-Adressen
-  der Costing-Mail. Das Logo der Halle (Verwaltung › Halle, PNG oder JPG,
+  der Costing-Mail. Das Logo der Venue (Verwaltung › Venue, PNG oder JPG,
   `App\Support\VenueLogo`) steht auf dem Costing mittig in der Kopfzeile jeder
   Seite statt ihres Namens, rechts im Kopf der Daysheet-Seite (auf dem Handy über
   dem Titel) und im Kopf der Mails (Daysheet, Costing, Passwort vergessen;

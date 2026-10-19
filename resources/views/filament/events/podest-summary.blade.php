@@ -12,7 +12,7 @@
 <div @class(['vc-podests', 'vc-podests--alert' => $over])>
     <div class="vc-podests__head">
         <h4 class="vc-podests__title">Podest-Berechnung</h4>
-        <span class="vc-podests__inventory">Bestand der Halle: {{ $inventory }} Podeste</span>
+        <span class="vc-podests__inventory">Bestand der Venue: {{ $inventory }} Podeste</span>
     </div>
     <dl class="vc-podests__grid">
         @foreach ($rows as $label => $count)

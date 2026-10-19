@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Überträgt den lokalen Stand auf eine Hallen-Installation und leert die Caches.
+# Überträgt den lokalen Stand auf eine Venue-Installation und leert die Caches.
 #
 #   scripts/deploy.sh                       → ipa.vcontrol.eu
-#   scripts/deploy.sh halle2.vcontrol.eu    → andere Installation, gleicher Code
-#   scripts/deploy.sh --dry-run [halle]     → nur anzeigen, auf dem Server ändert sich nichts
+#   scripts/deploy.sh venue2.vcontrol.eu    → andere Installation, gleicher Code
+#   scripts/deploy.sh --dry-run [venue]     → nur anzeigen, auf dem Server ändert sich nichts
 #
 # Was im Repo gelöscht oder umbenannt wurde, löscht das Skript auch auf dem
 # Server – aber nur in den Code-Ordnern (CLEAN_DIRS). Nie angefasst werden das

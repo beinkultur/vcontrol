@@ -12,8 +12,8 @@ use InvalidArgumentException;
 /**
  * Costings verschicken (Modul Preislisten & Costing): Mail an den Veranstalter
  * mit dem Costing als PDF im Anhang (CostingPdf). Vorbelegt mit den
- * Ansprechpartnern des Veranstalters, in Kopie den Adressen der Halle und dem
- * Absender, Betreff und Text aus Verwaltung › Halle (CostingSettings) mit
+ * Ansprechpartnern des Veranstalters, in Kopie den Adressen der Venue und dem
+ * Absender, Betreff und Text aus Verwaltung › Venue (CostingSettings) mit
  * Platzhaltern wie beim Daysheet. Dazu die Zahlen, wie Formular und PDF sie
  * zeigen.
  */
@@ -36,7 +36,7 @@ final class Costings
         ];
     }
 
-    /** Platzhalter des Daysheets ({event}, {datum}, {halle}), dazu {fassung} und {preisliste} */
+    /** Platzhalter des Daysheets ({event}, {datum}, {venue}), dazu {fassung} und {preisliste} */
     public static function fill(string $text, Costing $costing): string
     {
         return strtr(Daysheets::fill($text, $costing->event), [

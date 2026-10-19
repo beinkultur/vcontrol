@@ -21,7 +21,7 @@ use InvalidArgumentException;
 
 /**
  * „Daysheet versenden“ – im Kopf des Events und unter Durchführung › Daysheets.
- * Vorbelegt mit den Standards der Halle und den beteiligten Gewerken im BCC;
+ * Vorbelegt mit den Standards der Venue und den beteiligten Gewerken im BCC;
  * alles lässt sich vor dem Versand ändern. Nur für Bearbeiter des Events.
  */
 final class DaysheetActions
@@ -44,7 +44,7 @@ final class DaysheetActions
                 TagsInput::make('to')
                     ->label('An')
                     ->placeholder('E-Mail-Adresse und Enter')
-                    ->helperText('Vorbelegt: Standard-Empfänger der Halle (Verwaltung › Halle).')
+                    ->helperText('Vorbelegt: Standard-Empfänger der Venue (Verwaltung › Venue).')
                     ->splitKeys(['Tab', ',', ' ', ';'])
                     ->nestedRecursiveRules(['email'])
                     ->required(),

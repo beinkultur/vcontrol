@@ -8,7 +8,7 @@ use App\Models\EventStage;
  * Podeste einer Bühne wie in der PHP-Version (EventStageSummary): Grundfläche
  * in ganzen Metern ÷ 2 für Hauptbühne, beide Wings und das Rollipodest, dazu
  * sonstige Podeste. Bestand, Mietanteil, Rollipodest und Höhen stellt jede
- * Halle selbst ein (StageSettings).
+ * Venue selbst ein (StageSettings).
  */
 final class StagePodests
 {
@@ -49,7 +49,7 @@ final class StagePodests
         return StageSettings::current()->included;
     }
 
-    /** @return list<float> Bühnenhöhen in Metern, die die Halle stellen kann */
+    /** @return list<float> Bühnenhöhen in Metern, die die Venue stellen kann */
     public static function heights(): array
     {
         return StageSettings::current()->heightChoices();

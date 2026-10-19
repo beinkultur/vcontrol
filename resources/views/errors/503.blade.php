@@ -3,7 +3,7 @@
     `php artisan down --render="errors::503" --retry=60` vorab gerendert: Die Seite
     kommt dann sogar, wenn die App gerade nicht startet (etwa während Composer
     läuft). Deshalb alles inline, nur Logo und Favicon als feste Dateien aus
-    public/. Name und Farbe der Halle nur, wenn die Datenbank antwortet.
+    public/. Name und Farbe der Venue nur, wenn die Datenbank antwortet.
 --}}
 @php
     try {

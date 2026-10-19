@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Rollen & Rechte sieht und ändert nur der System-Admin (Wunsch des Betreibers,
- * 12.10.2026) – auch Admins der Halle und Rollen mit dem Recht „Rollen &
+ * 12.10.2026) – auch Admins der Venue und Rollen mit dem Recht „Rollen &
  * Rechte“ nicht. Zugewiesen werden Rollen weiterhin unter Benutzer.
  */
 class RolePolicy extends AreaPolicy

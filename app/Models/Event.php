@@ -140,7 +140,7 @@ class Event extends Model
         return $this->hasMany(Costing::class)->orderByDesc('version');
     }
 
-    /** Zuletzt verschickte Fassung – die sehen Externe und das Daysheet, wenn die Halle es freigibt */
+    /** Zuletzt verschickte Fassung – die sehen Externe und das Daysheet, wenn die Venue es freigibt */
     public function sentCosting(): ?Costing
     {
         return $this->costings()->whereNotNull('sent_at')->first();

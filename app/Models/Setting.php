@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-/** Einstellung dieser Halle als Schlüssel/Wert. */
+/** Einstellung dieser Venue als Schlüssel/Wert. */
 #[Fillable(['key', 'value'])]
 class Setting extends Model
 {
     public const VENUE_NAME = 'venue_name';
 
-    /** Pfad des Hallen-Logos (App\Support\VenueLogo), steht auf dem Costing */
+    /** Pfad des Venue-Logos (App\Support\VenueLogo), steht auf dem Costing */
     public const VENUE_LOGO = 'venue_logo';
 
     public const PODEST_INVENTORY = 'podest_inventory';
@@ -21,7 +21,7 @@ class Setting extends Model
     /** Geheimer Schlüssel des Kalender-Feeds; leer = Feed aus. */
     public const CALENDAR_FEED_TOKEN = 'calendar_feed_token';
 
-    /** Antwortadresse für Mails der Halle (Absender ist no-reply@… aus der Server-Konfiguration) */
+    /** Antwortadresse für Mails der Venue (Absender ist no-reply@… aus der Server-Konfiguration) */
     public const MAIL_REPLY_TO = 'mail_reply_to';
 
     /** Daysheet: Standard-Empfänger (mit Komma getrennt), Betreff und Text der Mail */

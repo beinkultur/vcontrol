@@ -10,13 +10,13 @@ use App\Models\EventStage;
  * Blick von der Bühne zum Publikum: SL = rechts im Plan, SR = links im Plan.
  * Maße in Metern, im SVG mal SCALE.
  *
- * Standardbühne, Hausbestand, Raumbegrenzung und Beschriftung stellt jede Halle
+ * Standardbühne, Hausbestand, Raumbegrenzung und Beschriftung stellt jede Venue
  * ein (StageSettings, voreingestellt die Inselpark Arena: 14 × 8 m, 24 + 2).
  */
 final class StagePlan
 {
     /**
-     * Rahmen des Plans, fest für alle Hallen: keine echte Raumgröße, sondern das
+     * Rahmen des Plans, fest für alle Venues: keine echte Raumgröße, sondern das
      * Seitenverhältnis von Bühne zu Plan.
      */
     public const ROOM_WIDTH = 25;
@@ -136,7 +136,7 @@ final class StagePlan
                 'boundary_left' => $roomCx - $settings->boundary,
                 'boundary_right' => $roomCx + $settings->boundary,
             ],
-            // Für Legende und Zahlen: Standardbühne und Hausbestand dieser Halle
+            // Für Legende und Zahlen: Standardbühne und Hausbestand dieser Venue
             'base' => ['width' => $baseW, 'depth' => $baseD, 'podests' => $settings->basePodests()],
             'house' => ['2x1' => $settings->house2x1, '1x1' => $settings->house1x1],
             'stage' => [

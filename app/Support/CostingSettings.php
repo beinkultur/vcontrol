@@ -8,7 +8,7 @@ use App\Models\Setting;
 use App\Models\User;
 
 /**
- * Einstellungen der Halle zum Costing (Verwaltung › Halle, Abschnitt Costing):
+ * Einstellungen der Venue zum Costing (Verwaltung › Venue, Abschnitt Costing):
  * welche Rollen den Menüpunkt Costings und welche das Costing am Event sehen,
  * ob die Ansicht für Externe und das Daysheet das zuletzt verschickte Costing
  * zeigen, und die Vorbelegung der Mail. Admins sehen immer alles. Solange die
@@ -19,9 +19,9 @@ final class CostingSettings
 {
     public const DEFAULT_SUBJECT = 'Costing {event} – {datum}';
 
-    public const DEFAULT_TEXT = "Hallo,\n\nanbei das Costing für {event} am {datum} in der {halle} ({fassung}, Preisliste {preisliste}).\n\nViele Grüße\n{halle}";
+    public const DEFAULT_TEXT = "Hallo,\n\nanbei das Costing für {event} am {datum} in der {venue} ({fassung}, Preisliste {preisliste}).\n\nViele Grüße\n{venue}";
 
-    public const PLACEHOLDER_HELP = '{event}, {datum}, {halle}, {fassung} und {preisliste} werden ersetzt.';
+    public const PLACEHOLDER_HELP = '{event}, {datum}, {venue}, {fassung} und {preisliste} werden ersetzt.';
 
     /** Menüpunkt Costings, also die Liste aller Costings */
     public static function seesMenu(User $user): bool

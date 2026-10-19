@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Zähler (Stammdaten › Zähler): Welche Zähler es gibt, mit Einheit und ob je
- * Event abgelesen wird, legt fest, wer die Halle verwaltet (Bereich
+ * Event abgelesen wird, legt fest, wer die Venue verwaltet (Bereich
  * „Stammdaten“, auf ipa die Admins). Sortieren wie die Räume; löschen nur,
  * solange kein Stand erfasst ist – sonst deaktivieren.
  */

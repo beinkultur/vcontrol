@@ -19,9 +19,9 @@ use Illuminate\Support\Facades\DB;
  */
 class DemoData extends Command
 {
-    protected $signature = 'vc:demo-data {--halle=Be-In Arena : Name der erfundenen Halle}';
+    protected $signature = 'vc:demo-data {--venue=Be-In Arena : Name der erfundenen Venue}';
 
-    protected $description = 'Füllt eine leere Installation mit Demodaten einer erfundenen Halle';
+    protected $description = 'Füllt eine leere Installation mit Demodaten einer erfundenen Venue';
 
     public function handle(): int
     {
@@ -30,13 +30,13 @@ class DemoData extends Command
 
             return self::FAILURE;
         }
-        $venue = trim((string) $this->option('halle')) ?: 'Be-In Arena';
+        $venue = trim((string) $this->option('venue')) ?: 'Be-In Arena';
         if ($this->input->isInteractive() && !$this->confirm("Demodaten für „{$venue}“ anlegen?", true)) {
             return self::FAILURE;
         }
 
         DB::transaction(fn () => Audit::quietly(fn () => (new DemoSeeder($venue))->run()));
-        Audit::record('demo', Audit::IMPORTED, null, ['halle' => $venue, 'events' => DemoSeeder::eventCount()], label: "Demodaten „{$venue}“");
+        Audit::record('demo', Audit::IMPORTED, null, ['venue' => $venue, 'events' => DemoSeeder::eventCount()], label: "Demodaten „{$venue}“");
 
         $this->info(DemoSeeder::eventCount() . " Events mit Stammdaten für „{$venue}“ angelegt.");
         $this->line('Das erste eigene Konto: php artisan vc:system-admin <E-Mail>');

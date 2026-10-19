@@ -9,8 +9,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Standard-Saalpläne pflegt, wer die Stammdaten der Halle bearbeiten darf
- * (Verwaltung › Halle, in der Regel der Admin). Gelöscht wird nur ein Plan,
+ * Standard-Saalpläne pflegt, wer die Stammdaten der Venue bearbeiten darf
+ * (Verwaltung › Venue, in der Regel der Admin). Gelöscht wird nur ein Plan,
  * den kein Event nutzt – sonst deaktivieren. Alles nur mit dem Modul Saalplan.
  */
 class SeatingPlanPolicy extends AreaPolicy

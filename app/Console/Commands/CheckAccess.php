@@ -38,7 +38,8 @@ class CheckAccess extends Command
         'GET /admin/feldoptionen' => '/feldoptionen',
         'GET /admin/inventar' => '/inventar',
         'GET /admin/kalender' => '/kalender-ebenen',
-        'GET /admin/stammdaten' => '/halle',
+        // Seit 19.10.2026 „Venue“ statt „Halle“ (die alte Adresse /halle leitet weiter)
+        'GET /admin/stammdaten' => '/venue',
         'GET /protokolle/uebergabe' => '/uebergabeprotokolle',
         'GET /protokolle/bestellscheine' => '/bestellscheine',
         'GET /protokolle/schaeden' => '/schaeden',

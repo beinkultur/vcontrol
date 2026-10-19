@@ -38,7 +38,7 @@ use Livewire\Component;
 use UnitEnum;
 
 /**
- * Preislisten der Halle (Modul Preislisten & Costing) mit ihren Kostenpunkten
+ * Preislisten der Venue (Modul Preislisten & Costing) mit ihren Kostenpunkten
  * nach Abschnitten, wie die gedruckte Preisliste. Events wählen eine unter
  * Buchung › Daten, das Costing übernimmt daraus Kostenpunkte, Preise und
  * Vorgabe-Faktoren. Rechte: PriceListPolicy.

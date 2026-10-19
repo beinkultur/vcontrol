@@ -1,8 +1,8 @@
 {{--
-    Kopf der Mails (x-mail::header): das Logo der Halle (App\Support\VenueLogo),
+    Kopf der Mails (x-mail::header): das Logo der Venue (App\Support\VenueLogo),
     eingepasst in 200 × 60 px und eingebettet wie das VenueControl-Logo im Fuß
     (html/logo). Ohne Logo oder ohne $mail – etwa in einer Vorschau über
-    MailMessage::render() – steht $name da. $alt: Name der Halle, wenn $name
+    MailMessage::render() – steht $name da. $alt: Name der Venue, wenn $name
     etwas anderes ist (Passwort-Mail: „VenueControl“). Die Textfassung
     (text/venue) schreibt immer $name.
 --}}

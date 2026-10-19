@@ -44,7 +44,7 @@ class RoleForm
                             ->hiddenLabel()
                             ->state(fn (?Role $record): string => $record?->is_system_admin
                                 ? 'Betreiber von VenueControl: alles wie Admin, dazu Module (Verwaltung › System), Rollen & Rechte und die System-Admin-Konten. Die Rechte-Matrix gilt für diese Rolle nicht.'
-                                : 'Admin der Halle: Vollzugriff auf alle Bereiche und Kalender – die Rechte-Matrix gilt für diese Rolle nicht. Module, Rollen & Rechte und System-Admins bleiben dem System-Admin.')
+                                : 'Admin der Venue: Vollzugriff auf alle Bereiche und Kalender – die Rechte-Matrix gilt für diese Rolle nicht. Module, Rollen & Rechte und System-Admins bleiben dem System-Admin.')
                             ->visible(fn (?Role $record): bool => (bool) $record?->is_super || (bool) $record?->is_system_admin)
                             ->columnSpanFull(),
                     ]),

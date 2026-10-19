@@ -43,7 +43,7 @@ use Illuminate\Support\Str;
 use UnitEnum;
 
 /**
- * Einstellungen dieser Halle (in der PHP-Version „Stammdaten“). Jede Halle hat
+ * Einstellungen dieser Venue (in der PHP-Version „Stammdaten“). Jede Venue hat
  * eine eigene Installation – hier steht, welche es ist.
  *
  * @property-read Schema $form
@@ -52,9 +52,10 @@ class ManageVenue extends Page
 {
     use BoxedPage;
 
-    protected static ?string $slug = 'halle';
+    /** Bis 19.10.2026 „/halle“ – die alte Adresse leitet weiter (routes/web.php) */
+    protected static ?string $slug = 'venue';
 
-    protected static ?string $title = 'Halle';
+    protected static ?string $title = 'Venue';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
 
@@ -111,15 +112,15 @@ class ManageVenue extends Page
             ->statePath('data')
             ->disabled(fn (): bool => !$this->canEdit())
             ->components([
-                Section::make('Stammdaten der Halle')
+                Section::make('Stammdaten der Venue')
                     ->schema([
                         TextInput::make('venue_name')
-                            ->label('Name der Halle')
+                            ->label('Name der Venue')
                             ->helperText('Erscheint in der Kopfzeile und auf der Anmeldeseite.')
                             ->required()
                             ->maxLength(120),
                         SafeFileUpload::make('venue_logo')
-                            ->label('Logo der Halle')
+                            ->label('Logo der Venue')
                             ->helperText('Steht oben auf dem Costing (PDF). PNG oder JPG, am besten mit transparentem Hintergrund und mindestens 600 Pixel breit.')
                             ->allowedExtensions(['png', 'jpg', 'jpeg'])
                             ->maxSize(2048)
@@ -241,7 +242,7 @@ class ManageVenue extends Page
                             ]),
                     ]),
                 Section::make('E-Mail')
-                    ->description('Mails der Halle (Daysheets, Schadensmeldungen) gehen von einer festen Absenderadresse aus der Server-Konfiguration raus.')
+                    ->description('Mails der Venue (Daysheets, Schadensmeldungen) gehen von einer festen Absenderadresse aus der Server-Konfiguration raus.')
                     ->columns(2)
                     ->schema([
                         TextEntry::make('mail_sender')
@@ -267,7 +268,7 @@ class ManageVenue extends Page
                         TagsInput::make('daysheet_to')
                             ->label('Standard-Empfänger')
                             ->placeholder('E-Mail-Adresse und Enter')
-                            ->helperText('Steht unter „An“, z. B. das Büro der Halle.')
+                            ->helperText('Steht unter „An“, z. B. das Büro der Venue.')
                             ->splitKeys(['Tab', ',', ' ', ';'])
                             ->nestedRecursiveRules(['email']),
                         TextInput::make('daysheet_subject')

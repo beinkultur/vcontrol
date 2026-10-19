@@ -78,6 +78,23 @@ class DaysheetTest extends TestCase
         $this->assertSame('DS Konzert Nord', Daysheets::defaults($this->event)['subject']);
     }
 
+    public function test_platzhalter_venue_und_der_alte_halle(): void
+    {
+        $this->assertStringContainsString('{venue}', Daysheets::DEFAULT_TEXT);
+        $this->assertStringNotContainsString('{halle}', Daysheets::DEFAULT_TEXT);
+        // Bis 19.10.2026 hieß er {halle} – gespeicherte Texte gehen weiter
+        $this->assertSame('in der Inselpark Arena / Inselpark Arena', Daysheets::fill('in der {venue} / {halle}', $this->event));
+
+        // Die Migration stellt gespeicherte Vorgaben um, andere Einstellungen nicht
+        Setting::put(Setting::DAYSHEET_TEXT, 'Gruß, {halle}');
+        Setting::put(Setting::COSTING_SUBJECT, 'Costing {event} – {halle}');
+        Setting::put(Setting::VENUE_NAME, 'Arena {halle}');
+        (require database_path('migrations/2026_10_19_100000_rename_venue_placeholder_in_settings.php'))->up();
+        $this->assertSame('Gruß, {venue}', Setting::lookup(Setting::DAYSHEET_TEXT));
+        $this->assertSame('Costing {event} – {venue}', Setting::lookup(Setting::COSTING_SUBJECT));
+        $this->assertSame('Arena {halle}', Setting::lookup(Setting::VENUE_NAME));
+    }
+
     public function test_eventmanager_verschickt_mit_link_bis_zum_tag_nach_der_veranstaltung(): void
     {
         $this->travelTo(Carbon::parse('2026-10-06 10:00'));

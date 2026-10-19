@@ -4,7 +4,7 @@ namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
 
-/** Leistungen, die bei einem Event von der Halle oder vom Veranstalter gestellt werden. */
+/** Leistungen, die bei einem Event von der Venue oder vom Veranstalter gestellt werden. */
 enum ServiceCode: string implements HasLabel
 {
     case Vt = 'vt';

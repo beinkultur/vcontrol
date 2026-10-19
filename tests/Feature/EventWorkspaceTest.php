@@ -50,10 +50,10 @@ class EventWorkspaceTest extends TestCase
     {
         $this->actingAs($this->admin());
 
-        // Veranstaltung und Termin, darunter Halle & Publikum und Internes
+        // Veranstaltung und Termin, darunter Venue & Publikum und Internes
         $this->get(EventResource::getUrl('create'))
             ->assertOk()
-            ->assertSeeInOrder(['Veranstaltung', 'Titel', 'Kategorie 2', 'Termin', 'Beginn', 'Halle & Publikum', 'PAX erwartet', 'Bestuhlung', 'Intern', 'Projektleitung', 'Interne Buchungsnotizen'])
+            ->assertSeeInOrder(['Veranstaltung', 'Titel', 'Kategorie 2', 'Termin', 'Beginn', 'Venue & Publikum', 'PAX erwartet', 'Bestuhlung', 'Intern', 'Projektleitung', 'Interne Buchungsnotizen'])
             ->assertDontSee('Laufende Nummer')
             ->assertDontSee('Event abgeschlossen');
 
@@ -61,7 +61,7 @@ class EventWorkspaceTest extends TestCase
         $event = Event::create(['title' => 'Konzert', 'starts_at' => now()->addWeek()]);
         $this->get(EventResource::getUrl('edit', ['record' => $event]))
             ->assertOk()
-            ->assertSeeInOrder(['Halle & Publikum', 'Intern', 'VA-ID', 'Laufende Nummer', 'Event abgeschlossen']);
+            ->assertSeeInOrder(['Venue & Publikum', 'Intern', 'VA-ID', 'Laufende Nummer', 'Event abgeschlossen']);
     }
 
     public function test_veranstalterwechsel_bildet_va_id_neu_nummer_bleibt(): void

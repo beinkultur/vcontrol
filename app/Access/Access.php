@@ -8,7 +8,7 @@ use App\Models\User;
 
 /**
  * Was ein Benutzer darf. Mehrere Rollen addieren sich: je Bereich zählt die
- * höchste Stufe. Die Super-Rolle (Admin der Halle) darf alles – außer in
+ * höchste Stufe. Die Super-Rolle (Admin der Venue) darf alles – außer in
  * abgeschalteten Bereichen und nicht freigegebenen Modulen. Darüber steht der
  * System-Admin (Betreiber): Er hat alle Rechte eines Admins, gibt zusätzlich
  * Module frei, schaltet Bereiche, ändert Rollen & Rechte und verwaltet die
@@ -27,7 +27,7 @@ final class Access
     {
     }
 
-    /** Vollzugriff: Admin der Halle oder System-Admin. */
+    /** Vollzugriff: Admin der Venue oder System-Admin. */
     public function isSuper(): bool
     {
         return $this->user->roles->contains(fn (Role $role): bool => $role->is_super || $role->is_system_admin);

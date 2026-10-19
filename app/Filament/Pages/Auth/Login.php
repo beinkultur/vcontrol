@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
  */
 class Login extends BaseLogin
 {
-    public const NO_ACCESS = 'Für dieses Konto gibt es hier keinen Zugang – bitte bei der Verwaltung der Halle melden.';
+    public const NO_ACCESS = 'Für dieses Konto gibt es hier keinen Zugang – bitte bei der Verwaltung der Venue melden.';
 
     protected function isUserAllowedToAccessPanel(Authenticatable $user): bool
     {

@@ -12,7 +12,7 @@ use Illuminate\Mail\Mailables\Envelope;
 /**
  * Costing-Mail (App\Support\Costings): Betreff und Text aus dem Versand-Dialog,
  * das Costing als PDF im Anhang. Absender und Antwortadresse wie beim Daysheet
- * (DaysheetMail): die Halle, Antworten an ihre Antwortadresse, ohne sie an den,
+ * (DaysheetMail): die Venue, Antworten an ihre Antwortadresse, ohne sie an den,
  * der verschickt hat.
  */
 class CostingMail extends Mailable

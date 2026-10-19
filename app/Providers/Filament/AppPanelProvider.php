@@ -56,8 +56,8 @@ class AppPanelProvider extends PanelProvider
             // Jede Seite braucht eine vollständige Policy – fehlt eine Methode, bricht
             // Filament ab, statt die Aktion stillschweigend zu erlauben.
             ->strictAuthorization()
-            // Mit dem Hallennamen – jede Halle hat ihre eigene Installation. In der
-            // Kopfzeile (und auf der Anmeldeseite) stehen das Logo und die Halle,
+            // Mit dem Venue-Namen – jede Venue hat ihre eigene Installation. In der
+            // Kopfzeile (und auf der Anmeldeseite) stehen das Logo und die Venue,
             // „VenueControl“ bleibt im Fenstertitel. Auf dem Handy nur das Logo (vcontrol.css).
             ->brandName(fn (): string => collect([config('app.name'), Setting::lookup(Setting::VENUE_NAME)])
                 ->filter()

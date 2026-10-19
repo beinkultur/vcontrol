@@ -23,7 +23,7 @@ use Closure;
  * Betrieb, WLAN. Dateien und Notizen ohne die „für Externe verborgenen“. Mit
  * ihrem Modul (Verwaltung › System) gehören die Bühne mit dem Bühnenplan und
  * der Saalplan (eigener oder Standard) mit den genutzten Bereichen und der
- * Bestuhlung dazu, dazu das zuletzt verschickte Costing, wenn die Halle es für
+ * Bestuhlung dazu, dazu das zuletzt verschickte Costing, wenn die Venue es für
  * Externe bzw. das Daysheet freigibt (CostingSettings) – dann gibt der Aufrufer
  * die Adresse dafür mit.
  */

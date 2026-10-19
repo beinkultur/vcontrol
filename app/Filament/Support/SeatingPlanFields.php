@@ -18,9 +18,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Saalplan (PDF) in Formularen: Standard-Saalpläne der Halle (Stammdaten ›
+ * Saalplan (PDF) in Formularen: Standard-Saalpläne der Venue (Stammdaten ›
  * Saalpläne) und je Event entweder einer davon oder ein eigener (Buchung ›
- * Daten, Abschnitt „Halle & Publikum“, für die Buchhaltung auch über „Saalplan
+ * Daten, Abschnitt „Venue & Publikum“, für die Buchhaltung auch über „Saalplan
  * ändern“ in der Leseansicht).
  *
  * Wer einen Standard-Saalplan wählt, bekommt dessen Bereiche und Bestuhlung

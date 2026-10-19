@@ -5,7 +5,7 @@ namespace App\Access;
 use App\Models\Setting;
 
 /**
- * Was diese Halle hat: freigegebene Module (Module, Setting::MODULES) und
+ * Was diese Venue hat: freigegebene Module (Module, Setting::MODULES) und
  * abgeschaltete Bereiche (Area, Setting::DISABLED_AREAS). Beides schaltet der
  * System-Admin unter Verwaltung › System. Solange dort nichts gespeichert ist,
  * sind alle Module frei und für die Bereiche gilt die Server-Konfiguration
@@ -14,7 +14,7 @@ use App\Models\Setting;
  */
 final class Modules
 {
-    /** @var list<string>|null  null: in der Halle nichts gespeichert */
+    /** @var list<string>|null  null: in der Venue nichts gespeichert */
     private ?array $storedAreas;
 
     /** @var list<string>|null  null: nichts gespeichert, alle Module frei */

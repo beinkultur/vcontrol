@@ -37,7 +37,7 @@ final class AccessData
 
     /**
      * Schickt die Zugangsdaten an das Konto. Antworten gehen an die
-     * Antwortadresse der Halle, sonst an den Admin, der verschickt. False, wenn
+     * Antwortadresse der Venue, sonst an den Admin, der verschickt. False, wenn
      * die Mail nicht rausging – der Fehler landet im Log, das Konto bleibt.
      */
     public static function send(User $user, string $password, bool $isNew): bool

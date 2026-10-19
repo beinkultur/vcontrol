@@ -19,6 +19,6 @@ class ListRoles extends ListRecords
 
     public function getSubheading(): ?string
     {
-        return 'Nur für System-Admins. Admins der Halle sehen diese Seite nicht; sie weisen Rollen unter Benutzer zu.';
+        return 'Nur für System-Admins. Admins der Venue sehen diese Seite nicht; sie weisen Rollen unter Benutzer zu.';
     }
 }

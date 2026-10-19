@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-/** Raum bzw. Fläche der Halle, die Events belegen. */
+/** Raum bzw. Fläche der Venue, die Events belegen. */
 #[Fillable(['name', 'sort_order', 'is_active'])]
 class Room extends Model
 {

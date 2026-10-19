@@ -6,9 +6,9 @@ use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Logo der Halle (Verwaltung › Halle): PNG oder JPG, nicht öffentlich
+ * Logo der Venue (Verwaltung › Venue): PNG oder JPG, nicht öffentlich
  * gespeichert. Steht auf dem Costing (CostingPdf), im Kopf der Daysheet-Seite
- * und der Mails (vendor/mail/html/venue); die Halle-Seite zeigt es über die
+ * und der Mails (vendor/mail/html/venue); die Venue-Seite zeigt es über die
  * Route venue.logo. SVG ist als Upload gesperrt (App\Support\Uploads).
  */
 final class VenueLogo

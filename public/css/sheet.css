@@ -30,7 +30,7 @@
     --sheet-alert-fg: #fca5a5;
 }
 
-/* Titel links, das Logo der Halle (Daysheet) rechts, unten bündig wie auf dem Costing */
+/* Titel links, das Logo der Venue (Daysheet) rechts, unten bündig wie auf dem Costing */
 .vc-sheet__head {
     display: flex;
     align-items: flex-end;

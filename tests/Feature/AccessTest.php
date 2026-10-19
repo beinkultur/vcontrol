@@ -71,7 +71,7 @@ class AccessTest extends TestCase
 
         $this->actingAs($extern)->get('/')->assertRedirect('/extern/events');
         $this->get('/extern/events')->assertOk();
-        foreach (['/events', '/events/create', '/buchhaltung', '/codes', '/audit', '/veranstalter', '/benutzer', '/halle', '/schaeden', '/bestellscheine'] as $path) {
+        foreach (['/events', '/events/create', '/buchhaltung', '/codes', '/audit', '/veranstalter', '/benutzer', '/venue', '/schaeden', '/bestellscheine'] as $path) {
             $this->get($path)->assertForbidden();
         }
 
@@ -110,8 +110,17 @@ class AccessTest extends TestCase
             'Inventar' => ['/inventar', 'admin_inventar'],
             'Inventar-Kategorien' => ['/inventar-kategorien', 'admin_inventar'],
             'Kalender-Ebenen' => ['/kalender-ebenen', 'admin_kalender'],
-            'Halle' => ['/halle', 'admin_stammdaten'],
+            'Venue' => ['/venue', 'admin_stammdaten'],
         ];
+    }
+
+    public function test_alte_adressen_der_seite_halle_leiten_weiter(): void
+    {
+        // Bis 19.10.2026 hieß Verwaltung › Venue „Halle“
+        $this->actingAs($this->admin());
+        $this->get('/halle')->assertRedirect('/venue')->assertStatus(301);
+        $this->get('/halle/logo')->assertRedirect('/venue/logo');
+        $this->get('/venue')->assertOk()->assertSee('Stammdaten der Venue')->assertSee('Name der Venue')->assertDontSee('Halle');
     }
 
     #[DataProvider('pages')]

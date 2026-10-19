@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Bühnen-Stammdaten der Halle: einmal je Anfrage aus der Datenbank
+        // Bühnen-Stammdaten der Venue: einmal je Anfrage aus der Datenbank
         $this->app->scoped(StageSettings::class, fn (): StageSettings => StageSettings::load());
         // Freigegebene Module und abgeschaltete Bereiche ebenso – sie fallen bei jeder Rechteprüfung an
         $this->app->scoped(Modules::class);

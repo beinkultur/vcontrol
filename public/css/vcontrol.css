@@ -1133,7 +1133,7 @@ a.vc-card:hover {
 }
 
 /* Kopfzeile: 50 statt Filaments 64 px hoch (Vorbild Lexware: 40 px), Logo und
-   Hallenname (AppPanelProvider::brandLogo), alles in einer Zeile. Die Variable
+   Venue-Name (AppPanelProvider::brandLogo), alles in einer Zeile. Die Variable
    nutzt Filament auch für Seitenleiste und Abstände; ohne den Außenabstand der
    Menüzeile (lg:my-2) passen Logo, Menüpunkte, Suche und Avatar in ihrer
    Standardgröße hinein. Bricht die Menüzeile um, wird die Kopfzeile zweizeilig
@@ -1166,7 +1166,7 @@ a.vc-card:hover {
     width: auto;
 }
 
-/* Lange Hallennamen nicht über die Menüzeile hinaus */
+/* Lange Venue-Namen nicht über die Menüzeile hinaus */
 .fi-topbar .vc-brand__name {
     max-width: 14rem;
     overflow: hidden;
@@ -1205,7 +1205,7 @@ a.vc-card:hover {
     }
 }
 
-/* 1024–1199 px: nur das Logo, ohne Hallennamen */
+/* 1024–1199 px: nur das Logo, ohne Venue-Namen */
 @media (min-width: 64rem) and (max-width: 74.999rem) {
     .fi-topbar-start .vc-brand__name {
         display: none;
@@ -1853,7 +1853,7 @@ button.vc-cal__row:hover {
 
 /* Unter 1024 px blendet Filament das Logo aus der Kopfzeile aus (das Menü steckt
    dann im Ausklapp-Menü links). Es bleibt neben dem Menüknopf stehen, auf dem
-   Handy ohne Hallennamen, damit die Suche Platz behält. */
+   Handy ohne Venue-Namen, damit die Suche Platz behält. */
 @media (max-width: 63.999rem) {
     .fi-topbar-start {
         display: flex;

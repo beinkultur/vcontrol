@@ -6,7 +6,7 @@ use App\Support\VenueLogo;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/** Logo der Halle für angemeldete Benutzer, etwa als Vorschau auf der Seite Halle. Nur PNG und JPG, am Inhalt erkannt. */
+/** Logo der Venue für angemeldete Benutzer, etwa als Vorschau auf der Seite Venue. Nur PNG und JPG, am Inhalt erkannt. */
 class VenueLogoController extends Controller
 {
     public function __invoke(): StreamedResponse

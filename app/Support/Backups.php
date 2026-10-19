@@ -323,7 +323,7 @@ final class Backups
         return $dir;
     }
 
-    /** z. B. ipa.vcontrol.eu-datenbank-2026-10-12-033000.sql.gz – eindeutig je Halle und Lauf */
+    /** z. B. ipa.vcontrol.eu-datenbank-2026-10-12-033000.sql.gz – eindeutig je Venue und Lauf */
     private static function fileName(string $kind, string $extension): string
     {
         return self::host() . '-' . $kind . '-' . now()->format('Y-m-d-His') . '.' . $extension;

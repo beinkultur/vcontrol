@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * Rolle mit Rechte-Matrix. permissions: Bereich => none|read|edit,
  * calendar_permissions: Kalender-Schlüssel => none|read|edit.
  *
- * Zwei Stufen Vollzugriff: is_super ist der Admin der Halle (alle Bereiche und
+ * Zwei Stufen Vollzugriff: is_super ist der Admin der Venue (alle Bereiche und
  * Kalender), is_system_admin der Betreiber von VenueControl – dazu Module,
  * Rollen & Rechte und die System-Admin-Konten. is_system_admin ist bewusst
  * nicht fillable; die Rolle legt nur systemAdmin() an.

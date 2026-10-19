@@ -31,7 +31,7 @@
     $areaLabels = ['zeiten' => 'Zeiten', 'checkliste' => 'Checkliste', 'buehne' => 'Bühne', 'personal' => 'Personal', 'gewerke' => 'Gewerke', 'gaeste' => 'Gästeliste', 'dateien' => 'Dateien', 'sonstiges' => 'Sonstiges'];
     $user = auth()->user();
     $seesFinance = $user instanceof \App\Models\User && $user->access()->can(\App\Access\Area::Buchhaltung);
-    // Preisliste und Costing: nur mit ihrem Modul, das Costing nur für die Rollen unter Verwaltung › Halle (CostingSettings)
+    // Preisliste und Costing: nur mit ihrem Modul, das Costing nur für die Rollen unter Verwaltung › Venue (CostingSettings)
     $priceLists = \App\Access\Module::PriceLists->isEnabled();
     $costing = $priceLists && \App\Filament\Resources\Costings\CostingResource::canAccess() ? $event->costings()->first() : null;
     $time = fn ($value): ?string => filled($value) ? substr((string) $value, 0, 5) : null;

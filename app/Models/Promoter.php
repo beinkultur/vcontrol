@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/** Veranstalter – Kunde der Halle. */
+/** Veranstalter – Kunde der Venue. */
 #[Fillable(['short_name', 'name', 'customer_no', 'email', 'address1', 'address2', 'zip', 'city', 'logo_path', 'is_archived'])]
 class Promoter extends Model
 {

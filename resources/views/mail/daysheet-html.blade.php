@@ -3,7 +3,7 @@
     Mails (etwa „Passwort vergessen“). Der Text aus dem Versand-Dialog steht als
     eigenes HTML in <p>, damit Markdown ihn nicht umdeutet (ein „*“ oder „#“ bleibt,
     was es ist); e() maskiert ihn. Nicht einrücken: Markdown macht sonst Code daraus.
-    Im Kopf das Logo der Halle (vendor/mail/html/venue, sonst ihr Name), im Fuß
+    Im Kopf das Logo der Venue (vendor/mail/html/venue, sonst ihr Name), im Fuß
     unter „… erstellt mit VenueControl“ das VenueControl-Logo
     (vendor/mail/html/logo, wie in der Passwort-Mail).
 --}}

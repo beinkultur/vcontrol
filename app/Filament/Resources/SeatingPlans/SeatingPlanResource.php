@@ -23,7 +23,7 @@ use Filament\Tables\Table;
 use UnitEnum;
 
 /**
- * Standard-Saalpläne der Halle: PDF, Name, die Bereiche, die der Plan nutzt,
+ * Standard-Saalpläne der Venue: PDF, Name, die Bereiche, die der Plan nutzt,
  * und seine Bestuhlung. Events wählen einen davon unter Buchung › Daten und
  * übernehmen dabei Bereiche und Bestuhlung (App\Filament\Support\SeatingPlanFields).
  * Rechte: SeatingPlanPolicy.

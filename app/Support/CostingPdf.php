@@ -9,7 +9,7 @@ use Dompdf\Options;
 
 /**
  * Costing als PDF (A4 hoch) mit Dompdf, aus der Vorlage costing-pdf: das Logo
- * der Halle mittig in der Kopfzeile jeder Seite (VenueLogo, sonst ihr Name über
+ * der Venue mittig in der Kopfzeile jeder Seite (VenueLogo, sonst ihr Name über
  * dem Titel), Event und Preisliste, die Posten nach Abschnitten, Summen netto,
  * Mehrwertsteuer und brutto, darunter Anmerkung und Hinweise der Preisliste.
  * Ohne Zugriff auf fremde Adressen: Bilder kommen als data-URI, Skripte aus.

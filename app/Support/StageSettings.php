@@ -5,7 +5,7 @@ namespace App\Support;
 use App\Models\Setting;
 
 /**
- * Bühnen-Stammdaten dieser Halle, einstellbar unter Verwaltung › Halle.
+ * Bühnen-Stammdaten dieser Venue, einstellbar unter Verwaltung › Venue.
  * Voreingestellt sind die Werte der Inselpark Arena (in der PHP-Version fest im
  * Code). Fest bleibt nur der Rahmen des Bühnenplans, siehe StagePlan::ROOM_WIDTH.
  *

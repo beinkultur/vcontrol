@@ -21,7 +21,7 @@ use UnitEnum;
 
 /**
  * Rollen & Rechte: sehen und ändern nur System-Admins (RolePolicy) – auch die
- * Admins der Halle nicht. Sie weisen Rollen unter Benutzer zu.
+ * Admins der Venue nicht. Sie weisen Rollen unter Benutzer zu.
  */
 class RoleResource extends Resource
 {

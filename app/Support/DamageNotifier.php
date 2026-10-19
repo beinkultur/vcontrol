@@ -14,7 +14,7 @@ use Throwable;
 
 /**
  * Wie DamageNotifier der PHP-Version: neue Schäden gehen per Mail an die
- * Empfänger aus Verwaltung › Halle (Setting::DAMAGE_NOTIFY), sonst an alle
+ * Empfänger aus Verwaltung › Venue (Setting::DAMAGE_NOTIFY), sonst an alle
  * aktiven Benutzer mit der Rolle „hausmeister“. Ein Mailfehler hält das
  * Speichern nicht auf.
  */

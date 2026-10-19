@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Costing als PDF – nur mit dem Modul Preislisten & Costing. Jede Fassung für
- * alle, die Costings sehen (CostingPolicy, Rollen unter Verwaltung › Halle); die
+ * alle, die Costings sehen (CostingPolicy, Rollen unter Verwaltung › Venue); die
  * zuletzt verschickte eines Events außerdem für beteiligte Externe, wenn die
- * Halle es für die Ansicht für Externe freigibt. Den Daysheet-Link prüft der
+ * Venue es für die Ansicht für Externe freigibt. Den Daysheet-Link prüft der
  * DaysheetController selbst.
  */
 class CostingController extends Controller
