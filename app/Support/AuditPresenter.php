@@ -247,7 +247,7 @@ final class AuditPresenter
         'promoter_rep' => 'Prom.-Rep.', 'promoter_rep_signature' => 'Unterschrift Prom.-Rep.', 'checks' => 'Prüfpunkte',
         // Codes, Benutzer, Rollen, Stammdaten
         'code' => 'Code', 'valid_from' => 'Gültig ab', 'valid_on' => 'Gültig am', 'email_verified_at' => 'E-Mail bestätigt',
-        'password' => 'Passwort', 'must_change_password' => 'Muss Passwort ändern', 'credentials_sent_to' => 'Zugangsdaten verschickt an', 'account_type' => 'Kontotyp', 'calendar_permissions' => 'Kalender-Rechte', 'calendar_view' => 'Kalender-Ansicht', 'calendar_token' => 'Kalender-Abo (Schlüssel)', 'calendar_token_hash' => 'Kalender-Abo (Prüfwert)', 'slug' => 'Kürzel',
+        'password' => 'Passwort', 'must_change_password' => 'Muss Passwort ändern', 'credentials_sent_to' => 'Zugangsdaten verschickt an', 'guest_list_sent_to' => 'Gästeliste verschickt an', 'account_type' => 'Kontotyp', 'calendar_permissions' => 'Kalender-Rechte', 'calendar_view' => 'Kalender-Ansicht', 'calendar_token' => 'Kalender-Abo (Schlüssel)', 'calendar_token_hash' => 'Kalender-Abo (Prüfwert)', 'slug' => 'Kürzel',
         'is_super' => 'Admin', 'is_system_admin' => 'System-Admin', 'permissions' => 'Rechte', 'customer_no' => 'Kundennummer', 'logo_path' => 'Logo', 'initials' => 'Kürzel',
         'positions' => 'Positionen', 'capacity' => 'Kapazität', 'categories' => 'Leistungsbereiche', 'field_key' => 'Feld', 'value' => 'Wert',
         'parent_value' => 'Übergeordnet', 'price' => 'Preis', 'key' => 'Schlüssel', 'color' => 'Farbe', 'freitermin_status' => 'Freitermin-Status',

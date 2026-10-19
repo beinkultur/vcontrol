@@ -92,7 +92,12 @@ Bedienbar:
   „Briefing vollständig“ (Spalte bleibt mit Altwerten); Merch-Fee und
   „Merch-Fee eingesammelt“ stehen unter Durchführung › Betrieb › Check.
 - Gästeliste mit Druckansicht für den Einlass (A4, nach Name sortiert, Summe,
-  Spalte zum Abhaken).
+  Spalte zum Abhaken). Seit 19.10.2026 auch als PDF, das der Server immer in
+  DIN A4 hoch setzt (`/events/{id}/gaesteliste.pdf`, `GuestLists::pdf`, Dompdf,
+  Kopfzeile auf jeder Seite, Seitenzahlen), und per Mail („Per Mail senden“: An,
+  BCC mit dem Absender, Betreff und Text mit {event}, {datum}, {venue},
+  {gaeste}, {freikarten}, PDF im Anhang, `GuestListMail`). Verschicken darf, wer
+  das Event bearbeitet; im Änderungsprotokoll steht „Gästeliste verschickt an …“.
 - **Durchführung › Betrieb** (01.10.2026): Räume einmal je Raum mit Backstage /
   neutral / Büro; Bus-Strom als Anzahl der Anschlüsse (0–5, einzeln
   abgerechnet, Spalte in der Buchhaltung); Zählerstände Anfang und Ende je

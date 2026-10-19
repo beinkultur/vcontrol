@@ -26,6 +26,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 $panel = Filament::getPanel('app');
 Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])->group(function (): void {
     Route::get('/events/{event}/gaesteliste', GuestListPrintController::class)->name('events.guest-list-print');
+    Route::get('/events/{event}/gaesteliste.pdf', [GuestListPrintController::class, 'pdf'])->name('events.guest-list-pdf');
     Route::get('/events/{event}/buehnenplan/druck', [StagePlanController::class, 'print'])->name('events.stage-plan-print');
     Route::get('/events/{event}/buehnenplan.svg', [StagePlanController::class, 'svg'])->name('events.stage-plan-svg');
     Route::get('/dateien/{file}/download', EventFileController::class)->name('event-files.download');

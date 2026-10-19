@@ -1,5 +1,6 @@
 {{--
-    HTML-Fassung der Costing-Mail (App\Mail\CostingMail), aufgebaut wie die
+    HTML-Fassung der Costing-Mail (App\Mail\CostingMail, ebenso der Gästeliste,
+    App\Mail\GuestListMail), aufgebaut wie die
     Daysheet-Mail: im Kopf das Logo der Venue (sonst ihr Name), Text aus dem
     Versand-Dialog als eigenes HTML in <p> (e() maskiert, Markdown deutet nichts
     um), das PDF hängt an. Nicht einrücken: Markdown macht sonst Code daraus.

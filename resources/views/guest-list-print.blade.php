@@ -10,7 +10,8 @@
         .toolbar { display: flex; gap: .75rem; justify-content: flex-end; padding: 1rem; }
         .toolbar button, .toolbar a { font: inherit; padding: .5rem 1rem; border-radius: .5rem; border: 1px solid #d1d5db; background: #fff; color: #111; text-decoration: none; cursor: pointer; }
         .toolbar button { background: #2563eb; border-color: #2563eb; color: #fff; }
-        .sheet { background: #fff; max-width: 190mm; margin: 0 auto 2rem; padding: 12mm; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+        /* Am Bildschirm schon so breit wie DIN A4 (210 mm, 10 mm Rand wie im Druck) */
+        .sheet { background: #fff; width: 210mm; max-width: 100%; box-sizing: border-box; min-height: 297mm; margin: 0 auto 2rem; padding: 10mm; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
         h1 { font-size: 1.4rem; margin: 0; }
         .meta { color: #4b5563; margin: .25rem 0 1rem; }
         table { width: 100%; border-collapse: collapse; }
@@ -24,7 +25,7 @@
             @page { size: A4 portrait; margin: 10mm; }
             body { background: #fff; }
             .toolbar { display: none; }
-            .sheet { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+            .sheet { box-shadow: none; margin: 0; padding: 0; width: auto; min-height: 0; max-width: none; }
             tr { break-inside: avoid; }
         }
     </style>
@@ -32,7 +33,8 @@
 <body>
     <div class="toolbar">
         <a href="{{ \App\Filament\Resources\Events\EventResource::getUrl('view', ['record' => $event]) }}">← Zurück</a>
-        <button type="button" onclick="window.print()">Drucken / PDF speichern</button>
+        <a href="{{ route('events.guest-list-pdf', $event) }}" target="_blank" rel="noopener">PDF (A4)</a>
+        <button type="button" onclick="window.print()">Drucken</button>
     </div>
     <article class="sheet">
         <h1>{{ $event->title }}</h1>
@@ -77,7 +79,7 @@
         @endif
 
         <footer>
-            <span>{{ $venueName ? $venueName . ' · ' : '' }}VenueControl</span>
+            <span>{{ $venueName ? $venueName . ' · ' : '' }}{{ config('app.name') }}</span>
             <span>Erstellt: {{ now()->format('d.m.Y H:i') }}</span>
         </footer>
     </article>
