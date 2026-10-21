@@ -26,6 +26,14 @@ final class AccountingChecks
 
     public const INCOMING_MISSING = 'eingang';
 
+    /**
+     * Rechnungen, die schon mit „… gestellt“ als bezahlt gelten – klein
+     * geschrieben, ohne „gestellt“. In VenueControl keine: Für die Endabrechnung
+     * gibt es „Endabrechnung gezahlt“ (21.10.2026). In IPA-Control steht hier
+     * 'endabrechnung' – dort wird der Eingang der Endabrechnung nicht verfolgt.
+     */
+    public const PAID_WHEN_SENT = [];
+
     /** Für den Filter „Prüfen“ der Buchhaltungsliste */
     public const LABELS = [
         self::CONTRACT_OPEN => 'Vertrag versendet, nicht zurück',
@@ -49,7 +57,7 @@ final class AccountingChecks
             $key = mb_strtolower(trim($m[1]));
             $invoices[$key] ??= ['sent' => false, 'paid' => false];
             $invoices[$key]['sent'] = true;
-            if (mb_strtolower($m[2]) !== 'gestellt') {
+            if (mb_strtolower($m[2]) !== 'gestellt' || in_array($key, self::PAID_WHEN_SENT, true)) {
                 $invoices[$key]['paid'] = true;
             }
         }

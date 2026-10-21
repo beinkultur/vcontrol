@@ -103,6 +103,9 @@ class EventForm
 
     public const CHECK_OPTIONS = ['yes' => 'ja', 'no' => 'nein', 'na' => 'entfällt'];
 
+    /** „Merch-Fee eingesammelt“: dazu „per Überweisung“ (21.10.2026) */
+    public const MERCH_FEE_OPTIONS = [...self::CHECK_OPTIONS, 'transfer' => 'per Überweisung'];
+
     /** Umbenannte Bereiche: alte Kennung in der Adresse → neue (HasEventHeading::redirectRenamedSection) */
     public const RENAMED_SECTIONS = ['personal' => 'kontakte'];
 
@@ -651,7 +654,7 @@ class EventForm
                     self::yesNo('stage', 'sold_out_award', 'Sold-Out-Award'),
                     // Bis 12.10.2026 unter Planung › Checkliste
                     self::relationText('checklist', 'merch_fee', 'Merch-Fee', 120),
-                    self::yesNo('checklist', 'merch_fee_check', 'Merch-Fee eingesammelt', textValues: true, notApplicable: true),
+                    self::yesNo('checklist', 'merch_fee_check', 'Merch-Fee eingesammelt', textValues: true, notApplicable: true, extra: ['transfer']),
                 ]),
         ];
     }
@@ -677,16 +680,17 @@ class EventForm
      * nur ja/nein (Wunsch vom 01.10.2026) – mit $notApplicable auch „entfällt“
      * (Merch-Fee eingesammelt: ohne Merch gibt es nichts einzusammeln).
      */
-    private static function yesNo(string $relation, string $column, string $label, bool $textValues = false, bool $notApplicable = false): ToggleButtons
+    /** @param  list<string>  $extra  weitere Werte aus MERCH_FEE_OPTIONS, etwa „per Überweisung“ */
+    private static function yesNo(string $relation, string $column, string $label, bool $textValues = false, bool $notApplicable = false, array $extra = []): ToggleButtons
     {
         $field = ToggleButtons::make($column)
             ->label($label)
             ->grouped()
             ->dehydrated(false);
-        $allowed = $notApplicable ? ['yes', 'no', 'na'] : ['yes', 'no'];
+        $allowed = [...($notApplicable ? ['yes', 'no', 'na'] : ['yes', 'no']), ...$extra];
         $field = $textValues
-            ? $field->options(array_intersect_key(self::CHECK_OPTIONS, array_flip($allowed)))
-                ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray'])
+            ? $field->options(array_intersect_key(self::MERCH_FEE_OPTIONS, array_flip($allowed)))
+                ->colors(['yes' => 'success', 'no' => 'danger', 'na' => 'gray', 'transfer' => 'info'])
                 ->icons(['yes' => Heroicon::Check, 'no' => Heroicon::XMark])
             : $field->boolean('ja', 'nein');
 

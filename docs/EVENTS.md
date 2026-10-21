@@ -115,7 +115,8 @@ Bedienbar:
   der PHP-Version: Sonderreinigung, Haus-Delay, Miete Elektro-Ameise, Haus-Rig
   ab 7 Uhr, seit 21.10.2026 Personenlift (ja/nein, `event_operations.person_lift`),
   Sold-Out-Award und (seit 12.10.2026, vorher Planung › Checkliste) Merch-Fee und
-  „Merch-Fee eingesammelt“ (ja/nein/entfällt). PAX abgerechnet steht seit
+  „Merch-Fee eingesammelt“ (ja/nein/entfällt, seit 21.10.2026 auch „per
+  Überweisung“, Wert `transfer`). PAX abgerechnet steht seit
   21.10.2026 unter Buchung › Buchhaltung. Die Zählerstände gibt es nur hier,
   nicht in der PHP-Version.
 - **Durchführung vollständig** (`App\Support\ExecutionCheck`, 21.10.2026): jeder
@@ -359,8 +360,11 @@ Bedienbar:
     erwartet) und „Bezahlt“: grüner Haken, wenn jede verschickte Rechnung auch
     bezahlt ist. Rechnungen sind die Paare im FIBU-Status – „… gestellt“ heißt
     verschickt, „… gezahlt“ bezahlt (nur „gezahlt“ angehakt zählt als
-    verschickt und bezahlt); für „Endabrechnung gestellt“ braucht es dazu die
-    Feldoption „Endabrechnung gezahlt“. Filter „Liste“ (Offen, Abgeschlossen,
+    verschickt und bezahlt); für „Endabrechnung gestellt“ gibt es dazu seit
+    21.10.2026 die Feldoption „Endabrechnung gezahlt“ (auf ipa und Demo
+    angelegt). Rechnungen, die schon mit „gestellt“ als bezahlt gelten, stehen
+    in `AccountingChecks::PAID_WHEN_SENT` – in VenueControl keine, in
+    IPA-Control die Endabrechnung (dort wird ihr Eingang nicht verfolgt). Filter „Liste“ (Offen, Abgeschlossen,
     Endabrechnung, Archiv, Alle – bis dahin Reiter), „Prüfen“ (Vertrag
     versendet, nicht zurück · Rechnung versendet, nicht gezahlt ·
     Finanz-Warnung · Event abgeschlossen, Eingangsrechnungen fehlen;

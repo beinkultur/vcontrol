@@ -368,8 +368,8 @@ final class AuditPresenter
             return $label;
         }
         $text = (string) $value;
-        if (in_array($text, ['yes', 'no', 'na'], true)) {
-            return ['yes' => 'ja', 'no' => 'nein', 'na' => 'entfällt'][$text];
+        if (in_array($text, ['yes', 'no', 'na', 'transfer'], true)) {
+            return ['yes' => 'ja', 'no' => 'nein', 'na' => 'entfällt', 'transfer' => 'per Überweisung'][$text];
         }
         if (preg_match('/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$/', $text) === 1) {
             $date = Carbon::parse($text);

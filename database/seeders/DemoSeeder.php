@@ -154,7 +154,7 @@ final class DemoSeeder extends Seeder
             OptionField::VaType1->value => ['Konzert', 'Comedy', 'Show', 'Sport', 'Messe', 'Versammlung', 'Gala'],
             OptionField::EmployeePosition->value => ['VL', 'VfV'],
             OptionField::ContractStatus->value => ['Vertrag erstellt', 'Vertrag versendet', 'Vertrag zurück', 'Rahmenvertrag'],
-            OptionField::AccountingStatus->value => ['1. Rate / Grundmiete gestellt', '1. Rate / Grundmiete gezahlt', '2. Rate gestellt', '2. Rate gezahlt', Event::ACCOUNTING_FINAL],
+            OptionField::AccountingStatus->value => ['1. Rate / Grundmiete gestellt', '1. Rate / Grundmiete gezahlt', '2. Rate gestellt', '2. Rate gezahlt', Event::ACCOUNTING_FINAL, 'Endabrechnung gezahlt'],
         ];
         foreach ($values as $field => $list) {
             foreach ($list as $index => $value) {
@@ -555,6 +555,8 @@ final class DemoSeeder extends Seeder
             return;
         }
         $accounting = match (true) {
+            // Abgeschlossene Abrechnung: auch die Endabrechnung bezahlt (grüner Haken in der Buchhaltungsliste)
+            $past && $offset < -30 => ['1. Rate / Grundmiete gestellt', '1. Rate / Grundmiete gezahlt', '2. Rate gestellt', '2. Rate gezahlt', Event::ACCOUNTING_FINAL, 'Endabrechnung gezahlt'],
             $past => ['1. Rate / Grundmiete gestellt', '1. Rate / Grundmiete gezahlt', '2. Rate gestellt', '2. Rate gezahlt', Event::ACCOUNTING_FINAL],
             $fill === 3 && $mark !== 'alert' => ['1. Rate / Grundmiete gestellt', '1. Rate / Grundmiete gezahlt', '2. Rate gestellt', '2. Rate gezahlt'],
             $fill >= 2 => ['1. Rate / Grundmiete gestellt', '1. Rate / Grundmiete gezahlt'],

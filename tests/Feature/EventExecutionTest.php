@@ -103,6 +103,16 @@ class EventExecutionTest extends TestCase
             ->call('save');
         $this->assertSame('yes', $this->event->checklist()->value('special_cleaning'));
         $this->assertSame(1, $this->event->checklist()->count());
+
+        // Merch-Fee eingesammelt: auch „per Überweisung“ (seit 21.10.2026), zählt als Wert
+        $this->form()
+            ->assertSee('per Überweisung')
+            ->fillForm(['merch_fee_check' => 'transfer'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertSame('transfer', $this->event->checklist()->value('merch_fee_check'));
+        $this->assertNotContains('Merch-Fee eingesammelt', \App\Support\ExecutionCheck::missing($this->event->fresh()));
+        $this->form()->assertSchemaStateSet(['merch_fee_check' => 'transfer']);
     }
 
     public function test_neues_event_ohne_zusatzzeilen(): void

@@ -176,6 +176,7 @@ class AccountingDashboard extends EditRecord
         $yesNo = fn (mixed $value): string => match (true) {
             $value === null || $value === '' => '–',
             $value === 'na' => 'entfällt',
+            $value === 'transfer' => 'per Überweisung',
             $value === true || $value === 1 || $value === '1' || $value === 'yes' => 'ja',
             default => 'nein',
         };

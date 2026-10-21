@@ -36,7 +36,7 @@ final class ExecutionCheck
     private const TEXT_COLUMNS = ['special_cleaning', 'merch_fee', 'merch_fee_check'];
 
     /** Auswahl als Text: nur diese Werte zählen (ein altes „entfällt“ der Sonderreinigung zeigt das Formular als leer) */
-    private const ALLOWED = ['special_cleaning' => ['yes', 'no'], 'merch_fee_check' => ['yes', 'no', 'na']];
+    private const ALLOWED = ['special_cleaning' => ['yes', 'no'], 'merch_fee_check' => ['yes', 'no', 'na', 'transfer']];
 
     public const CONCERT = 'konzert';
 
