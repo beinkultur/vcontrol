@@ -172,7 +172,7 @@ class AccountingListTest extends TestCase
                 "Abweichung bei {$event->title}",
             );
         }
-        $this->assertSame('0/1', IncomingInvoices::summary($events[2]->fresh()), 'VfVs 2 zählt mit');
+        $this->assertSame('0/1', IncomingInvoices::summary($events[2]->fresh()), 'VfV 2 zählt mit');
     }
 
     public function test_nur_mit_recht_auf_die_buchhaltung(): void
@@ -209,7 +209,9 @@ class AccountingListTest extends TestCase
             ->assertSee('2 Anschlüsse')
             ->assertSee('20 %')
             ->assertSee('Personenlift')
-            ->assertSee('VfVs 2')
+            ->assertSee('VfV 1')
+            ->assertSee('VfV 2')
+            ->assertDontSee('VfVs')
             ->assertSee('Event öffnen')
             // Nicht im Seitenzustand: Felder, die das Dashboard nicht braucht (WLAN-Passwort nur für Event-Bearbeiter)
             ->assertDontSee('geheimes-wlan');

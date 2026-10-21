@@ -37,7 +37,7 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `event_service_groups` | `vc_event_trade_active`, `vc_event_trade_groups` | welche Leistungsgruppen aktiv sind |
 | `event_assignments` | `vc_event_role_assignments` | Rollen am Event (VL, VfV …) an Benutzer, Kontakt oder Gewerk, mit Zeiten (Kontakte statt Mitarbeiter seit 14.10.2026) |
 | `contacts` | `vc_employees` (bis 14.10.2026 `employees`) | Kontakte ohne Anmeldung: Person oder Funktion („Hallenmeister“), Kürzel, Telefon, E-Mail, Positionen, Notiz, archiviert |
-| `event_incoming_invoices` | `vc_event_incoming_invoices` | die erwarteten Eingangsrechnungen (sechs wie in PHP, seit 21.10.2026 dazu „VfVs 2“, Schlüssel `vfv_2`) |
+| `event_incoming_invoices` | `vc_event_incoming_invoices` | die erwarteten Eingangsrechnungen (sechs wie in PHP, seit 21.10.2026 dazu „VfV 2“, Schlüssel `vfv_2`; „VfVs“ heißt seitdem „VfV 1“, Schlüssel `vfv`) |
 | `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Venue: PDF, Name, Kapazität (seit 19.10.2026), genutzte Bereiche, Bestuhlung, aktiv |
 | `meters` | neu (15.10.2026) | Zähler der Venue: Name, Einheit, Zählernummer, Standort, je Event ablesen, aktiv, Reihenfolge |
 | `meter_readings` | neu (15.10.2026), Strom aus `event_operations` | Stände: Zähler, Event mit Anfang/Ende oder frei, Zeitpunkt, Stand (3 Nachkommastellen), Zählerwechsel, Notiz |

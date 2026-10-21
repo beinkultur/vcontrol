@@ -17,8 +17,9 @@ class EventIncomingInvoice extends Model
     public const SLOTS = [
         'gracework_umbau' => 'GraceWork (Umbau)',
         'zlaja_reinigung' => 'Zlaja (Reinigung)',
-        'vfv' => 'VfVs',
-        'vfv_2' => 'VfVs 2',
+        // Bis 21.10.2026 „VfVs“; der Schlüssel bleibt
+        'vfv' => 'VfV 1',
+        'vfv_2' => 'VfV 2',
         'cobra_hausrigg' => 'Cobra – Hausrigg',
         'cobra_hausdelay' => 'Cobra – Haus-Delay',
         'mobiliar_stuehle' => 'Mobiliar/Stühle',
