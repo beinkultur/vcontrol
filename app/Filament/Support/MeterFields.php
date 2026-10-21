@@ -64,10 +64,22 @@ final class MeterFields
                 if (!is_numeric($value)) {
                     return;
                 }
+                // Unverändert gespeicherte Stände (etwa Altdaten aus AppSheet, die nicht
+                // aufsteigen) prüft das Formular nicht erneut – sonst scheiterte jedes
+                // Speichern des Events, auch wenn niemand den Zähler anfasst (21.10.2026)
+                $unchanged = function (string $position, mixed $state) use ($record, $meter): bool {
+                    $stored = MeterReadings::eventValue($record, $meter, $position);
+
+                    return $stored !== null && is_numeric($state) && abs((float) $stored - (float) $state) < 0.0005;
+                };
                 $other = $get(self::name($meter, $start ? MeterReading::END : MeterReading::START));
-                if (!$start && is_numeric($other) && (float) $value < (float) $other) {
+                if (!$start && is_numeric($other) && (float) $value < (float) $other
+                    && !($unchanged(MeterReading::END, $value) && $unchanged(MeterReading::START, $other))) {
                     $fail('Der Stand am Ende kann nicht kleiner sein als am Anfang.');
 
+                    return;
+                }
+                if ($unchanged($position, $value)) {
                     return;
                 }
                 // Gegen die übrigen Stände des Zählers, zu den Tagen, die gerade im Formular stehen

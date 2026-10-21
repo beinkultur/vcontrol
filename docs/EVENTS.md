@@ -92,7 +92,10 @@ Bedienbar:
   (`?phase=planung&bereich=buehne`). Leserollen sehen denselben Workspace nur
   lesend – ohne Buchhaltung (fehlt ganz, nicht nur ausgeblendet) und ohne
   WLAN-Passwort, wie in der PHP-Version. Neu anlegen: nur die Daten, danach
-  geht es in den Workspace. Die Checkliste zeigt die PHP-Version nur als
+  geht es in den Workspace. Scheitert das Speichern, nennt seit 21.10.2026 eine
+  Meldung Reiter, Feld und Grund (der Fehler steht oft in einem anderen Reiter);
+  ein archivierter Veranstalter am Event bleibt gültig, unverändert gespeicherte
+  Zählerstände (etwa nicht aufsteigende Altdaten) werden nicht erneut geprüft. Die Checkliste zeigt die PHP-Version nur als
   Platzhalter, obwohl die Daten existieren – hier ist sie bearbeitbar, mit
   der Überschrift „Sind folgende Positionen geplant?“. Seit 12.10.2026 ohne
   „Briefing vollständig“ (Spalte bleibt mit Altwerten); Merch-Fee und

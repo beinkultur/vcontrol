@@ -224,6 +224,12 @@ class EventForm
         'durchfuehrung' => ['3', 'Durchführung', 'Show Day – Betrieb und Räume'],
     ];
 
+    /** Name einer Phase für Meldungen, etwa „Planung“ (Kennung wie in der Adresse) */
+    public static function phaseTitle(string $id): string
+    {
+        return self::PHASES[$id][1] ?? ($id === 'uebersicht' ? 'Übersicht' : $id);
+    }
+
     /** Phase mit Nummer, Beschreibung und Fortschritt am Reiter. */
     private static function phase(string $label, string $id): Tab
     {
@@ -307,7 +313,11 @@ class EventForm
                             ->columnSpanFull(),
                         Select::make('promoter_id')
                             ->label('Veranstalter')
-                            ->relationship('promoter', 'name', fn ($query) => $query->where('is_archived', false)->orderBy('name'))
+                            // Archivierte nicht zur Wahl – der schon eingetragene bleibt gültig, sonst
+                            // scheiterte jedes Speichern des Events (gemeldet am 21.10.2026)
+                            ->relationship('promoter', 'name', fn ($query, ?Event $record) => $query
+                                ->where(fn ($q) => $q->where('is_archived', false)->orWhere('id', $record?->promoter_id))
+                                ->orderBy('name'))
                             ->searchable()
                             ->preload(),
                         Select::make('status')
