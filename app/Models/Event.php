@@ -6,6 +6,7 @@ use App\Access\Module;
 use App\Enums\RoomUsage;
 use App\Support\EventDisplay;
 use App\Support\EventNumber;
+use App\Support\ExecutionCheck;
 use App\Support\IncomingInvoices;
 use App\Support\MeterReadings;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -348,6 +349,17 @@ class Event extends Model
     {
         $query->where(fn (Builder $q) => $q->whereNull('status')
             ->orWhereRaw('LOWER(TRIM(status)) NOT IN (' . implode(', ', array_fill(0, count(EventDisplay::CANCELLED_STATUSES), '?')) . ')', EventDisplay::CANCELLED_STATUSES));
+    }
+
+    /**
+     * Durchführung nicht vollständig erfasst (ExecutionCheck): ein Punkt aus
+     * Durchführung › Check oder Bus-Strom ohne Wert, bei Konzerten kein Raum.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeExecutionIncomplete(Builder $query): void
+    {
+        ExecutionCheck::applyIncomplete($query);
     }
 
     /** @param Builder<self> $query */

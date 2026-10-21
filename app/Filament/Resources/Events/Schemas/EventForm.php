@@ -20,8 +20,8 @@ use App\Filament\Resources\Events\RelationManagers\HandoverProtocolsRelationMana
 use App\Filament\Resources\Events\RelationManagers\OrderSlipsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\ShowChecklistsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\NotesRelationManager;
+use App\Filament\Support\AccountingFields;
 use App\Filament\Support\AssignmentFields;
-use App\Filament\Support\IncomingInvoiceFields;
 use App\Filament\Support\MeterFields;
 use App\Filament\Support\OptionChoices;
 use App\Filament\Support\RoomUsageFields;
@@ -29,7 +29,6 @@ use App\Filament\Support\SeatingPlanFields;
 use App\Filament\Support\ServiceFields;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Event;
-use App\Models\EventFinance;
 use App\Models\EventOperation;
 use App\Models\EventPr;
 use App\Models\EventStage;
@@ -46,7 +45,6 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
@@ -474,39 +472,10 @@ class EventForm
      *
      * @return list<Section>
      */
+    /** Buchung › Buchhaltung: dieselben Felder wie das Buchhaltungs-Dashboard (AccountingFields). */
     private static function accounting(): array
     {
-        return [
-            Section::make('Finanzen')
-                ->relationship('finance')
-                ->columns(2)
-                ->disabled(fn (): bool => !self::can(Area::Buchhaltung, Level::Edit))
-                ->schema([
-                    Select::make('contract_status')
-                        ->label('Vertragsstatus')
-                        ->options(fn (?EventFinance $record): array => OptionChoices::for(OptionField::ContractStatus, $record?->contract_status))
-                        ->native(false),
-                    // Die Preisliste steht seit 13.10.2026 unter Buchung › Daten (Modul Preislisten & Costing)
-                    TextInput::make('rent')
-                        ->label('Miete')
-                        ->numeric()
-                        ->suffix('€'),
-                    CheckboxList::make('accounting_status')
-                        ->label('FIBU-Status')
-                        ->options(fn (?EventFinance $record): array => OptionChoices::for(OptionField::AccountingStatus, $record?->accounting_status))
-                        ->columns(2)
-                        ->columnSpanFull(),
-                    TagsInput::make('invoice_numbers')
-                        ->label('Rechnungsnummern'),
-                    Toggle::make('accounting_closed')
-                        ->label('Abrechnung abgeschlossen'),
-                ]),
-            Section::make('Eingangsrechnungen')
-                ->description('Welche Rechnungen von Dienstleistern erwartet werden und ob sie da sind. Mobiliar ist bei „bestuhlt“ automatisch erwartet, Cobra – Haus-Delay bei Haus-Delay (Durchführung › Betrieb) immer.')
-                ->columns(3)
-                ->disabled(fn (): bool => !self::can(Area::Buchhaltung, Level::Edit))
-                ->schema(IncomingInvoiceFields::all()),
-        ];
+        return AccountingFields::all();
     }
 
     private static function pr(): Section
@@ -667,11 +636,9 @@ class EventForm
                     self::yesNo('operation', 'house_delay', 'Haus-Delay'),
                     self::yesNo('checklist', 'power_ant', 'Miete Elektro-Ameise'),
                     self::yesNo('checklist', 'house_rig_early', 'Haus-Rig ab 7 Uhr'),
+                    // Seit 21.10.2026; PAX abgerechnet steht seitdem unter Buchung › Buchhaltung
+                    self::yesNo('operation', 'person_lift', 'Personenlift'),
                     self::yesNo('stage', 'sold_out_award', 'Sold-Out-Award'),
-                    TextInput::make('pax')
-                        ->label('PAX abgerechnet')
-                        ->numeric()
-                        ->minValue(0),
                     // Bis 12.10.2026 unter Planung › Checkliste
                     self::relationText('checklist', 'merch_fee', 'Merch-Fee', 120),
                     self::yesNo('checklist', 'merch_fee_check', 'Merch-Fee eingesammelt', textValues: true, notApplicable: true),

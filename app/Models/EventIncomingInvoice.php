@@ -13,11 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['event_id', 'invoice_key', 'is_active', 'is_received', 'updated_by'])]
 class EventIncomingInvoice extends Model
 {
-    /** Die sechs festen Positionen, wie in der PHP-Version. */
+    /** Die festen Positionen wie in der PHP-Version, seit 21.10.2026 mit einem zweiten VfV-Dienstleister. */
     public const SLOTS = [
         'gracework_umbau' => 'GraceWork (Umbau)',
         'zlaja_reinigung' => 'Zlaja (Reinigung)',
         'vfv' => 'VfVs',
+        'vfv_2' => 'VfVs 2',
         'cobra_hausrigg' => 'Cobra – Hausrigg',
         'cobra_hausdelay' => 'Cobra – Haus-Delay',
         'mobiliar_stuehle' => 'Mobiliar/Stühle',

@@ -122,18 +122,14 @@ final class EventProgress
     /** @return list<bool> */
     private static function executionChecks(Event $e): array
     {
-        $c = $e->checklist;
         $op = $e->operation;
 
+        // PAX abgerechnet zählt seit 21.10.2026 nicht mehr – es steht unter Buchung › Buchhaltung;
+        // der Check zählt erst, wenn jeder Punkt einen Wert hat (ExecutionCheck, wie die Event-Liste)
         return [
-            $e->pax !== null,
             $e->rooms->isNotEmpty() || filled($op?->backstages) || filled($op?->offices),
             $op?->bus_power !== null,
-            self::answered($c?->merch_fee_check)
-                || in_array($c?->special_cleaning, ['yes', 'no'], true)
-                || $op?->house_delay !== null
-                || $c?->power_ant !== null
-                || $e->stage?->sold_out_award !== null,
+            ExecutionCheck::missingChecks($e) === [],
             (bool) $e->closed,
         ];
     }

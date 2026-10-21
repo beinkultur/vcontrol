@@ -107,7 +107,9 @@ class SmokeRender extends Command
                     // was der Admin bearbeiten darf (ein verschicktes Costing führt zur Ansicht)
                     $path = $resource::getUrl($name, ['record' => $record], isAbsolute: false);
                     $page = $registration->getPage();
-                    if ($page::canAccess(['record' => $record]) && (!is_subclass_of($page, EditRecord::class) || $resource::canEdit($record))) {
+                    // Seiten mit eigener Rechteprüfung (canAccess selbst bestimmt, etwa das Buchhaltungs-Dashboard) zählen ohne canEdit
+                    $ownAccess = (new \ReflectionMethod($page, 'canAccess'))->getDeclaringClass()->getName() === $page;
+                    if ($page::canAccess(['record' => $record]) && (!is_subclass_of($page, EditRecord::class) || $resource::canEdit($record) || $ownAccess)) {
                         $paths[] = $path;
                     } else {
                         $this->skipped[] = $path;

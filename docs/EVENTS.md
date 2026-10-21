@@ -37,7 +37,7 @@ Stand 30.09.2026. Grundlage ist das Datenmodell der PHP-Version (vc.bein.ws,
 | `event_service_groups` | `vc_event_trade_active`, `vc_event_trade_groups` | welche Leistungsgruppen aktiv sind |
 | `event_assignments` | `vc_event_role_assignments` | Rollen am Event (VL, VfV …) an Benutzer, Kontakt oder Gewerk, mit Zeiten (Kontakte statt Mitarbeiter seit 14.10.2026) |
 | `contacts` | `vc_employees` (bis 14.10.2026 `employees`) | Kontakte ohne Anmeldung: Person oder Funktion („Hallenmeister“), Kürzel, Telefon, E-Mail, Positionen, Notiz, archiviert |
-| `event_incoming_invoices` | `vc_event_incoming_invoices` | die sechs erwarteten Eingangsrechnungen |
+| `event_incoming_invoices` | `vc_event_incoming_invoices` | die erwarteten Eingangsrechnungen (sechs wie in PHP, seit 21.10.2026 dazu „VfVs 2“, Schlüssel `vfv_2`) |
 | `seating_plans` | neu (12.10.2026) | Standard-Saalpläne der Venue: PDF, Name, Kapazität (seit 19.10.2026), genutzte Bereiche, Bestuhlung, aktiv |
 | `meters` | neu (15.10.2026) | Zähler der Venue: Name, Einheit, Zählernummer, Standort, je Event ablesen, aktiv, Reihenfolge |
 | `meter_readings` | neu (15.10.2026), Strom aus `event_operations` | Stände: Zähler, Event mit Anfang/Ende oder frei, Zeitpunkt, Stand (3 Nachkommastellen), Zählerwechsel, Notiz |
@@ -110,9 +110,19 @@ Bedienbar:
   Zähler „je Event“ (bis 15.10.2026 nur der Stromzähler), der Verbrauch wird
   daraus berechnet (kein Eingabefeld mehr); „Check“ wie in
   der PHP-Version: Sonderreinigung, Haus-Delay, Miete Elektro-Ameise, Haus-Rig
-  ab 7 Uhr, Sold-Out-Award, dazu PAX abgerechnet und (seit 12.10.2026, vorher
-  Planung › Checkliste) Merch-Fee und „Merch-Fee eingesammelt“ (ja/nein/
-  entfällt). Die Zählerstände gibt es nur hier, nicht in der PHP-Version.
+  ab 7 Uhr, seit 21.10.2026 Personenlift (ja/nein, `event_operations.person_lift`),
+  Sold-Out-Award und (seit 12.10.2026, vorher Planung › Checkliste) Merch-Fee und
+  „Merch-Fee eingesammelt“ (ja/nein/entfällt). PAX abgerechnet steht seit
+  21.10.2026 unter Buchung › Buchhaltung. Die Zählerstände gibt es nur hier,
+  nicht in der PHP-Version.
+- **Durchführung vollständig** (`App\Support\ExecutionCheck`, 21.10.2026): jeder
+  Punkt unter Check hat einen Wert (egal welchen; Sonderreinigung nur ja/nein,
+  Merch-Fee ein Text), Bus-Strom auch (0 zählt), bei VA-Kategorie 1 „Konzert“
+  ist mindestens ein Raum Backstage oder Büro. Vergangene Events, bei denen
+  etwas fehlt, bleiben in der Event-Liste unter „Zukünftige“ stehen (Tooltip am
+  Datum: was fehlt; `Event::scopeExecutionIncomplete`). Der Fortschritt der
+  Durchführung zählt seitdem: Räume, Bus-Strom, Check vollständig, Event
+  abgeschlossen (vorher PAX abgerechnet und „ein Check-Punkt beantwortet“).
 - **Durchführung › Übergabeprotokolle** wie in der PHP-Version: Inventar an
   einen Empfänger (mit dessen Unterschrift), „Zurückerhalten“, Unterschrift
   später ergänzen. **Durchführung › Bestellscheine**: „Bestellt von“, Artikel
@@ -337,8 +347,34 @@ Bedienbar:
 - **Detailansicht** (nur lesen): Kerndaten, Zeiten, Finanzen (mit Recht),
   Rollen mit Uhrzeit, Räume, Leistungen, Bühne, Checkliste, Sold-Out-Award.
 - **Buchhaltung** mit Offen/Abgeschlossen/Alle/Endabrechnung/Archiv und
-  Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Spalte
-  „Zus. Podeste“: über den im Mietpreis enthaltenen hinaus (47 Events).
+  Finanz-Warnung – mit echten Daten zahlengleich zur PHP-Version. Seit
+  21.10.2026 umgebaut:
+  - **Liste** im Aufbau der Event-Liste (nach Monaten, schmale Zeilen, Filter
+    und Suche in einer Zeile): Datum, Status, Veranstaltung (rotes ! bei
+    Finanz-Warnung, solange die Abrechnung offen ist), Veranstalter, VA-ID,
+    Vertrag, FIBU-Status (gezahlt grün), Rechnungen, Eing.-Rg. (eingegangen/
+    erwartet) und „Bezahlt“: grüner Haken, wenn jede verschickte Rechnung auch
+    bezahlt ist. Rechnungen sind die Paare im FIBU-Status – „… gestellt“ heißt
+    verschickt, „… gezahlt“ bezahlt (nur „gezahlt“ angehakt zählt als
+    verschickt und bezahlt); für „Endabrechnung gestellt“ braucht es dazu die
+    Feldoption „Endabrechnung gezahlt“. Filter „Liste“ (Offen, Abgeschlossen,
+    Endabrechnung, Archiv, Alle – bis dahin Reiter), „Prüfen“ (Vertrag
+    versendet, nicht zurück · Rechnung versendet, nicht gezahlt ·
+    Finanz-Warnung · Event abgeschlossen, Eingangsrechnungen fehlen;
+    `App\Support\AccountingChecks`, Wörter statt ganzer Werte, damit auch eigene
+    Feldoptionen passen), Jahr, Veranstalter. Jede Spalte sortiert per Klick;
+    nach einer anderen Spalte als dem Datum ohne Monatsgruppen. Miete, Bus-Strom,
+    Zus. Podeste und „Abgeschl.“ stehen seitdem im Dashboard.
+  - **Buchhaltungs-Dashboard** (`/buchhaltung/{id}`, Klick in der Liste):
+    links Finanzen, PAX erwartet/abgerechnet und Eingangsrechnungen zum
+    Bearbeiten (`App\Filament\Support\AccountingFields`, dieselben Felder wie
+    Buchung › Buchhaltung) – mit Buchhaltung „Bearbeiten“, auch wenn die Rolle
+    Events nur lesen darf (wie die Rolle Buchhaltung); mit „Nur lesen“ nur
+    lesend. Rechts, was für die Abrechnung zählt: Event (Preisliste, Costing,
+    abgeschlossen, Rechnungen offen/bezahlt), Durchführung (was noch fehlt,
+    Bus-Strom, Zus. Podeste, alle Check-Punkte), Zählerstände mit Verbrauch,
+    Bestellscheine (Summe, abgerechnet), Leistungen über die Venue, Schäden –
+    je mit Link „Im Event“ für wer das Event sehen darf.
 
 - **Änderungsprotokoll** (`/audit`, Verwaltung › Audit, Recht „Audit“ wie in der
   PHP-Version; 01.10.2026): jede Änderung über Eloquent automatisch

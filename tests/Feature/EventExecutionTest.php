@@ -83,7 +83,7 @@ class EventExecutionTest extends TestCase
             ->assertSchemaStateSet(['special_cleaning' => null, 'house_delay' => null, 'power_ant' => null])
             // Ohne Hinweis auf die Cobra-Rechnung (Vorgabe vom 19.10.2026)
             ->assertDontSee('erwartet die Buchhaltung immer')
-            ->fillForm(['house_delay' => 1, 'power_ant' => 0, 'house_rig_early' => 1, 'sold_out_award' => 1])
+            ->fillForm(['house_delay' => 1, 'power_ant' => 0, 'house_rig_early' => 1, 'person_lift' => 0, 'sold_out_award' => 1])
             ->call('save')
             ->assertHasNoFormErrors();
 
@@ -93,6 +93,10 @@ class EventExecutionTest extends TestCase
         $this->assertFalse($this->event->checklist->power_ant);
         $this->assertTrue($this->event->checklist->house_rig_early);
         $this->assertTrue($this->event->stage->sold_out_award);
+        // Personenlift seit 21.10.2026; „nein“ ist ein Wert, leer heißt unbeantwortet
+        $this->assertFalse($this->event->operation->person_lift);
+        $this->assertContains('Sonderreinigung', \App\Support\ExecutionCheck::missing($this->event), 'Sonderreinigung noch ohne Wert');
+        $this->assertNotContains('Personenlift', \App\Support\ExecutionCheck::missing($this->event));
 
         $this->form()
             ->fillForm(['special_cleaning' => 'yes'])

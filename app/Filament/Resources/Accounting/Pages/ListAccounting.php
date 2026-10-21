@@ -4,35 +4,46 @@ namespace App\Filament\Resources\Accounting\Pages;
 
 use App\Filament\Resources\Accounting\AccountingResource;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Schemas\Components\Tabs\Tab;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Grouping\Group;
 
 /**
- * Listen wie in der PHP-Version. Events mit „Endabrechnung gestellt“ verlassen
- * die normalen Listen und stehen unter „Endabrechnung“, bis sie archivreif
- * sind (abgeschlossen und alle aktiven Eingangsrechnungen da) – dann „Archiv“.
+ * Listen wie in der PHP-Version, seit 21.10.2026 im Filter „Liste“ statt in
+ * Reitern: Events mit „Endabrechnung gestellt“ verlassen die normalen Listen und
+ * stehen unter „Endabrechnung“, bis sie archivreif sind (abgeschlossen und alle
+ * aktiven Eingangsrechnungen da) – dann „Archiv“. Nach Monaten gruppiert,
+ * solange nach Datum sortiert ist.
  */
 class ListAccounting extends ListRecords
 {
     protected static string $resource = AccountingResource::class;
 
-    /** @return array<string, Tab> */
-    public function getTabs(): array
+    /** Kein Pfad über der Liste – wie bei den Events */
+    public function getBreadcrumbs(): array
     {
-        $ascending = fn (Builder $query): Builder => $query->orderBy('starts_at')->orderBy('title');
-        $descending = fn (Builder $query): Builder => $query->orderByDesc('starts_at')->orderBy('title');
+        return [];
+    }
 
-        return [
-            'offen' => Tab::make('Offen')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $ascending($query->finalInvoiced(false)->accountingClosed(false))),
-            'abgeschlossen' => Tab::make('Abgeschlossen')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $descending($query->finalInvoiced(false)->accountingClosed())),
-            'alle' => Tab::make('Alle')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $ascending($query->finalInvoiced(false))),
-            'endabrechnung' => Tab::make('Endabrechnung')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $ascending($query->finalInvoiced()->archiveReady(false))),
-            'archiv' => Tab::make('Archiv')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $descending($query->finalInvoiced()->archiveReady())),
-        ];
+    /** Nach einer anderen Spalte sortiert: ohne Monatsgruppen, sonst sortierten diese zuerst */
+    public function getTableGrouping(): ?Group
+    {
+        $column = $this->getTableSortColumn();
+        if (filled($column) && $column !== 'starts_at') {
+            return null;
+        }
+
+        return parent::getTableGrouping();
+    }
+
+    /** Monate in der Richtung der Datumssortierung; Abgeschlossen und Archiv neueste zuerst */
+    public function getTableGroupingDirection(): ?string
+    {
+        if ($this->getTableSortColumn() === 'starts_at') {
+            return $this->getTableSortDirection() === 'desc' ? 'desc' : 'asc';
+        }
+        if (blank($this->tableGrouping) && in_array($this->tableFilters['state']['state'] ?? 'offen', AccountingResource::DESCENDING_STATES, true)) {
+            return 'desc';
+        }
+
+        return parent::getTableGroupingDirection();
     }
 }

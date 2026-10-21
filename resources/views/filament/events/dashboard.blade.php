@@ -45,6 +45,8 @@
             $costing !== null ? 'Costing: ' . $costing->label() . ', ' . $costing->statusLabel() : null,
             filled($event->pr?->pr_status) ? 'PR: ' . $event->pr->pr_status : null,
             $event->hasFinanceAlert() ? 'Buchhaltung: offen' : null,
+            // Seit 21.10.2026 unter Buchung › Buchhaltung statt Durchführung › Check
+            $event->pax !== null ? 'PAX abgerechnet ' . number_format($event->pax, 0, ',', '.') : null,
         ])],
         'planung' => ['num' => 2, 'title' => 'Planung', 'lines' => array_filter([
             $time($event->schedule?->start_time) ? 'Beginn ' . $time($event->schedule->start_time) : null,
@@ -58,7 +60,6 @@
             filled($event->status) ? 'Status ' . \App\Support\EventDisplay::statusLabel($event->status) : null,
             $time($event->schedule?->start_time) ? 'Show ' . $time($event->schedule->start_time) : null,
             $daysheetLine,
-            $event->pax !== null ? 'PAX abgerechnet ' . number_format($event->pax, 0, ',', '.') : null,
             $slips->isNotEmpty() ? $slips->count() . ' ' . ($slips->count() === 1 ? 'Bestellschein' : 'Bestellscheine') . ' · ' . \App\Models\OrderSlip::money($slips->sum(fn ($slip) => $slip->total())) : null,
             $openHandovers > 0 ? $openHandovers . ' ' . ($openHandovers === 1 ? 'Übergabe' : 'Übergaben') . ' offen' : null,
             $checklists > 0 ? $checklists . ' ' . ($checklists === 1 ? 'Checkliste' : 'Checklisten') : null,

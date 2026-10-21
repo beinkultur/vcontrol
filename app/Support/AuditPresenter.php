@@ -225,7 +225,7 @@ final class AuditPresenter
         // Betrieb (Stromzähler und -verbrauch bis 15.10.2026, für ältere Einträge)
         'power_start_ref' => 'Strom Referenz Anfang', 'power_end_ref' => 'Strom Referenz Ende', 'power_meter_start' => 'Stromzähler Anfang',
         'power_meter_end' => 'Stromzähler Ende', 'power_consumption' => 'Stromverbrauch', 'backstages' => 'Backstages', 'offices' => 'Büros',
-        'bus_power' => 'Bus-Strom', 'house_delay' => 'Haus-Delay',
+        'bus_power' => 'Bus-Strom', 'house_delay' => 'Haus-Delay', 'person_lift' => 'Personenlift',
         // Zähler und Zählerstände
         'per_event' => 'Je Event ablesen', 'meter_id' => 'Zähler', 'read_at' => 'Abgelesen', 'restart' => 'Zählerwechsel',
         // Personal, Gewerke, Räume, Rechnungen
@@ -274,7 +274,7 @@ final class AuditPresenter
     ];
 
     /** Felder mit ja/nein */
-    private const BOOLEANS = ['closed', 'accounting_closed', 'power_ant', 'house_rig_early', 'briefing_complete', 'sold_out_award', 'house_delay',
+    private const BOOLEANS = ['closed', 'accounting_closed', 'power_ant', 'house_rig_early', 'briefing_complete', 'sold_out_award', 'house_delay', 'person_lift',
         'stair_third', 'split_setup_teardown', 'is_active', 'is_archived', 'is_system', 'is_super', 'is_system_admin', 'is_shared', 'is_settled', 'is_fixed',
         'is_received', 'hidden_from_externals', 'factor_from_pax', 'default_active', 'fixed_price', 'per_event', 'restart', 'must_change_password'];
 

@@ -672,7 +672,10 @@ final class DemoSeeder extends Seeder
         $event->operation()->create([
             'bus_power' => $sport ? 0 : $this->random->getInt(1, 3),
             'house_delay' => !$sport && $this->random->getInt(0, 3) === 0,
+            'person_lift' => !$sport,
         ]);
+        // Durchführung vollständig erfasst (ExecutionCheck): auch „kein Sold-Out-Award“ ist ein Wert
+        $event->stage()->updateOrCreate([], ['sold_out_award' => (bool) $event->stage()->value('sold_out_award')]);
         // Stromzähler (je Event): Stand Anfang und Ende, dazwischen die Zeit bis zum nächsten Event
         $this->power ??= Meter::query()->where('name', 'Strom')->first()
             ?? Meter::create(['name' => 'Strom', 'unit' => 'kWh', 'per_event' => true, 'sort_order' => 10]);
@@ -680,7 +683,7 @@ final class DemoSeeder extends Seeder
         MeterReadings::saveForEvent($event, $this->power, MeterReading::END, $this->meter + $consumption);
         $this->meter += $consumption + $this->random->getInt(200, 900);
         $event->checklist()->updateOrCreate([], ['special_cleaning' => 'no', 'power_ant' => false, 'house_rig_early' => !$sport,
-            'merch_fee' => $sport ? null : '20 %', 'merch_fee_check' => $sport ? 'na' : 'yes']);
+            'merch_fee' => $sport ? 'keine' : '20 %', 'merch_fee_check' => $sport ? 'na' : 'yes']);
 
         $checks = [];
         foreach (array_keys(ShowChecklist::labels()) as $index => $key) {

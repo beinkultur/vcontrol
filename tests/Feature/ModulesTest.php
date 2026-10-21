@@ -8,7 +8,7 @@ use App\Access\Modules;
 use App\Enums\OptionField;
 use App\Filament\Pages\ManageSystem;
 use App\Filament\Pages\ManageVenue;
-use App\Filament\Resources\Accounting\Pages\ListAccounting;
+use App\Filament\Resources\Accounting\AccountingResource;
 use App\Filament\Resources\Costings\CostingResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
@@ -159,9 +159,9 @@ class ModulesTest extends TestCase
         $this->assertSame(0, EventProgress::phases($this->event->fresh())['planung'], 'ohne Bühne: 0 von 9');
         $this->assertArrayNotHasKey('buehne', EventProgress::planningAreas($this->event->fresh(), 0, 0));
 
-        // Keine Spalte Bühne in der Event-Liste, keine Zusatzpodeste in der Buchhaltung
+        // Keine Spalte Bühne in der Event-Liste, keine Zusatzpodeste im Buchhaltungs-Dashboard (seit 21.10.2026 dort statt in der Liste)
         Livewire::test(ListEvents::class)->assertTableColumnHidden('stage_summary');
-        Livewire::test(ListAccounting::class)->assertTableColumnHidden('extra_podests');
+        $this->get(AccountingResource::getUrl('dashboard', ['record' => $this->event]))->assertOk()->assertSee('Bus-Strom')->assertDontSee('Zus. Podeste');
 
         // Halle ohne Abschnitt Bühne; die Werte bleiben beim Speichern
         Livewire::test(ManageVenue::class)

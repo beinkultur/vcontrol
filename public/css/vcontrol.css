@@ -20,50 +20,51 @@
 }
 
 /* ---------------------------------------------------------------------
- * Event-Liste: schmale Zeilen, Monatszeilen, Hervorhebungen
+ * Event-Liste: schmale Zeilen, Monatszeilen, Hervorhebungen – seit 21.10.2026
+ * auch für die Buchhaltungsliste (gleicher Aufbau, AccountingResource)
  * ------------------------------------------------------------------ */
 
 /* Alle Event-Zeilen 36 px hoch, der Inhalt mittig (Zellen: vertical-align
    middle); mit umgebrochenem Titel auf dem Handy dürfen sie höher werden */
-.fi-resource-events.fi-resource-list-records-page .fi-ta-row:not(.fi-ta-group-header-row) {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-row:not(.fi-ta-group-header-row) {
     height: 2.25rem;
 }
 
 /* Auch die Symbol-Spalte „DS“: mit Filaments 16 px oben und unten war jede
    Zeile mit Haken 49 statt 33 px hoch */
-.fi-resource-events.fi-resource-list-records-page .fi-ta-text:not(.fi-inline),
-.fi-resource-events.fi-resource-list-records-page .fi-ta-icon:not(.fi-inline) {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-text:not(.fi-inline),
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-icon:not(.fi-inline) {
     padding-block: 0.3rem;
     padding-inline: 0.4rem;
 }
 
 /* Filter wie die Werkzeugleiste der PHP-Version: eine Zeile, ohne Überschrift */
-.fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-filters-above-content-ctn {
     padding: 0.6rem 0.75rem;
 }
 
-.fi-resource-events.fi-resource-list-records-page .fi-ta-filters-header {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-filters-header {
     display: none;
 }
 
-.fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-toolbar {
     padding-block: 0.4rem;
 }
 
 /* Suche rechts in der Zeile der Filter statt in einer eigenen Zeile darunter,
    unten bündig mit den Auswahlfeldern; auf dem Handy bleibt sie darunter */
 @media (min-width: 48rem) {
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-ctn {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-ctn {
         display: flex;
         align-items: stretch;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-filters-above-content-ctn {
         flex: 1 1 0;
         min-width: 0;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-toolbar {
         flex: 0 0 auto;
         align-items: flex-end;
         padding: 0.6rem 0.75rem 0.6rem 0;
@@ -71,11 +72,11 @@
 
     /* Die Filter sind aufklappbar (EventsTable: AboveContentCollapsible) – ab
        Tablet immer offen, ohne Filter-Symbol */
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn > .fi-ta-filters {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-filters-above-content-ctn > .fi-ta-filters {
         display: grid !important;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-trigger-action-ctn {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-filters-trigger-action-ctn {
         display: none;
     }
 }
@@ -84,7 +85,7 @@
    darunter auf. Der Container der Filter gibt seine Kinder (Filter, Symbol) an
    das Raster weiter (display: contents). Werkzeug-Aktionen hat die Liste keine. */
 @media (max-width: 47.999rem) {
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-ctn {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-ctn {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
@@ -93,51 +94,51 @@
         border-bottom: 1px solid var(--gray-200);
     }
 
-    .dark .fi-resource-events.fi-resource-list-records-page .fi-ta-header-ctn {
+    .dark :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-ctn {
         border-bottom-color: color-mix(in oklab, var(--color-white) 10%, transparent);
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-filters-above-content-ctn {
         display: contents;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-toolbar {
         grid-column: 1;
         grid-row: 1;
         padding: 0;
         border: 0;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar > .fi-ta-actions {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-toolbar > .fi-ta-actions {
         display: none;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-header-toolbar > div:last-child,
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-search-field {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-toolbar > div:last-child,
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-search-field {
         flex: 1 1 auto;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-trigger-action-ctn {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-filters-trigger-action-ctn {
         grid-column: 2;
         grid-row: 1;
         margin: 0 !important;
     }
 
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-filters-above-content-ctn > .fi-ta-filters {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-filters-above-content-ctn > .fi-ta-filters {
         grid-column: 1 / -1;
         grid-row: 2;
         margin-top: 0.75rem;
     }
 }
 
-.fi-resource-events.fi-resource-list-records-page .fi-ta-text,
-.fi-resource-events.fi-resource-list-records-page .fi-ta-text-item {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-text,
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-text-item {
     font-size: 0.8125rem;
     line-height: 1.25rem;
     white-space: nowrap;
 }
 
-.fi-resource-events.fi-resource-list-records-page .fi-ta-header-cell {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-header-cell {
     padding-block: 0.45rem;
     padding-inline: 0.4rem;
     font-size: 0.72rem;
@@ -146,12 +147,12 @@
     color: var(--gray-500);
 }
 
-.fi-resource-events.fi-resource-list-records-page .fi-ta-group-header {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-group-header {
     padding-block: 0.3rem;
     background: color-mix(in oklab, var(--gray-500) 12%, transparent);
 }
 
-.fi-resource-events.fi-resource-list-records-page .fi-ta-group-header .fi-ta-group-heading {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-group-header .fi-ta-group-heading {
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -159,11 +160,11 @@
     color: var(--gray-600);
 }
 
-.dark .fi-resource-events.fi-resource-list-records-page .fi-ta-group-header .fi-ta-group-heading {
+.dark :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-group-header .fi-ta-group-heading {
     color: var(--gray-300);
 }
 
-.fi-resource-events.fi-resource-list-records-page .fi-badge {
+:is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-badge {
     font-size: 0.68rem;
     padding-block: 0;
     min-height: 1.1rem;
@@ -1972,8 +1973,8 @@ button.vc-cal__row:hover {
     }
 
     /* Event-Liste: Der Titel darf umbrechen, die übrigen Spalten fehlen hier */
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-cell-title .fi-ta-text,
-    .fi-resource-events.fi-resource-list-records-page .fi-ta-cell-title .fi-ta-text-item {
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-cell-title .fi-ta-text,
+    :is(.fi-resource-events, .fi-resource-buchhaltung).fi-resource-list-records-page .fi-ta-cell-title .fi-ta-text-item {
         white-space: normal;
     }
 }

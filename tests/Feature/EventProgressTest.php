@@ -35,8 +35,17 @@ class EventProgressTest extends TestCase
         $this->assertSame(100, $phases['buchung']);
         // Planung: alles außer Kontakte (Rolle außer PL oder Ansprechpartner vor Ort), Gewerke und WLAN = 8 von 11
         $this->assertSame(73, $phases['planung']);
-        // Durchführung: PAX und abgeschlossen = 2 von 5
-        $this->assertSame(40, $phases['durchfuehrung']);
+        // Durchführung: nur abgeschlossen = 1 von 4 (PAX abgerechnet zählt seit 21.10.2026 nicht mehr)
+        $this->assertSame(25, $phases['durchfuehrung']);
+
+        // Check vollständig (jeder Punkt hat einen Wert), Bus-Strom 0, ein Raum: 4 von 4
+        $event->checklist->update(['special_cleaning' => 'no', 'power_ant' => false, 'house_rig_early' => true, 'merch_fee' => '10 %', 'merch_fee_check' => 'na']);
+        $event->operation()->create(['house_delay' => false, 'person_lift' => true, 'bus_power' => 0]);
+        $event->stage->update(['sold_out_award' => false]);
+        $this->assertSame(75, EventProgress::phases($event->fresh())['durchfuehrung']);
+        $room = \App\Models\Room::create(['name' => 'Backstage 1']);
+        $event->rooms()->attach($room->id, ['usage_type' => 'backstage']);
+        $this->assertSame(100, EventProgress::phases($event->fresh())['durchfuehrung']);
     }
 
     public function test_workspace_zeigt_uebersicht_mit_phasen(): void

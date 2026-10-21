@@ -7,6 +7,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Models\Event;
 use App\Support\EventDisplay;
+use App\Support\ExecutionCheck;
 use App\Support\StagePodests;
 use Filament\Forms\Components\Select;
 use Filament\Support\Enums\FontFamily;
@@ -48,7 +49,13 @@ class EventsTable
                     ->label('Datum')
                     ->formatStateUsing(fn (Event $record): string => EventDisplay::weekday($record->starts_at) . ' ' . $record->starts_at->format('d.m.')
                         . (EventDisplay::isMultiDay($record) ? ' 📅' : ''))
-                    ->tooltip(fn (Event $record): ?string => EventDisplay::isMultiDay($record) ? 'Mehrtägig bis ' . $record->ends_at->format('d.m.Y') : null)
+                    ->tooltip(fn (Event $record): ?string => collect([
+                        EventDisplay::isMultiDay($record) ? 'Mehrtägig bis ' . $record->ends_at->format('d.m.Y') : null,
+                        // Vergangen, aber noch nicht vollständig erfasst – deshalb noch unter „Zukünftige“
+                        $record->starts_at?->lt(today()) && ($missing = ExecutionCheck::missing($record)) !== []
+                            ? 'Durchführung unvollständig: ' . implode(', ', $missing)
+                            : null,
+                    ])->filter()->implode(' · ') ?: null)
                     ->placeholder('–'),
                 TextColumn::make('status')
                     ->label('Status')
@@ -139,7 +146,7 @@ class EventsTable
                     ->view('filament.events.list-progress'),
             ])
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
-                ->with(['promoter', 'finance', 'pr', 'schedule', 'checklist', 'stage', 'services', 'assignments.assignee', 'seatingPlan'])
+                ->with(['promoter', 'finance', 'pr', 'schedule', 'checklist', 'stage', 'operation', 'rooms', 'services', 'assignments.assignee', 'seatingPlan'])
                 ->withMax(['daysheets as daysheet_sent_at' => fn (Builder $daysheets): Builder => $daysheets->whereNull('revoked_at')], 'created_at'))
             // Abgesagte nur mit dem Schalter über der Liste; ein einzelnes Event (Aktionen) findet sich immer
             ->modifyQueryUsing(fn (Builder $query, $livewire, bool $isResolvingRecord): Builder => $isResolvingRecord || ($livewire instanceof ListEvents && $livewire->showCancelled)
@@ -187,10 +194,14 @@ class EventsTable
                             ->default('future')
                             ->selectablePlaceholder(false),
                     ])
+                    // „Zukünftige“ zeigt seit 21.10.2026 auch vergangene Events, deren
+                    // Durchführung noch nicht vollständig erfasst ist (ExecutionCheck)
                     ->query(fn (Builder $query, array $data): Builder => match ($data['time'] ?? 'future') {
                         'past' => $query->whereDate('starts_at', '<', today()),
                         'all' => $query,
-                        default => $query->whereDate('starts_at', '>=', today()),
+                        default => $query->where(fn (Builder $q): Builder => $q
+                            ->whereDate('starts_at', '>=', today())
+                            ->orWhere(fn (Builder $past): Builder => $past->whereDate('starts_at', '<', today())->executionIncomplete())),
                     })
                     ->indicateUsing(fn (array $data): ?string => ($data['time'] ?? 'future') === 'future'
                         ? null
