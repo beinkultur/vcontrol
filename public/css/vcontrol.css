@@ -1223,6 +1223,18 @@ a.vc-card:hover {
     }
 }
 
+/* Eingangsrechnungen: je Rechnung eine Zeile – Name, erwartet, Rechnung da
+   (IncomingInvoiceFields), getrennt durch eine feine Linie */
+.vc-invoice-row {
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.dark .vc-invoice-row {
+    border-bottom-color: rgb(255 255 255 / 0.06);
+}
+
 /* Event-Liste: Schalter „Abgesagte Events anzeigen“ neben den Aktionen der Kopfzeile
    (filament.events.cancelled-toggle), Schrift wie die Beschriftung der Filter */
 .vc-header-toggle {

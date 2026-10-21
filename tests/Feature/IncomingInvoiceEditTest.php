@@ -94,8 +94,15 @@ class IncomingInvoiceEditTest extends TestCase
         $this->assertSame('0/1', IncomingInvoices::summary($event->fresh()));
         $this->assertFalse($settled());
 
-        // In der Buchhaltung an und gesperrt; „Rechnung da“ lässt sich setzen
+        // In der Buchhaltung an und gesperrt; „Rechnung da“ lässt sich setzen. Ohne Hinweis (Vorgabe vom 21.10.2026)
         $this->actingAs($this->admin());
+        $this->get(\App\Filament\Resources\Accounting\AccountingResource::getUrl('dashboard', ['record' => $event]))
+            ->assertOk()
+            ->assertSee('Cobra – Haus-Delay')
+            ->assertDontSee('Immer erwartet, weil Haus-Delay')
+            // Auch ohne die Hinweise zum FIBU-Status und zur Durchführung (Vorgabe vom 21.10.2026)
+            ->assertDontSee('heißt: Rechnung verschickt')
+            ->assertDontSee('Was zusätzlich berechnet wird');
         Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
             ->assertSchemaStateSet(['invoice_cobra_hausdelay_active' => true])
             ->assertFormFieldIsDisabled('invoice_cobra_hausdelay_active')

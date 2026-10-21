@@ -104,6 +104,12 @@ class AccountingDashboard extends EditRecord
         return AccountingFields::canEdit() ? parent::getFormActions() : [];
     }
 
+    /** Im Fenstertitel „Buchhaltung · Titel“ statt Filaments „Event bearbeiten“ */
+    public function getTitle(): string
+    {
+        return 'Buchhaltung · ' . $this->getRecord()->title;
+    }
+
     public function getBreadcrumbs(): array
     {
         return [AccountingResource::getUrl() => 'Buchhaltung', 'Dashboard'];
@@ -199,7 +205,6 @@ class AccountingDashboard extends EditRecord
         }
 
         return Section::make('Durchführung')
-            ->description('Was zusätzlich berechnet wird oder eine Eingangsrechnung auslöst.')
             ->compact()
             ->headerActions([self::workspaceLink('execution', 'durchfuehrung', 'betrieb')])
             ->schema($entries);

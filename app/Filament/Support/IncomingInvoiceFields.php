@@ -7,7 +7,9 @@ use App\Models\EventIncomingInvoice;
 use App\Support\Audit;
 use App\Support\IncomingInvoices;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Support\Enums\FontWeight;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,26 +20,32 @@ use Illuminate\Support\Facades\DB;
  * automatischen Stand abweicht – unberührte Positionen folgen weiter der
  * Automatik (Mobiliar bei „bestuhlt“). Cobra – Haus-Delay ist bei Haus-Delay
  * Pflicht: „erwartet“ ist dann an und gesperrt.
+ *
+ * Seit 21.10.2026 eine Zeile je Rechnung (Name, erwartet, Rechnung da) statt
+ * eines Kastens – im schmalen Buchhaltungs-Dashboard quetschten sich sonst die
+ * Schalter; ohne Hinweis bei der gesperrten Cobra (Vorgabe vom 21.10.2026).
  */
 final class IncomingInvoiceFields
 {
-    /** @return list<Fieldset> */
+    /** @return list<Grid> */
     public static function all(): array
     {
         $fields = [];
         foreach (EventIncomingInvoice::SLOTS as $key => $label) {
-            $fields[] = Fieldset::make($label)
-                ->columns(2)
+            $fields[] = Grid::make(['default' => 2, 'sm' => 4])
+                ->extraAttributes(['class' => 'vc-invoice-row'])
                 ->schema([
+                    TextEntry::make("invoice_{$key}_label")
+                        ->hiddenLabel()
+                        ->state($label)
+                        ->weight(FontWeight::Medium)
+                        ->columnSpan(['default' => 2, 'sm' => 2]),
                     Toggle::make("invoice_{$key}_active")
                         ->label('erwartet')
                         ->live()
                         ->afterStateHydrated(fn (Toggle $component, ?Event $record) => $component->state(self::slot($record, $key)['active'] ?? false))
                         // Pflicht, solange die Regel greift (Cobra bei Haus-Delay) – siehe IncomingInvoices
                         ->disabled(fn (?Event $record): bool => self::slot($record, $key)['forced'] ?? false)
-                        ->helperText(fn (?Event $record): ?string => (self::slot($record, $key)['forced'] ?? false)
-                            ? 'Immer erwartet, weil Haus-Delay unter Durchführung › Betrieb auf ja steht.'
-                            : null)
                         ->dehydrated(false),
                     Toggle::make("invoice_{$key}_received")
                         ->label('Rechnung da')

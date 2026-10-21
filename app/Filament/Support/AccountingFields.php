@@ -47,7 +47,6 @@ final class AccountingFields
                         ->suffix('€'),
                     CheckboxList::make('accounting_status')
                         ->label('FIBU-Status')
-                        ->helperText('„… gestellt“ heißt: Rechnung verschickt, „… gezahlt“: bezahlt. Sind alle gestellten auch gezahlt, zeigt die Buchhaltungsliste einen grünen Haken.')
                         ->options(fn (?EventFinance $record): array => OptionChoices::for(OptionField::AccountingStatus, $record?->accounting_status))
                         ->columns(2)
                         ->columnSpanFull(),
@@ -70,7 +69,6 @@ final class AccountingFields
                 ]),
             Section::make('Eingangsrechnungen')
                 ->description('Welche Rechnungen von Dienstleistern erwartet werden und ob sie da sind. Mobiliar ist bei „bestuhlt“ automatisch erwartet, Cobra – Haus-Delay bei Haus-Delay (Durchführung › Betrieb) immer.')
-                ->columns(3)
                 ->disabled($readOnly)
                 ->schema(IncomingInvoiceFields::all()),
         ];
