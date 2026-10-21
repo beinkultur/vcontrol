@@ -73,11 +73,12 @@ class EventListTest extends TestCase
 
         $component = Livewire::test(ListEvents::class)
             // Konzerte brauchen einen Raum (Backstage oder Büro), andere nicht
-            ->assertCanSeeTableRecords([$konzert, $ohneLift, $ohneMerch, $ohneStrom])
-            ->assertCanNotSeeTableRecords([$messe]);
+            ->assertCanSeeTableRecords([$konzert, $ohneLift, $ohneStrom])
+            // Ein leerer Merch-Fee-Text zählt nicht (Vorgabe vom 21.10.2026)
+            ->assertCanNotSeeTableRecords([$messe, $ohneMerch]);
         $this->assertSame(['Raum (Backstage oder Büro)'], ExecutionCheck::missing($konzert));
         $this->assertSame(['Personenlift'], ExecutionCheck::missing($ohneLift->fresh()));
-        $this->assertSame(['Merch-Fee'], ExecutionCheck::missing($ohneMerch->fresh()));
+        $this->assertSame([], ExecutionCheck::missing($ohneMerch->fresh()));
         $this->assertSame(['Bus-Strom'], ExecutionCheck::missing($ohneStrom->fresh()));
         $this->assertTrue(ExecutionCheck::isComplete($messe));
 

@@ -120,8 +120,9 @@ Bedienbar:
   21.10.2026 unter Buchung › Buchhaltung. Die Zählerstände gibt es nur hier,
   nicht in der PHP-Version.
 - **Durchführung vollständig** (`App\Support\ExecutionCheck`, 21.10.2026): jeder
-  Punkt unter Check hat einen Wert (egal welchen; Sonderreinigung nur ja/nein,
-  Merch-Fee ein Text), Bus-Strom auch (0 zählt), bei VA-Kategorie 1 „Konzert“
+  Punkt unter Check hat einen Wert (egal welchen; Sonderreinigung nur ja/nein;
+  der Merch-Fee-Text zählt nicht, „Merch-Fee eingesammelt“ schon), Bus-Strom
+  auch (0 zählt), bei VA-Kategorie 1 „Konzert“
   ist mindestens ein Raum Backstage oder Büro. Vergangene Events, bei denen
   etwas fehlt, bleiben in der Event-Liste unter „Zukünftige“ stehen (Tooltip am
   Datum: was fehlt; `Event::scopeExecutionIncomplete`). Der Fortschritt der

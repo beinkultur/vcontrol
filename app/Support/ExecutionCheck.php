@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * Ist die Durchführung eines Events vollständig erfasst? (Vorgabe vom
  * 21.10.2026) Jeder Punkt unter Durchführung › Betrieb › Check hat einen Wert –
- * egal welchen –, Bus-Strom auch (0 zählt), und bei VA-Kategorie 1 „Konzert“ ist
+ * egal welchen, außer dem Merch-Fee-Text –, Bus-Strom auch (0 zählt), und bei VA-Kategorie 1 „Konzert“ ist
  * mindestens ein Raum Backstage oder Büro. Vergangene Events, bei denen etwas
  * fehlt, bleiben in der Event-Liste stehen (Zeitraum „Zukünftige“, Event::
  * scopeExecutionIncomplete), der Fortschritt der Durchführung zählt es mit.
@@ -31,6 +31,13 @@ final class ExecutionCheck
         'merch_fee' => ['checklist', 'Merch-Fee'],
         'merch_fee_check' => ['checklist', 'Merch-Fee eingesammelt'],
     ];
+
+    /**
+     * Stehen im Abschnitt, zählen aber nicht für „vollständig“: ein leerer
+     * Merch-Fee-Text hält ein vergangenes Event nicht in der Liste (Vorgabe vom
+     * 21.10.2026) – „Merch-Fee eingesammelt“ schon.
+     */
+    public const OPTIONAL = ['merch_fee'];
 
     /** Textspalten: auch leerer Text zählt als fehlend (die übrigen sind ja/nein bzw. eine Zahl, 0 ist ein Wert) */
     private const TEXT_COLUMNS = ['special_cleaning', 'merch_fee', 'merch_fee_check'];
@@ -68,6 +75,9 @@ final class ExecutionCheck
     {
         $missing = [];
         foreach (self::CHECKS as $column => [$relation, $label]) {
+            if (in_array($column, self::OPTIONAL, true)) {
+                continue;
+            }
             $value = $event->{$relation}?->{$column};
             if (self::blank($value) || (isset(self::ALLOWED[$column]) && !in_array($value, self::ALLOWED[$column], true))) {
                 $missing[] = $label;
@@ -96,7 +106,9 @@ final class ExecutionCheck
     {
         $byRelation = [];
         foreach (self::CHECKS as $column => [$relation]) {
-            $byRelation[$relation][] = $column;
+            if (!in_array($column, self::OPTIONAL, true)) {
+                $byRelation[$relation][] = $column;
+            }
         }
         $byRelation['operation'][] = 'bus_power';
 
