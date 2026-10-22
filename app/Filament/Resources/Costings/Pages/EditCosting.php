@@ -20,6 +20,9 @@ class EditCosting extends EditRecord
 
     protected static string $resource = CostingResource::class;
 
+    /** Ziel nach dem Löschen, vor dem Löschen bestimmt */
+    protected ?string $afterDeleteUrl = null;
+
     public function mount(int|string $record): void
     {
         $costing = $this->resolveRecord($record);
@@ -54,8 +57,13 @@ class EditCosting extends EditRecord
         return [
             CostingActions::pdf(),
             CostingActions::send(),
+            // Nach dem Löschen gibt es den Entwurf nicht mehr – das Ziel (Costing-Reiter
+            // des Events) steht deshalb schon vorher fest (Fehler 500 bis 22.10.2026)
             DeleteAction::make()
-                ->successRedirectUrl(fn (Costing $record): ?string => CostingResource::eventUrl($record)),
+                ->before(function (): void {
+                    $this->afterDeleteUrl = CostingResource::eventUrl($this->getRecord());
+                })
+                ->successRedirectUrl(fn (): ?string => $this->afterDeleteUrl),
         ];
     }
 }

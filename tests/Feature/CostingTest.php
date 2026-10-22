@@ -208,6 +208,18 @@ class CostingTest extends TestCase
         $this->assertTrue($manager->can('update', $copy));
     }
 
+    public function test_entwurf_loeschen_fuehrt_zurueck_zum_event(): void
+    {
+        $costing = Costing::createFor($this->event, $this->list);
+        $this->actingAs($this->eventmanager());
+
+        Livewire::test(EditCosting::class, ['record' => $costing->getRouteKey()])
+            ->callAction('delete')
+            ->assertRedirect(EventResource::getUrl('edit', ['record' => $this->event]) . '?phase=buchung&bereich=costing');
+
+        $this->assertNull(Costing::query()->find($costing->id));
+    }
+
     public function test_ohne_empfaenger_kein_versand(): void
     {
         Mail::fake();
