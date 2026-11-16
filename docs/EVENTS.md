@@ -161,6 +161,40 @@ Bedienbar:
   lesen, Operationen bearbeiten) – wie in der PHP-Version. Wer die
   Bearbeiten-Seite eines Events ohne Schreibrecht aufruft (z. B. über den Link
   in der Schadensmail), landet in der Ansicht, Phase und Bereich bleiben.
+- **Advancing** (Modul „Advancing“, 17.11.2026, zuerst für ce.vcontrol.eu): Zu
+  einem Event bekommt der Veranstalter einen Fragenkatalog per Link ohne Konto.
+  - **Kataloge** (`advancing_templates`): Abschnitte mit Infotexten und Fragen
+    als JSON-Struktur (`App\Support\AdvancingCatalog`: Typen text, textarea,
+    number, date, choice, yes_no, person, info; je Frage `key`, `label`, optional
+    `help`, `required`, `locked` – Veranstalter sieht nur –, `options`,
+    `binding`). Eingespielt per `php artisan vc:advancing-catalog import <datei>`
+    (gleicher Name ersetzt), eine Oberfläche dafür folgt. Erster Katalog:
+    `database/advancing/lkh-arena-kultur.json` („Kultur“ der LKH Arena, aus dem
+    Google-Formular, ohne Personen).
+  - **Je Event** (`event_advancings`, eins je Event): Planung › Advancing →
+    „Advancing starten“ kopiert den Katalog; gebundene Fragen sind aus dem Event
+    vorbelegt (Titel, erster Tag, Zeiten wie „11:30 Uhr“, Ansprechpartner vor
+    Ort). „Öffnen“ bearbeitet die Vorbelegung (`prefill`); Personenfragen wählen
+    aus aktiven Personen-Konten und Kontakten und zeigen immer deren aktuelle
+    Kontaktdaten. „Per Mail senden“ wie das Daysheet (An vorbelegt mit dem
+    Ansprechpartner vor Ort, gültig bis Ende des Tages nach der Veranstaltung,
+    Schaltfläche „Fragenkatalog öffnen“); erneut senden schickt denselben Link,
+    nach „Link sperren“ einen neuen. Der Schlüssel liegt als Hash (Suche) und
+    verschlüsselt (Link kopieren, „Als Veranstalter ansehen“) – nicht im Audit.
+    „Abschließen“ macht die Seite schreibgeschützt.
+  - **Veranstalter** (`/advancing/{Schlüssel}`, `AdvancingController`):
+    klassisches Formular ohne Livewire, nur Titel und Datum des Events und der
+    Katalog. Gespeichert wird in `answers` nur, was er gegenüber dem beim Laden
+    gezeigten Wert geändert hat (zwei offene Seiten überschreiben sich nicht);
+    gleich der Vorbelegung heißt keine eigene Antwort. Gesperrte Fragen und
+    Personen ändert er nicht. „Absenden“ prüft Pflichtfragen, zählt mit und
+    mailt den Planer, der verschickt hat, und die Antwortadresse der Venue.
+    Gesperrt, abgelaufen, abgeschlossen: 410. Im Audit: „Veranstalter
+    (Advancing-Link)“.
+  - Angezeigt wird `answers[key] ?? prefill[key]`; was abweicht, steht beim
+    Planer gelb am Feld und als Zahl „Geändert“ in der Zeile.
+  - Offen: Katalog-Editor, „ins Event übernehmen“, „Wieder öffnen“, Anzeige im
+    Dashboard und Fortschritt, Kataloge je Venue (mehrere Venues je Instanz).
 - **Kalender** (`/kalender`, Recht „Kalender“, 13.10.2026) wie in der
   PHP-Version: Monat, Woche, Tag, 4 Wochen; die Ebenen aus Verwaltung ›
   Kalender als Chips in ihrer Farbe zum Ein- und Ausblenden, Auswahl in der

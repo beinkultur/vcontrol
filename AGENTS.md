@@ -164,7 +164,7 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   Setting `disabled_areas`); bis dort zum ersten Mal gespeichert wird, gilt
   `VC_DISABLED_AREAS`. Benutzer, Rollen & Rechte und Halle bleiben immer an.
 - **Module** (`App\Access\Module`): was eine Halle bucht – Bühnenplan, Saalplan,
-  Gästeliste, Buchhaltung, Preislisten & Costing. Der System-Admin gibt sie unter Verwaltung › System
+  Gästeliste, Buchhaltung, Preislisten & Costing, Advancing (seit 17.11.2026, docs/EVENTS.md). Der System-Admin gibt sie unter Verwaltung › System
   frei (Setting `modules`; ohne Eintrag sind alle frei). Ohne Freigabe ist ein
   Modul für alle ausgeblendet, Gespeichertes bleibt. Jede Stelle, die ein Modul
   zeigt, fragt `Module::…->isEnabled()`: Reiter und Felder, Links und Knöpfe,
