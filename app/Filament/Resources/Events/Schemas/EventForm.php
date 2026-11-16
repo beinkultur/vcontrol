@@ -11,6 +11,7 @@ use App\Filament\Resources\Costings\CostingResource;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ViewEvent;
+use App\Filament\Resources\Events\RelationManagers\AdvancingRelationManager;
 use App\Filament\Resources\Events\RelationManagers\CostingsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\FilesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\GuestsRelationManager;
@@ -184,6 +185,10 @@ class EventForm
                                         ->schema(AssignmentFields::all(except: [AssignmentRole::ProjectLead])),
                                     self::onsiteContact(),
                                 ]),
+                                // Nur mit dem Modul Advancing (Verwaltung › System): Fragenkatalog an den Veranstalter
+                                Module::Advancing->isEnabled()
+                                    ? self::tab('Advancing', 'advancing')->schema([self::embedded(AdvancingRelationManager::class)])
+                                    : null,
                                 self::tab('Gewerke', 'gewerke')->schema([
                                     Section::make()
                                         ->description('Wer die Leistung stellt, welches Gewerk oder welcher Anbieter. Leer heißt: nicht festgelegt.')
