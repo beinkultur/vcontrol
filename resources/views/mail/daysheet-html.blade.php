@@ -19,7 +19,7 @@
 
 @endforeach
 <x-mail::button :url="$link">
-Daysheet öffnen
+{{ $buttonLabel }}
 </x-mail::button>
 
 @foreach ($after as $paragraph)
@@ -28,7 +28,7 @@ Daysheet öffnen
 @endforeach
 <x-slot:subcopy>
 <x-mail::subcopy>
-Sollten Sie Schwierigkeiten haben, die Schaltfläche „Daysheet öffnen“ zu klicken, kopieren Sie den nachfolgenden Link in die Adresszeile Ihres Browsers: <span class="break-all">[{{ $link }}]({{ $link }})</span>
+Sollten Sie Schwierigkeiten haben, die Schaltfläche „{{ $buttonLabel }}“ zu klicken, kopieren Sie den nachfolgenden Link in die Adresszeile Ihres Browsers: <span class="break-all">[{{ $link }}]({{ $link }})</span>
 </x-mail::subcopy>
 </x-slot:subcopy>
 

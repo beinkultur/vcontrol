@@ -27,6 +27,8 @@ class DaysheetMail extends Mailable
         public ?string $replyToAddress = null,
         public ?string $replyToName = null,
         public string $link = '',
+        // Auch für den Advancing-Link (App\Support\Advancings)
+        public string $buttonLabel = 'Daysheet öffnen',
     ) {
     }
 

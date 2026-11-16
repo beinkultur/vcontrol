@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdvancingController;
 use App\Http\Controllers\BackupCronController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CostingController;
@@ -43,8 +44,8 @@ Route::middleware([...$panel->getMiddleware(), ...$panel->getAuthMiddleware()])-
 Route::redirect('/halle', '/venue', 301);
 Route::redirect('/halle/logo', '/venue/logo', 301);
 
-// Daysheet: ohne Konto, der Schlüssel im Link berechtigt (bis zum Tag nach der
-// Veranstaltung, sperrbar).
+// Daysheet und Advancing: ohne Konto, der Schlüssel im Link berechtigt (bis zum
+// Tag nach der Veranstaltung, sperrbar).
 // Gedrosselt je IP, damit niemand Schlüssel durchprobiert.
 Route::middleware('throttle:60,1')->group(function (): void {
     Route::get('/daysheet/{token}', [DaysheetController::class, 'show'])
@@ -59,6 +60,13 @@ Route::middleware('throttle:60,1')->group(function (): void {
     Route::get('/daysheet/{token}/costing', [DaysheetController::class, 'costing'])
         ->where('token', '[A-Za-z0-9]{48}')
         ->name('daysheet.costing');
+    // Advancing (Modul Advancing): Fragenkatalog für den Veranstalter, gleiche Regeln wie das Daysheet
+    Route::get('/advancing/{token}', [AdvancingController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{48}')
+        ->name('advancing.show');
+    Route::post('/advancing/{token}', [AdvancingController::class, 'update'])
+        ->where('token', '[A-Za-z0-9]{48}')
+        ->name('advancing.update');
 });
 
 // Kalender-Feed: Kalender-Apps rufen ohne Anmeldung ab, deshalb mit Schlüssel
