@@ -41,6 +41,9 @@ final class Audit
 
     private static int $paused = 0;
 
+    /** Wer ohne Anmeldung ändert (Audit::as), etwa der Veranstalter über den Advancing-Link */
+    private static ?string $actor = null;
+
     /** Aus einem Eloquent-Ereignis (created, updated, deleted) */
     public static function model(string $action, Model $model): void
     {
@@ -89,6 +92,26 @@ final class Audit
     }
 
     /**
+     * Änderungen ohne angemeldeten Benutzer unter diesem Namen protokollieren –
+     * etwa der Veranstalter, der über den Advancing-Link speichert.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    public static function as(string $name, callable $callback): mixed
+    {
+        $previous = self::$actor;
+        self::$actor = $name;
+        try {
+            return $callback();
+        } finally {
+            self::$actor = $previous;
+        }
+    }
+
+    /**
      * Ohne Protokoll ausführen – nur für Vorgänge, die selbst einen Eintrag schreiben.
      *
      * @template T
@@ -119,7 +142,7 @@ final class Audit
             AuditLog::query()->create([
                 'user_id' => $user instanceof User ? $user->getKey() : null,
                 // Spalte 120 Zeichen – ein längerer Name ließe sonst jeden Eintrag dieses Benutzers scheitern
-                'user_name' => $user instanceof User ? Str::limit($user->getFilamentName(), 120, '') : ($http ? null : 'System'),
+                'user_name' => $user instanceof User ? Str::limit($user->getFilamentName(), 120, '') : (self::$actor ?? ($http ? null : 'System')),
                 'subject' => $subject,
                 'subject_key' => $key,
                 'subject_label' => $label !== null ? Str::limit($label, 195) : null,

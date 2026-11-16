@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Enums\AccountType;
+use App\Filament\Resources\Events\EventResource;
+use App\Mail\AdvancingSubmittedMail;
 use App\Mail\DaysheetMail;
 use App\Models\AdvancingTemplate;
 use App\Models\Contact;
@@ -34,6 +36,14 @@ final class Advancings
     public const PLACEHOLDER_HELP = '{event}, {datum} und {venue} werden ersetzt, beim Versand auch {link} und {gueltig_bis}. Fehlt {link}, steht der Link am Ende.';
 
     public const BUTTON_LABEL = 'Fragenkatalog öffnen';
+
+    /** So steht der Veranstalter im Änderungsprotokoll (Audit::as) */
+    public const ACTOR = 'Veranstalter (Advancing-Link)';
+
+    /** Höchstlängen je Typ; Zahlen 0 bis MAX_NUMBER */
+    private const MAX_LENGTH = ['text' => 500, 'textarea' => 5000];
+
+    private const MAX_NUMBER = 9999;
 
     /** Advancing aus einem Katalog starten: Kopie der Fragen, Vorbelegung aus dem Event. */
     public static function start(Event $event, AdvancingTemplate $template): EventAdvancing
@@ -206,6 +216,142 @@ final class Advancings
             return Carbon::createFromFormat('!Y-m-d', $value)->format('d.m.Y');
         } catch (Throwable) {
             return $value;
+        }
+    }
+
+    /**
+     * Eingaben des Veranstalters speichern. Übernommen wird nur, was er gegenüber
+     * dem beim Laden gezeigten Wert ($shown) geändert hat – so überschreibt eine
+     * zweite, ältere Seite nicht, was jemand anders inzwischen gespeichert hat.
+     * Gesperrte Fragen, Personen, Infotexte und Unbekanntes bleiben außen vor.
+     * Gleich der Vorbelegung heißt: keine eigene Antwort. Bei Fehlern wird nichts
+     * gespeichert.
+     *
+     * @param  array<mixed>  $posted  key => Wert aus a[…]
+     * @param  array<mixed>  $shown  key => Wert beim Laden aus o[…]
+     * @return array<string, string> Fehler je Feld (a.key)
+     */
+    public static function save(EventAdvancing $advancing, array $posted, array $shown): array
+    {
+        $questions = $advancing->questions();
+        $errors = [];
+        $updates = [];
+        foreach ($posted as $key => $value) {
+            $question = is_string($key) ? ($questions[$key] ?? null) : null;
+            if ($question === null || !self::editable($question)) {
+                continue;
+            }
+            $value = self::normalize(is_scalar($value) ? $value : '');
+            $before = self::normalize(is_scalar($shown[$key] ?? null) ? $shown[$key] : '');
+            if ($value === $before) {
+                continue;
+            }
+            $error = self::invalid($question, $value);
+            if ($error !== null) {
+                $errors["a.{$key}"] = $error;
+
+                continue;
+            }
+            $updates[$key] = $value;
+        }
+        if ($errors !== []) {
+            return $errors;
+        }
+
+        $answers = (array) $advancing->answers;
+        $prefill = (array) $advancing->prefill;
+        foreach ($updates as $key => $value) {
+            if ($value === self::normalize($prefill[$key] ?? null)) {
+                unset($answers[$key]);
+            } else {
+                $answers[$key] = $value;
+            }
+        }
+        Audit::as(self::ACTOR, fn (): bool => $advancing->update(['answers' => $answers === [] ? null : $answers, 'last_saved_at' => now()]));
+
+        return [];
+    }
+
+    /** Darf der Veranstalter die Frage ändern? Personen wählt immer der Planer. */
+    public static function editable(array $question): bool
+    {
+        return !($question['locked'] ?? false) && !in_array($question['type'] ?? null, ['info', 'person'], true);
+    }
+
+    private static function invalid(array $question, string $value): ?string
+    {
+        if ($value === '') {
+            return null;
+        }
+        $type = (string) ($question['type'] ?? 'text');
+
+        return match ($type) {
+            'number' => ctype_digit($value) && (int) $value <= self::MAX_NUMBER ? null : 'Bitte eine ganze Zahl von 0 bis ' . self::MAX_NUMBER . ' eintragen.',
+            'date' => self::isDate($value) ? null : 'Bitte ein Datum wählen.',
+            'yes_no' => in_array($value, ['ja', 'nein'], true) ? null : 'Bitte ja oder nein wählen.',
+            'choice' => in_array($value, (array) ($question['options'] ?? []), true) ? null : 'Bitte einen Wert aus der Liste wählen.',
+            default => mb_strlen($value) <= (self::MAX_LENGTH[$type] ?? self::MAX_LENGTH['text'])
+                ? null
+                : 'Höchstens ' . (self::MAX_LENGTH[$type] ?? self::MAX_LENGTH['text']) . ' Zeichen.',
+        };
+    }
+
+    private static function isDate(string $value): bool
+    {
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+
+        return $date !== false && $date->format('Y-m-d') === $value;
+    }
+
+    /**
+     * Absenden: Pflichtfragen, die der Veranstalter ausfüllt, brauchen einen Wert.
+     * Danach Mail an den Planer, der den Link verschickt hat, und an die
+     * Antwortadresse der Venue; scheitert sie, bleibt die Abgabe trotzdem.
+     *
+     * @return array<string, string> Fehler je Feld (a.key)
+     */
+    public static function submit(EventAdvancing $advancing): array
+    {
+        $missing = [];
+        foreach ($advancing->questions() as $key => $question) {
+            if (($question['required'] ?? false) && self::editable($question) && self::normalize(self::value($advancing, $key)) === '') {
+                $missing["a.{$key}"] = 'Bitte ausfüllen.';
+            }
+        }
+        if ($missing !== []) {
+            return $missing;
+        }
+
+        Audit::as(self::ACTOR, fn (): bool => $advancing->update(['submitted_at' => now(), 'submit_count' => $advancing->submit_count + 1]));
+        self::notifySubmitted($advancing);
+
+        return [];
+    }
+
+    private static function notifySubmitted(EventAdvancing $advancing): void
+    {
+        $sender = $advancing->sender;
+        $recipients = Daysheets::emails([
+            $sender instanceof User && $sender->is_active ? $sender->email : null,
+            MailIdentity::replyTo()?->address,
+        ]);
+        if ($recipients === []) {
+            return;
+        }
+        $event = $advancing->event;
+        $link = EventResource::getUrl('edit', ['record' => $event]) . '?phase=planung&bereich=advancing';
+
+        try {
+            Mail::to($recipients)->send(new AdvancingSubmittedMail(
+                eventTitle: (string) $event->title,
+                eventDate: Daysheets::fill('{datum}', $event),
+                templateName: (string) $advancing->template_name,
+                submitCount: (int) $advancing->submit_count,
+                changedCount: count(self::changedKeys($advancing)),
+                link: $link,
+            ));
+        } catch (Throwable $exception) {
+            report($exception);
         }
     }
 
