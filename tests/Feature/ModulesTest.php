@@ -79,7 +79,7 @@ class ModulesTest extends TestCase
         $this->actingAs($this->systemAdmin());
 
         Livewire::test(ManageSystem::class)
-            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung', 'preislisten']])
+            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung', 'preislisten', 'advancing']])
             // Die Buchhaltung steht nicht mehr unter Bereiche, sie kommt mit ihrem Modul
             ->assertFormFieldExists('areas_arbeitsbereiche', fn (CheckboxList $field): bool => !array_key_exists('buchhaltung', $field->getOptions())
                 && array_key_exists('events', $field->getOptions()))
@@ -124,7 +124,7 @@ class ModulesTest extends TestCase
         // Die Seite zeigt es so an; gespeichert gilt nur noch das Modul
         $this->actingAs($this->systemAdmin());
         Livewire::test(ManageSystem::class)
-            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'preislisten']])
+            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'preislisten', 'advancing']])
             ->fillForm(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung', 'preislisten']])
             ->call('save');
 

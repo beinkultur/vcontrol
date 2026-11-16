@@ -1,0 +1,344 @@
+{
+    "name": "Kultur",
+    "intro": "Zur Vorbereitung eurer Show bei uns in der LKH Arena bitten wir um die Beantwortung der folgenden Fragen sowie um Beachtung der Informationen.",
+    "structure": [
+        {
+            "title": "Veranstaltung",
+            "items": [
+                {
+                    "key": "veranstaltung",
+                    "type": "text",
+                    "label": "Veranstaltung",
+                    "binding": "event.title",
+                    "locked": true
+                },
+                {
+                    "key": "datum",
+                    "type": "date",
+                    "label": "Datum",
+                    "binding": "event.date",
+                    "locked": true
+                }
+            ]
+        },
+        {
+            "title": "Ansprechpersonen Veranstalter/Produktion",
+            "items": [
+                {
+                    "key": "tourleitung",
+                    "type": "text",
+                    "label": "Tourleitung / Örtlicher Vertreter",
+                    "binding": "onsite.name"
+                },
+                {
+                    "key": "tourleitung_email",
+                    "type": "text",
+                    "label": "E-Mail",
+                    "binding": "onsite.email"
+                },
+                {
+                    "key": "tourleitung_mobil",
+                    "type": "text",
+                    "label": "Mobil",
+                    "binding": "onsite.phone"
+                },
+                {
+                    "key": "produktion",
+                    "type": "text",
+                    "label": "Produktionsleitung / Technische Leitung"
+                },
+                {
+                    "key": "produktion_email",
+                    "type": "text",
+                    "label": "E-Mail"
+                },
+                {
+                    "key": "produktion_mobil",
+                    "type": "text",
+                    "label": "Mobil"
+                }
+            ]
+        },
+        {
+            "title": "Ansprechpersonen LKH Arena",
+            "items": [
+                {
+                    "key": "ap_advancing",
+                    "type": "person",
+                    "label": "Advancing LKH Arena",
+                    "locked": true
+                },
+                {
+                    "key": "ap_technik",
+                    "type": "person",
+                    "label": "Advancing LKH Arena techn. Fragen / Rigging",
+                    "locked": true
+                },
+                {
+                    "key": "ap_betriebsleitung_getin",
+                    "type": "person",
+                    "label": "Betriebsleitung ab Get-In",
+                    "locked": true
+                },
+                {
+                    "key": "ap_haustechnik_getin",
+                    "type": "person",
+                    "label": "Haustechniker ab Get-In",
+                    "locked": true
+                },
+                {
+                    "key": "ap_betriebsleitung_show",
+                    "type": "person",
+                    "label": "Betriebsleitung ab Showbeginn",
+                    "locked": true
+                },
+                {
+                    "key": "ap_veranstaltungsleitung",
+                    "type": "person",
+                    "label": "Veranstaltungsleitung",
+                    "locked": true
+                }
+            ]
+        },
+        {
+            "title": "Fahrzeuge",
+            "text": "Achtung: Da das Pflaster auf dem Parkplatz sehr empfindlich ist, dürfen Fahrzeuge über 7,5t nur auf den dafür vorgesehenen Flächen abgestellt werden. Ihr erhaltet einen Parkpositionsplan.\n\nTrucks müssen zum Laden bewegt werden.\n\nEs sind 30 kostenfreie Parkplätze für den Veranstalter vorgesehen. Ein Truck/Bus  entspricht 7 regulären Parkplätzen. Weitere Parkplätze werden in der Abschlussrechnung zum tagesaktuellen P1 Preis (8,32€ netto) an den Veranstalter berücksichtigt.",
+            "items": [
+                {
+                    "key": "busse",
+                    "type": "number",
+                    "label": "Busse (Anz.)"
+                },
+                {
+                    "key": "trucks",
+                    "type": "number",
+                    "label": "Trucks (Anz.)"
+                },
+                {
+                    "key": "sprinter",
+                    "type": "number",
+                    "label": "Transporter / Sprinter (Anz.)"
+                },
+                {
+                    "key": "pkw",
+                    "type": "number",
+                    "label": "PKW (Anz.)"
+                },
+                {
+                    "type": "info",
+                    "label": "Besucherparken",
+                    "text": "Damit alle Gäste rechtzeitig zu Showbeginn in der Arena sind, ist es sehr wichtig die Anfahrtsituation mit den Gästen zu kommunizieren. Dafür eignet sich ein Mail Out, welches einige Tage vor der Veranstaltung über eventim an die Ticketkäufer versandt wird."
+                }
+            ]
+        },
+        {
+            "title": "Schedule",
+            "items": [
+                {
+                    "key": "ankunft",
+                    "type": "text",
+                    "label": "Ankunft Nightliner / Trucks"
+                },
+                {
+                    "key": "get_in",
+                    "type": "text",
+                    "label": "Get-In",
+                    "binding": "schedule.get_in"
+                },
+                {
+                    "key": "aufbau_bestuhlung",
+                    "type": "text",
+                    "label": "Aufbau Restbestuhlung / Bühnengeländer"
+                },
+                {
+                    "key": "sicherheitsbesprechung",
+                    "type": "text",
+                    "label": "Sicherheitsbesprechung"
+                },
+                {
+                    "key": "einlass",
+                    "type": "text",
+                    "label": "Einlass",
+                    "binding": "schedule.admission"
+                },
+                {
+                    "key": "showbeginn",
+                    "type": "text",
+                    "label": "Showbeginn",
+                    "binding": "schedule.start_time"
+                },
+                {
+                    "key": "pause",
+                    "type": "text",
+                    "label": "Pause"
+                },
+                {
+                    "key": "va_ende",
+                    "type": "text",
+                    "label": "VA-Ende",
+                    "binding": "schedule.end_time"
+                },
+                {
+                    "key": "abbau_ende",
+                    "type": "text",
+                    "label": "Abbau Ende (ca.)",
+                    "binding": "schedule.load_out"
+                },
+                {
+                    "key": "curfew",
+                    "type": "text",
+                    "label": "Curfew",
+                    "binding": "schedule.curfew"
+                },
+                {
+                    "key": "schedule_besonderheiten",
+                    "type": "text",
+                    "label": "Besonderheiten"
+                }
+            ]
+        },
+        {
+            "title": "Bühne (freistehend)",
+            "items": [
+                {
+                    "key": "buehne_groesse",
+                    "type": "text",
+                    "label": "Größe"
+                },
+                {
+                    "key": "buehne_gelaender",
+                    "type": "text",
+                    "label": "Bühnengeländer (wo und ab wann anbauen?)"
+                },
+                {
+                    "key": "buehne_treppe",
+                    "type": "text",
+                    "label": "Treppenposition"
+                }
+            ]
+        },
+        {
+            "title": "Weitere technische Details",
+            "items": [
+                {
+                    "key": "sidemasking",
+                    "type": "text",
+                    "label": "Sidemasking gebucht? Reicht es bis zur Bühnenkante?"
+                },
+                {
+                    "key": "backdrop",
+                    "type": "text",
+                    "label": "Backdrop vom Haus"
+                },
+                {
+                    "key": "stapler",
+                    "type": "text",
+                    "label": "Stapler mitgebucht? (Keine Rampe örtlich!)"
+                },
+                {
+                    "key": "followspots",
+                    "type": "text",
+                    "label": "Werden Follow Spots mitgebracht?"
+                },
+                {
+                    "key": "foh",
+                    "type": "text",
+                    "label": "Werden Tische/Stühle für den FOH benötigt?"
+                }
+            ]
+        },
+        {
+            "title": "Merch",
+            "items": [
+                {
+                    "key": "merch_material",
+                    "type": "text",
+                    "label": "Werden Tische oder anderes Material benötigt?"
+                }
+            ]
+        },
+        {
+            "title": "Einlass",
+            "text": "Durch die bescheidene Verkehrslage empfehlen wir dringend eine Einlasszeit von 90 Minuten vor Showbeginn. ACHTUNG: Das Foyer der LKH Arena ist sehr klein. In jedem Fall bedeutet Einlass auch gleichzeitig Saaleinlass. Gäste können sich nicht zur Überbrückung nur im Foyer aufhalten.",
+            "items": [
+                {
+                    "type": "info",
+                    "label": "Einlasskontrolle",
+                    "text": "Personal via LKH Arena, Scanner müssen vom Veranstalter gestellt werden. Alternative: Sichtkontrolle ODER wir erhalten ein Leserecht für die eventim Veranstaltung (Mandantennummer 2169)"
+                },
+                {
+                    "key": "abendkasse",
+                    "type": "text",
+                    "label": "Abendkasse besetzt von LKH Arena (29€/h) oder Veranstalter?"
+                }
+            ]
+        },
+        {
+            "title": "Hospitality",
+            "text": "Bitte den Backstageplan beachten.\n\nDie LKH Arena verfügt über keine Anschlüsse für mitgebrachte Waschmaschinen.\nDie vorhandene Waschmaschine und der vorhandene Trockner können gegen eine Nutzungsgebühr von 50€/Gerät und vorheriger Anmeldung bis 14 Uhr am Showtag genutzt werden. \n\nHand- und Duschtücher können in begrenzter Stückzahl nach vorheriger Anmeldung verliehen werden (5€/Stück). Fehlende Handtücher werden zum Neuanschaffungspreis in der Schlussrechnung an den Veranstalter berücksichtigt.",
+            "items": [
+                {
+                    "key": "handtuecher",
+                    "type": "text",
+                    "label": "Handtücher benötigt?"
+                }
+            ]
+        },
+        {
+            "title": "Catering",
+            "text": "Wir sind selbst Hausgastronom. Gern erstellen wir ein Angebot nach euren Wünschen.",
+            "items": [
+                {
+                    "key": "catering",
+                    "type": "text",
+                    "label": "Wird ein Caterer mitgebracht? Wenn ja, welche Ausstattung wird benötigt?"
+                }
+            ]
+        },
+        {
+            "title": "Sicherheit",
+            "items": [
+                {
+                    "key": "ordner_backstage",
+                    "type": "text",
+                    "label": "Wird ein zusätzlicher Ordner für den Backstagebereich benötigt, welcher früher als 30 Minuten vor Einlass starten soll?"
+                },
+                {
+                    "key": "feuergefaehrlich",
+                    "type": "text",
+                    "label": "Gibt es feuergefährliche Handlungen oder sonstige Handlungen von denen eine Gefahr für die Sicherheit der Beteiligten ausgeht? Diese muss uns zur Genehmigung spätestens 6 Wochen vor der Veranstaltung bekannt sein."
+                },
+                {
+                    "key": "sicherheit_sonstiges",
+                    "type": "textarea",
+                    "label": "Sonstige sicherheitsrelevante Themen"
+                },
+                {
+                    "type": "info",
+                    "label": "Hinweise",
+                    "text": "Unmittelbar vor jeder Veranstaltung wird von uns eine Begrüßung und Sicherheitsinformation über die PA oder die Hausanlage eingespielt. Dies ist im eigenen Ablauf zu bedenken.\n\nAußer für szenische Zwecke auf der Bühne, ist das Rauchen und Dampfen (oder ähnliche Handlungen die Dampf, Qualm oder Rauch erzeugen) in allen Räumen der Arena verboten. Ausnahmen gelten nach vorheriger Absprachen für Catering und Küchen. \n\nWir sind Fans von Produktionen, bei denen Organistationspflichten, Arbeitsschutzregeln- und Gesetze sowie die gängigen DIN Normen selbstständig gelebt werden.\nDa es sich bei der LKH Arena um eine Versammlungsstätte nach NVStättVO handelt, gelten selbstverständlich auch alle Regeln für den Betrieb einer solchen. Wenn es spezielle Fragen dazu gibt, meldet euch gern bei uns."
+                }
+            ]
+        },
+        {
+            "title": "Sonstiges",
+            "items": [
+                {
+                    "key": "verkauf_waehrend_show",
+                    "type": "text",
+                    "label": "Darf während der  Show verkauft werden, falls Gäste nachfragen?"
+                },
+                {
+                    "type": "info",
+                    "label": "Ordnungsdienst & Sanis",
+                    "text": "Ordnungsdienst und Sanitätsdienst wurden durch die LKH Arena bestellt."
+                },
+                {
+                    "key": "anmerkungen",
+                    "type": "textarea",
+                    "label": "sonstige Anmerkungen"
+                }
+            ]
+        }
+    ]
+}

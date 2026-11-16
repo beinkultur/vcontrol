@@ -15,6 +15,7 @@ enum Module: string
     case GuestList = 'gaesteliste';
     case Accounting = 'buchhaltung';
     case PriceLists = 'preislisten';
+    case Advancing = 'advancing';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum Module: string
             self::GuestList => 'Gästeliste',
             self::Accounting => 'Buchhaltung',
             self::PriceLists => 'Preislisten & Costing',
+            self::Advancing => 'Advancing',
         };
     }
 
@@ -36,6 +38,7 @@ enum Module: string
             self::GuestList => 'Gäste mit Freikarten je Event und die Liste zum Drucken für den Einlass.',
             self::Accounting => 'Finanzen, FIBU-Status und Eingangsrechnungen je Event, die Buchhaltungsliste und die Finanz-Warnung.',
             self::PriceLists => 'Preislisten der Venue mit Kostenpunkten, die Preisliste je Event und das Costing, das der Eventmanager daraus erstellt und als PDF verschickt. Die Buchhaltung sieht beides.',
+            self::Advancing => 'Fragenkatalog an den Veranstalter je Event: vorausgefüllt unter Planung › Advancing, Link ohne Konto per Mail, Antworten mit Markierung der Änderungen. Die Kataloge spielt der Betreiber ein (vc:advancing-catalog).',
         };
     }
 

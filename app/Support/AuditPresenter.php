@@ -85,6 +85,8 @@ final class AuditPresenter
         'inquiry_dates' => 'Wunschtermin',
         'settings' => 'Einstellung',
         'daysheets' => 'Daysheet',
+        'advancing_templates' => 'Advancing-Katalog',
+        'event_advancings' => 'Advancing',
         'import' => 'Import',
         'demo' => 'Demodaten',
     ];
@@ -152,6 +154,8 @@ final class AuditPresenter
         'inquiry_dates' => [Area::Anfragen],
         'settings' => [Area::AdminStammdaten],
         'daysheets' => [Area::Events],
+        'advancing_templates' => [Area::Events],
+        'event_advancings' => [Area::Events],
     ];
 
     /** @return list<string>|null Tabellen, deren Einträge der Benutzer sieht; null = alle (Admin) */
@@ -238,6 +242,11 @@ final class AuditPresenter
         'hidden_from_externals' => 'Für Externe verborgen',
         // Daysheets
         'recipients_to' => 'An', 'recipients_bcc' => 'BCC', 'expires_at' => 'Gültig bis', 'revoked_at' => 'Link gesperrt', 'token_hash' => 'Schlüssel',
+        // Advancing
+        'template_name' => 'Katalog', 'advancing_template_id' => 'Katalog', 'structure' => 'Fragen', 'prefill' => 'Vorbelegung',
+        'answers' => 'Antworten des Veranstalters', 'token' => 'Link', 'sent_at' => 'Versendet', 'sent_by' => 'Versendet von',
+        'first_opened_at' => 'Zuerst geöffnet', 'last_saved_at' => 'Zuletzt gespeichert', 'submitted_at' => 'Abgegeben', 'submit_count' => 'Abgaben',
+        'closed_at' => 'Abgeschlossen', 'closed_by_name' => 'Abgeschlossen von',
         // Bestellscheine, Übergaben, Schäden, Checklisten
         'ordered_from' => 'Bestellt von', 'ordered_at' => 'Bestellt am', 'signature' => 'Unterschrift', 'is_settled' => 'Abgerechnet',
         'order_slip_id' => 'Bestellschein', 'article_name' => 'Artikel', 'category_name' => 'Kategorie', 'unit' => 'Einheit',
@@ -269,6 +278,8 @@ final class AuditPresenter
         'inquiry_dates' => ['option_date' => 'Termin'],
         'calendar_entries' => ['calendar_key' => 'Ebene', 'all_day' => 'Ganztägig'],
         'promoter_contacts' => ['role' => 'Funktion'],
+        'advancing_templates' => ['intro' => 'Einleitung'],
+        'event_advancings' => ['intro' => 'Einleitung'],
         'meters' => ['number' => 'Zählernummer', 'location' => 'Standort'],
         'meter_readings' => ['value' => 'Stand', 'position' => 'Event-Stand'],
     ];

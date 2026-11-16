@@ -220,6 +220,18 @@ class Event extends Model
         return $this->hasMany(EventNote::class);
     }
 
+    /** Advancing (Modul Advancing): höchstens eins je Event (Unique-Index). @return HasOne<EventAdvancing, $this> */
+    public function advancing(): HasOne
+    {
+        return $this->hasOne(EventAdvancing::class);
+    }
+
+    /** Dasselbe als Liste – nur für den Relation Manager unter Planung › Advancing. @return HasMany<EventAdvancing, $this> */
+    public function advancings(): HasMany
+    {
+        return $this->hasMany(EventAdvancing::class);
+    }
+
     /** Versendete Daysheet-Links. @return HasMany<Daysheet, $this> */
     public function daysheets(): HasMany
     {
