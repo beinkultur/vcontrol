@@ -11,7 +11,6 @@ use App\Models\EventAssignment;
 use App\Models\EventFile;
 use App\Models\EventNote;
 use App\Models\EventService;
-use App\Models\Setting;
 use Closure;
 
 /**
@@ -55,7 +54,7 @@ final class ExternSheet
             'title' => (string) $event->title,
             'date' => self::date($event),
             'promoter' => $event->promoter?->name,
-            'venue' => Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name'),
+            'venue' => VenueIdentity::name(),
             'cancelled' => EventDisplay::statusKind($event->status) === 'cancelled',
             'times' => self::times($event),
             'contacts' => self::contacts($event),

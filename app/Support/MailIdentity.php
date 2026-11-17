@@ -28,6 +28,6 @@ final class MailIdentity
 
     private static function venue(): string
     {
-        return Setting::lookup(Setting::VENUE_NAME) ?: (string) config('mail.from.name');
+        return VenueIdentity::configured() ?? (string) config('mail.from.name');
     }
 }

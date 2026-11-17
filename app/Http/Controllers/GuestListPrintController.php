@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Access\Module;
 use App\Models\Event;
-use App\Models\Setting;
 use App\Support\GuestLists;
+use App\Support\VenueIdentity;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -43,7 +43,7 @@ class GuestListPrintController extends Controller
             'event' => $event->load('promoter'),
             'guests' => $guests,
             'ticketTotal' => (int) $guests->sum('free_tickets'),
-            'venueName' => Setting::lookup(Setting::VENUE_NAME),
+            'venueName' => VenueIdentity::configured(),
         ]);
     }
 }

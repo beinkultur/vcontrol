@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Access\Module;
 use App\Models\EventAdvancing;
-use App\Models\Setting;
 use App\Support\Advancings;
 use App\Support\Audit;
 use App\Support\EventDisplay;
+use App\Support\VenueIdentity;
 use App\Support\VenueLogo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -144,6 +144,6 @@ class AdvancingController extends Controller
 
     private static function venue(): string
     {
-        return Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name');
+        return VenueIdentity::name();
     }
 }

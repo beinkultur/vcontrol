@@ -80,7 +80,7 @@ final class Daysheets
      */
     public static function fill(string $text, Event $event, ?string $link = null, ?CarbonInterface $validUntil = null): string
     {
-        $venue = Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name');
+        $venue = VenueIdentity::name();
         $replace = [
             '{event}' => (string) $event->title,
             '{datum}' => $event->starts_at ? EventDisplay::weekday($event->starts_at) . ', ' . $event->starts_at->format('d.m.Y') : 'Datum offen',

@@ -6,9 +6,9 @@ use App\Access\Module;
 use App\Models\Daysheet;
 use App\Models\Event;
 use App\Models\EventFile;
-use App\Models\Setting;
 use App\Support\CostingSettings;
 use App\Support\ExternSheet;
+use App\Support\VenueIdentity;
 use App\Support\VenueLogo;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -123,7 +123,7 @@ class DaysheetController extends Controller
 
     private static function venue(): string
     {
-        return Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name');
+        return VenueIdentity::name();
     }
 
     /** Logo der Venue für den Kopf, in Pixeln (VenueLogo) */

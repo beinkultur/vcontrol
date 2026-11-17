@@ -7,7 +7,7 @@
 --}}
 @php
     try {
-        $venue = \App\Models\Setting::lookup(\App\Models\Setting::VENUE_NAME);
+        $venue = \App\Support\VenueIdentity::configured();
         $accent = \App\Enums\ColorScheme::current()->swatches()[0] ?? null;
     } catch (\Throwable) {
         $venue = null;

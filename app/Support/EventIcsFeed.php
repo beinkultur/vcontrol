@@ -43,7 +43,7 @@ final class EventIcsFeed
 
     public static function build(): string
     {
-        $venue = Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name');
+        $venue = VenueIdentity::name();
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',

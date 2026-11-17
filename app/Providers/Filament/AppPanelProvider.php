@@ -12,9 +12,9 @@ use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Http\Middleware\RequirePasswordChange;
-use App\Models\Setting;
 use App\Models\User;
 use App\Support\Backups;
+use App\Support\VenueIdentity;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -60,13 +60,13 @@ class AppPanelProvider extends PanelProvider
             // Mit dem Venue-Namen – jede Venue hat ihre eigene Installation. In der
             // Kopfzeile (und auf der Anmeldeseite) stehen das Logo und die Venue,
             // „VenueControl“ bleibt im Fenstertitel. Auf dem Handy nur das Logo (vcontrol.css).
-            ->brandName(fn (): string => collect([config('app.name'), Setting::lookup(Setting::VENUE_NAME)])
+            ->brandName(fn (): string => collect([config('app.name'), VenueIdentity::configured()])
                 ->filter()
                 ->implode(' · '))
             ->brandLogo(fn (): HtmlString => new HtmlString(sprintf(
                 '<span class="vc-brand"><img class="vc-brand__logo" src="%s" alt="VenueControl"><span class="vc-brand__name">%s</span></span>',
                 e(asset('images/logo.svg')),
-                e(Setting::lookup(Setting::VENUE_NAME) ?: config('app.name')),
+                e(VenueIdentity::name()),
             )))
             ->brandLogoHeight('2rem')
             // Farbschema, das der System-Admin unter Verwaltung › System wählt

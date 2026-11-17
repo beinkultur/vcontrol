@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\Costing;
-use App\Models\Setting;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -31,7 +30,7 @@ final class CostingPdf
         $dompdf->loadHtml(view('costing-pdf', [
             'costing' => $costing,
             'event' => $costing->event,
-            'venue' => Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name'),
+            'venue' => VenueIdentity::name(),
             'venueLogo' => VenueLogo::fitted(40, 12),
             'sections' => $costing->printedSections(),
         ])->render(), 'UTF-8');

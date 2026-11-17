@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\ExternEvents\ExternEventResource;
 use App\Models\EventAssignment;
-use App\Models\Setting;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 
@@ -21,7 +20,7 @@ final class PersonalIcsFeed
 {
     public static function build(User $user): string
     {
-        $venue = Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name');
+        $venue = VenueIdentity::name();
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',

@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Mail\GuestListMail;
 use App\Models\Event;
 use App\Models\EventGuest;
-use App\Models\Setting;
 use App\Models\User;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -75,7 +74,7 @@ final class GuestLists
             'event' => $event->loadMissing('promoter'),
             'guests' => $guests,
             'ticketTotal' => (int) $guests->sum('free_tickets'),
-            'venue' => Setting::lookup(Setting::VENUE_NAME) ?: (string) config('app.name'),
+            'venue' => VenueIdentity::name(),
         ])->render(), 'UTF-8');
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
