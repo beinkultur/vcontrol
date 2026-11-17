@@ -119,7 +119,9 @@ Bedienbar:
   Überweisung“, Wert `transfer`). PAX abgerechnet steht seit
   21.10.2026 unter Buchung › Buchhaltung. Die Zählerstände gibt es nur hier,
   nicht in der PHP-Version.
-- **Durchführung vollständig** (`App\Support\ExecutionCheck`, 21.10.2026): jeder
+- **Durchführung vollständig** (`App\Support\ExecutionCheck`, 21.10.2026; seit
+  17.11.2026 nur mit dem Modul „Betrieb“ – ohne das Modul fehlen Reiter und Check,
+  die Durchführung gilt als erfasst und zählt im Fortschritt nur „abgeschlossen“): jeder
   Punkt unter Check hat einen Wert (egal welchen; Sonderreinigung nur ja/nein;
   der Merch-Fee-Text zählt nicht, „Merch-Fee eingesammelt“ schon), Bus-Strom
   auch (0 zählt), bei VA-Kategorie 1 „Konzert“

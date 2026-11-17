@@ -164,7 +164,7 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   Setting `disabled_areas`); bis dort zum ersten Mal gespeichert wird, gilt
   `VC_DISABLED_AREAS`. Benutzer, Rollen & Rechte und Halle bleiben immer an.
 - **Module** (`App\Access\Module`): was eine Halle bucht – Bühnenplan, Saalplan,
-  Gästeliste, Buchhaltung, Preislisten & Costing, Advancing (seit 17.11.2026, docs/EVENTS.md). Der System-Admin gibt sie unter Verwaltung › System
+  Gästeliste, Buchhaltung, Preislisten & Costing, Advancing (seit 17.11.2026, docs/EVENTS.md), Betrieb (Durchführung › Betrieb mit dem Durchführungs-Check, seit 17.11.2026; ohne das Modul gilt die Durchführung als erfasst). Der System-Admin gibt sie unter Verwaltung › System
   frei (Setting `modules`; ohne Eintrag sind alle frei). Ohne Freigabe ist ein
   Modul für alle ausgeblendet, Gespeichertes bleibt. Jede Stelle, die ein Modul
   zeigt, fragt `Module::…->isEnabled()`: Reiter und Felder, Links und Knöpfe,
@@ -220,4 +220,7 @@ Version erreichen muss. Weiterentwickelt wird nur noch diese Laravel-Version.
   `EventFile::inlineType()`), FileUpload-Felder mit `->preventFilePathTampering()`.
 - Die Server-CLI ist PHP 8.3 (`php`), daneben gibt es `php85`. Code muss unter beiden
   laufen.
+- Den Namen der Venue nie direkt aus `Setting::VENUE_NAME` lesen, sondern über
+  `App\Support\VenueIdentity` (Vorbereitung für mehrere Venues je Installation,
+  docs/superpowers/specs/2026-11-17-mehrere-venues-design.md).
 - Oberfläche, Texte, Kommentare und Commit-Nachrichten auf Deutsch.
