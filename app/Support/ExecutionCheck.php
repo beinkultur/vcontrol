@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Access\Module;
 use App\Models\Event;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
  * mindestens ein Raum Backstage oder Büro. Vergangene Events, bei denen etwas
  * fehlt, bleiben in der Event-Liste stehen (Zeitraum „Zukünftige“, Event::
  * scopeExecutionIncomplete), der Fortschritt der Durchführung zählt es mit.
+ *
+ * Nur mit dem Modul Betrieb (17.11.2026): ohne das Modul fehlt nie etwas.
  */
 final class ExecutionCheck
 {
@@ -54,6 +57,9 @@ final class ExecutionCheck
      */
     public static function missing(Event $event): array
     {
+        if (!Module::Operations->isEnabled()) {
+            return [];
+        }
         $missing = self::missingChecks($event);
         if ($event->operation?->bus_power === null) {
             $missing[] = 'Bus-Strom';
@@ -73,6 +79,9 @@ final class ExecutionCheck
      */
     public static function missingChecks(Event $event): array
     {
+        if (!Module::Operations->isEnabled()) {
+            return [];
+        }
         $missing = [];
         foreach (self::CHECKS as $column => [$relation, $label]) {
             if (in_array($column, self::OPTIONAL, true)) {
@@ -104,6 +113,11 @@ final class ExecutionCheck
      */
     public static function applyIncomplete(Builder $query): void
     {
+        if (!Module::Operations->isEnabled()) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
         $byRelation = [];
         foreach (self::CHECKS as $column => [$relation]) {
             if (!in_array($column, self::OPTIONAL, true)) {

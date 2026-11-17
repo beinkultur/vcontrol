@@ -137,7 +137,8 @@ class AccountingDashboard extends EditRecord
                     Group::make(AccountingFields::all())->columnSpan(['xl' => 3]),
                     Group::make([
                         self::eventSection(),
-                        self::executionSection(),
+                        // Durchführung › Betrieb nur mit dem Modul Betrieb
+                        ...(Module::Operations->isEnabled() ? [self::executionSection()] : []),
                         self::meterSection(),
                         self::orderSlipSection(),
                         self::servicesSection(),

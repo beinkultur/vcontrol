@@ -79,7 +79,7 @@ class ModulesTest extends TestCase
         $this->actingAs($this->systemAdmin());
 
         Livewire::test(ManageSystem::class)
-            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung', 'preislisten', 'advancing']])
+            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung', 'preislisten', 'advancing', 'betrieb']])
             // Die Buchhaltung steht nicht mehr unter Bereiche, sie kommt mit ihrem Modul
             ->assertFormFieldExists('areas_arbeitsbereiche', fn (CheckboxList $field): bool => !array_key_exists('buchhaltung', $field->getOptions())
                 && array_key_exists('events', $field->getOptions()))
@@ -124,7 +124,7 @@ class ModulesTest extends TestCase
         // Die Seite zeigt es so an; gespeichert gilt nur noch das Modul
         $this->actingAs($this->systemAdmin());
         Livewire::test(ManageSystem::class)
-            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'preislisten', 'advancing']])
+            ->assertSchemaStateSet(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'preislisten', 'advancing', 'betrieb']])
             ->fillForm(['modules' => ['buehnenplan', 'saalplan', 'gaesteliste', 'buchhaltung', 'preislisten']])
             ->call('save');
 
@@ -139,7 +139,8 @@ class ModulesTest extends TestCase
         Setting::put('stage_label', 'Halle 2 stage');
         $token = $this->daysheetToken();
 
-        $this->only(Module::SeatingPlan, Module::GuestList, Module::Accounting);
+        // Betrieb bleibt an: der Sold-Out-Award steht unter Durchführung › Betrieb
+        $this->only(Module::SeatingPlan, Module::GuestList, Module::Accounting, Module::Operations);
         $this->actingAs($this->admin());
 
         $this->get(EventResource::getUrl('stage-plan', ['record' => $this->event]))->assertForbidden();

@@ -122,6 +122,10 @@ final class EventProgress
     /** @return list<bool> */
     private static function executionChecks(Event $e): array
     {
+        // Ohne das Modul Betrieb zählt nur „Event abgeschlossen“
+        if (!Module::Operations->isEnabled()) {
+            return [(bool) $e->closed];
+        }
         $op = $e->operation;
 
         // PAX abgerechnet zählt seit 21.10.2026 nicht mehr – es steht unter Buchung › Buchhaltung;

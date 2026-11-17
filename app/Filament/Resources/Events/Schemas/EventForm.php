@@ -212,14 +212,15 @@ class EventForm
                             ]))),
                         ]),
                         self::phase('Durchführung', 'durchfuehrung')->schema([
-                            self::sections('durchfuehrung', [
-                                self::tab('Betrieb', 'betrieb')->schema(self::execution()),
+                            self::sections('durchfuehrung', array_values(array_filter([
+                                // Nur mit dem Modul Betrieb (Verwaltung › System)
+                                Module::Operations->isEnabled() ? self::tab('Betrieb', 'betrieb')->schema(self::execution()) : null,
                                 self::tab('Übergabeprotokolle', 'uebergabe')->schema([self::embedded(HandoverProtocolsRelationManager::class)]),
                                 self::tab('Bestellscheine', 'bestellscheine')->schema([self::embedded(OrderSlipsRelationManager::class)]),
                                 self::tab('Checklisten', 'checklisten')->schema([self::embedded(ShowChecklistsRelationManager::class)]),
                                 self::tab('Schäden', 'schaeden')->schema([self::embedded(DamagesRelationManager::class)]),
                                 self::tab('Daysheets', 'daysheets')->schema([self::embedded(DaysheetsRelationManager::class)]),
-                            ]),
+                            ]))),
                         ]),
                     ]),
             ]);

@@ -16,6 +16,7 @@ enum Module: string
     case Accounting = 'buchhaltung';
     case PriceLists = 'preislisten';
     case Advancing = 'advancing';
+    case Operations = 'betrieb';
 
     public function label(): string
     {
@@ -26,6 +27,7 @@ enum Module: string
             self::Accounting => 'Buchhaltung',
             self::PriceLists => 'Preislisten & Costing',
             self::Advancing => 'Advancing',
+            self::Operations => 'Betrieb',
         };
     }
 
@@ -39,6 +41,7 @@ enum Module: string
             self::Accounting => 'Finanzen, FIBU-Status und Eingangsrechnungen je Event, die Buchhaltungsliste und die Finanz-Warnung.',
             self::PriceLists => 'Preislisten der Venue mit Kostenpunkten, die Preisliste je Event und das Costing, das der Eventmanager daraus erstellt und als PDF verschickt. Die Buchhaltung sieht beides.',
             self::Advancing => 'Fragenkatalog an den Veranstalter je Event: vorausgefüllt unter Planung › Advancing, Link ohne Konto per Mail, Antworten mit Markierung der Änderungen. Die Kataloge spielt der Betreiber ein (vc:advancing-catalog).',
+            self::Operations => 'Durchführung › Betrieb je Event: Räume (Backstage, Büro), Bus-Strom, Zählerstände je Event und der Check (Sonderreinigung, Haus-Delay, Merch-Fee …). Ohne das Modul gilt die Durchführung als erfasst: vergangene Events bleiben nicht unter „Zukünftige“ stehen.',
         };
     }
 
