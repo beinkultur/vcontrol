@@ -22,6 +22,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Gästeliste eines Events mit Freikarten. In der Detailansicht nur lesend.
@@ -155,6 +156,13 @@ class GuestsRelationManager extends RelationManager
                         $sender instanceof User ? $sender : null);
                 } catch (InvalidArgumentException $exception) {
                     Notification::make()->danger()->title($exception->getMessage())->send();
+                    $action->halt();
+                } catch (Throwable $exception) {
+                    // Mailserver lehnt ab (etwa falsches Passwort in der .env): melden, nichts protokolliert
+                    report($exception);
+                    Notification::make()->danger()->title('Versand fehlgeschlagen')
+                        ->body('Die Mail ging nicht raus. Bitte später noch einmal versuchen oder dem Betreiber Bescheid geben.')
+                        ->persistent()->send();
                     $action->halt();
                 }
 

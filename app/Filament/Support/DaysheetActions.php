@@ -18,6 +18,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * „Daysheet versenden“ – im Kopf des Events und unter Durchführung › Daysheets.
@@ -87,6 +88,15 @@ final class DaysheetActions
                     );
                 } catch (InvalidArgumentException $exception) {
                     Notification::make()->danger()->title($exception->getMessage())->send();
+                    $action->halt();
+
+                    return;
+                } catch (Throwable $exception) {
+                    // Mailserver lehnt ab (etwa falsches Passwort in der .env): melden, nichts gespeichert
+                    report($exception);
+                    Notification::make()->danger()->title('Versand fehlgeschlagen')
+                        ->body('Die Mail ging nicht raus, das Daysheet wurde nicht verschickt. Bitte später noch einmal versuchen oder dem Betreiber Bescheid geben.')
+                        ->persistent()->send();
                     $action->halt();
 
                     return;
