@@ -13,6 +13,7 @@ use App\Models\EventAdvancing;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
@@ -60,6 +61,69 @@ final class Advancings
             'structure' => $structure,
             'prefill' => self::prefillFromEvent($event, $structure),
         ]);
+    }
+
+    /**
+     * Vorbelegung des Planers speichern. Wo er einen Wert ändert oder den des
+     * Veranstalters übernimmt, gilt danach seiner: die Antwort des Veranstalters
+     * zu dieser Frage fällt weg (sie bleibt im Änderungsprotokoll). Antworten zu
+     * Fragen, die er nicht anfasst, bleiben.
+     *
+     * @param  array<string, string>  $prefill
+     */
+    public static function updatePrefill(EventAdvancing $advancing, array $prefill): void
+    {
+        $before = (array) $advancing->prefill;
+        $answers = (array) $advancing->answers;
+        foreach ($answers as $key => $answer) {
+            $new = self::normalize($prefill[$key] ?? null);
+            if ($new !== self::normalize($before[$key] ?? null) || $new === self::normalize($answer)) {
+                unset($answers[$key]);
+            }
+        }
+        $advancing->update(['prefill' => $prefill, 'answers' => $answers === [] ? null : $answers]);
+    }
+
+    /**
+     * Das Event hat sich geändert (Event::updated): Titel und Datum in der
+     * Vorbelegung ziehen nach, solange dort noch der alte Wert aus dem Event steht
+     * – hat der Planer sie geändert, bleibt seiner. Ein versendeter, nicht
+     * gesperrter Link gilt bis zum Tag nach dem neuen Datum.
+     */
+    public static function syncWithEvent(Event $event): void
+    {
+        $advancing = $event->advancing()->first();
+        if ($advancing === null || $advancing->isClosed()) {
+            return;
+        }
+        $updates = [];
+        $prefill = (array) $advancing->prefill;
+        $old = [
+            'event.title' => (string) $event->getOriginal('title'),
+            'event.date' => $event->getOriginal('starts_at')?->format('Y-m-d'),
+        ];
+        foreach ($advancing->questions() as $key => $question) {
+            $binding = $question['binding'] ?? null;
+            if (!is_string($binding) || !array_key_exists($binding, $old)) {
+                continue;
+            }
+            $new = self::bindingValue($event, $binding);
+            if (self::normalize($prefill[$key] ?? null) === self::normalize($old[$binding]) && self::normalize($new) !== self::normalize($old[$binding])) {
+                if (self::normalize($new) === '') {
+                    unset($prefill[$key]);
+                } else {
+                    $prefill[$key] = self::normalize($new);
+                }
+                $updates['prefill'] = $prefill;
+            }
+        }
+        $validUntil = Daysheets::validUntil($event);
+        if ($advancing->isSent() && !$advancing->isRevoked() && $validUntil !== null) {
+            $updates['expires_at'] = $validUntil;
+        }
+        if ($updates !== []) {
+            $advancing->update($updates);
+        }
     }
 
     /**
@@ -118,16 +182,22 @@ final class Advancings
 
     /**
      * Zur Wahl bei Personenfragen: „tba.“, aktive Personen-Konten (Mitarbeiter der
-     * Venue, Freelancer), nicht archivierte Kontakte.
+     * Venue, Freelancer), nicht archivierte Kontakte. System-Admins nur für
+     * System-Admins (wie überall, Scope visibleTo). Was schon gespeichert ist
+     * ($keep), bleibt wählbar – auch archiviert oder inaktiv –, sonst ließe sich die
+     * Vorbelegung nicht mehr speichern.
      *
+     * @param  list<string>  $keep  gespeicherte Verweise (user:ID, contact:ID)
      * @return array<string, string>
      */
-    public static function personOptions(): array
+    public static function personOptions(array $keep = []): array
     {
+        $viewer = Auth::user();
         $options = ['tba' => 'tba.'];
         $users = User::query()
             ->where('is_active', true)
             ->whereIn('account_type', array_map(fn (AccountType $type): string => $type->value, array_filter(AccountType::cases(), fn (AccountType $type): bool => $type->hasPositions())))
+            ->visibleTo($viewer instanceof User ? $viewer : null)
             ->orderBy('last_name')->orderBy('first_name')
             ->get();
         foreach ($users as $user) {
@@ -136,6 +206,12 @@ final class Advancings
         foreach (Contact::query()->where('is_archived', false)->orderBy('name')->get() as $contact) {
             $options["contact:{$contact->id}"] = self::label((string) $contact->name, $contact->email, $contact->phone);
         }
+        foreach ($keep as $ref) {
+            $ref = (string) $ref;
+            if (!isset($options[$ref]) && self::person($ref) !== null) {
+                $options[$ref] = self::personLabel($ref);
+            }
+        }
 
         return $options;
     }
@@ -143,18 +219,25 @@ final class Advancings
     /** „Name  |  E-Mail  |  Telefon“ zum Verweis (user:ID, contact:ID), immer der aktuelle Stand; sonst „tba.“ */
     public static function personLabel(?string $ref): string
     {
-        [$type, $id] = explode(':', (string) $ref, 2) + [1 => ''];
-        $id = ctype_digit($id) ? (int) $id : 0;
-        $person = match ($type) {
-            'user' => $id > 0 ? User::query()->find($id) : null,
-            'contact' => $id > 0 ? Contact::query()->find($id) : null,
-            default => null,
-        };
+        $person = self::person($ref);
 
         return match (true) {
             $person instanceof User => self::label($person->getFilamentName(), $person->email, $person->phone),
             $person instanceof Contact => self::label((string) $person->name, $person->email, $person->phone),
             default => 'tba.',
+        };
+    }
+
+    private static function person(?string $ref): User|Contact|null
+    {
+        [$type, $id] = explode(':', (string) $ref, 2) + [1 => ''];
+        $id = ctype_digit($id) ? (int) $id : 0;
+
+        return match (true) {
+            $id <= 0 => null,
+            $type === 'user' => User::query()->find($id),
+            $type === 'contact' => Contact::query()->find($id),
+            default => null,
         };
     }
 

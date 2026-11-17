@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Access\Module;
 use App\Enums\RoomUsage;
+use App\Support\Advancings;
 use App\Support\EventDisplay;
 use App\Support\EventNumber;
 use App\Support\ExecutionCheck;
@@ -79,6 +80,10 @@ class Event extends Model
             // Zählerstände des Events wandern mit seinen Tagen
             if ($event->wasChanged(['starts_at', 'ends_at'])) {
                 MeterReadings::syncEventTimes($event);
+            }
+            // Advancing: Titel und Datum in der Vorbelegung, Gültigkeit des Links
+            if ($event->wasChanged(['title', 'starts_at', 'ends_at'])) {
+                Advancings::syncWithEvent($event);
             }
         });
     }

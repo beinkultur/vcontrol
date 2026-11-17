@@ -5,7 +5,6 @@ namespace App\Filament\Support;
 use App\Models\EventAdvancing;
 use App\Support\Advancings;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -21,9 +20,14 @@ use Filament\Support\Icons\Heroicon;
  */
 final class AdvancingFields
 {
-    /** @return list<Component> */
-    public static function schema(EventAdvancing $advancing): array
+    /**
+     * @param  bool  $editable  false: nur lesen – Werte als Text, ohne Auswahllisten
+     *     (die Personenliste mit Kontaktdaten kommt dann gar nicht erst ins HTML)
+     * @return list<Component>
+     */
+    public static function schema(EventAdvancing $advancing, bool $editable = true): array
     {
+        $prefill = (array) $advancing->prefill;
         $sections = [];
         foreach ((array) $advancing->structure as $s => $section) {
             $components = [];
@@ -36,7 +40,7 @@ final class AdvancingFields
 
                     continue;
                 }
-                $field = self::field($item);
+                $field = self::field($item, $editable, isset($prefill[$item['key']]) ? (string) $prefill[$item['key']] : null);
                 $hint = self::changeHint($advancing, (string) $item['key']);
                 if ($hint !== null) {
                     $field->hint($hint)->hintColor('warning')->hintIcon(Heroicon::OutlinedExclamationTriangle);
@@ -89,16 +93,22 @@ final class AdvancingFields
         return $prefill;
     }
 
-    private static function field(array $item): Field
+    /** Feld für eine Frage; nur lesen: Text mit dem angezeigten Wert. */
+    public static function field(array $item, bool $editable = true, ?string $value = null): Component
     {
         $name = 'prefill.' . $item['key'];
+        if (!$editable) {
+            return TextEntry::make('show_' . $item['key'])
+                ->label((string) $item['label'])
+                ->state(Advancings::display($item, $value));
+        }
         $field = match ($item['type'] ?? 'text') {
             'textarea' => Textarea::make($name)->rows(3)->maxLength(5000),
             'number' => TextInput::make($name)->integer()->minValue(0)->maxValue(9999),
             'date' => DatePicker::make($name)->native(false)->displayFormat('d.m.Y')->format('Y-m-d'),
             'yes_no' => Select::make($name)->options(['ja' => 'ja', 'nein' => 'nein']),
             'choice' => Select::make($name)->options(array_combine((array) $item['options'], (array) $item['options'])),
-            'person' => Select::make($name)->options(fn (): array => Advancings::personOptions())->searchable(),
+            'person' => Select::make($name)->options(fn (): array => Advancings::personOptions(array_filter([$value])))->searchable(),
             default => TextInput::make($name)->maxLength(500),
         };
         $hints = array_filter([

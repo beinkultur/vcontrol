@@ -244,7 +244,7 @@ final class AuditPresenter
         'recipients_to' => 'An', 'recipients_bcc' => 'BCC', 'expires_at' => 'Gültig bis', 'revoked_at' => 'Link gesperrt', 'token_hash' => 'Schlüssel',
         // Advancing
         'template_name' => 'Katalog', 'advancing_template_id' => 'Katalog', 'structure' => 'Fragen', 'prefill' => 'Vorbelegung',
-        'answers' => 'Antworten des Veranstalters', 'token' => 'Link', 'sent_at' => 'Versendet', 'sent_by' => 'Versendet von',
+        'answers' => 'Antworten des Veranstalters', 'token' => 'Link', 'sent_by' => 'Versendet von',
         'first_opened_at' => 'Zuerst geöffnet', 'last_saved_at' => 'Zuletzt gespeichert', 'submitted_at' => 'Abgegeben', 'submit_count' => 'Abgaben',
         'closed_at' => 'Abgeschlossen', 'closed_by_name' => 'Abgeschlossen von',
         // Bestellscheine, Übergaben, Schäden, Checklisten
@@ -279,7 +279,7 @@ final class AuditPresenter
         'calendar_entries' => ['calendar_key' => 'Ebene', 'all_day' => 'Ganztägig'],
         'promoter_contacts' => ['role' => 'Funktion'],
         'advancing_templates' => ['intro' => 'Einleitung'],
-        'event_advancings' => ['intro' => 'Einleitung'],
+        'event_advancings' => ['intro' => 'Einleitung', 'sent_at' => 'Versendet'],
         'meters' => ['number' => 'Zählernummer', 'location' => 'Standort'],
         'meter_readings' => ['value' => 'Stand', 'position' => 'Event-Stand'],
     ];

@@ -12,6 +12,7 @@ use App\Support\VenueLogo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Fragenkatalog für den Veranstalter (Modul Advancing): ohne Konto über den Link
@@ -34,7 +35,9 @@ class AdvancingController extends Controller
         if (!$advancing->isLinkValid()) {
             return self::unavailable($advancing);
         }
-        if ($advancing->first_opened_at === null) {
+        // Wer in VenueControl angemeldet ist (der Planer über „Als Veranstalter ansehen“), ist nicht der Veranstalter
+        $preview = Auth::check();
+        if (!$preview && $advancing->first_opened_at === null) {
             Audit::as(Advancings::ACTOR, fn (): bool => $advancing->update(['first_opened_at' => now()]));
         }
         $event = $advancing->event;
@@ -49,6 +52,7 @@ class AdvancingController extends Controller
                 'eventDate' => $event->starts_at ? EventDisplay::weekday($event->starts_at) . ', ' . $event->starts_at->format('d.m.Y') : '',
                 'validUntil' => $advancing->expires_at,
                 'closed' => $advancing->isClosed(),
+                'preview' => $preview,
                 'submittedAt' => $advancing->submitted_at,
                 'documentTitle' => ($event->starts_at ?? now())->format('Ymd') . ' ' . trim((string) $event->title) . ' – Advancing',
                 'venue' => self::venue(),

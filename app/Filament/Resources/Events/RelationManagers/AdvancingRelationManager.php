@@ -83,6 +83,16 @@ class AdvancingRelationManager extends RelationManager
                         ? $record->submitted_at->format('d.m.Y H:i') . ($record->submit_count > 1 ? " ({$record->submit_count}×)" : '')
                         : null)
                     ->placeholder('–'),
+                TextColumn::make('history')
+                    ->label('Verlauf')
+                    ->state(fn (EventAdvancing $record): ?string => implode(' · ', array_filter([
+                        $record->first_opened_at ? 'Geöffnet ' . $record->first_opened_at->format('d.m. H:i') : null,
+                        $record->last_saved_at ? 'Gespeichert ' . $record->last_saved_at->format('d.m. H:i') : null,
+                        $record->closed_at ? 'Abgeschlossen ' . $record->closed_at->format('d.m. H:i') . (filled($record->closed_by_name) ? " ({$record->closed_by_name})" : '') : null,
+                    ])) ?: null)
+                    ->placeholder('–')
+                    ->wrap()
+                    ->visibleFrom('lg'),
                 TextColumn::make('changed')
                     ->label('Geändert')
                     ->state(fn (EventAdvancing $record): int => count(Advancings::changedKeys($record)))
@@ -136,7 +146,7 @@ class AdvancingRelationManager extends RelationManager
                     ->schema(fn (EventAdvancing $record): array => AdvancingFields::schema($record))
                     ->action(function (EventAdvancing $record, array $data): void {
                         abort_unless($this->mayChange(), 403);
-                        $record->update(['prefill' => AdvancingFields::prefill($record, $data)]);
+                        Advancings::updatePrefill($record, AdvancingFields::prefill($record, $data));
                         Notification::make()->success()->title('Vorbelegung gespeichert')->send();
                     }),
                 Action::make('view')
@@ -148,9 +158,8 @@ class AdvancingRelationManager extends RelationManager
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Schließen')
                     ->visible(fn (): bool => !$this->mayChange())
-                    ->fillForm(fn (EventAdvancing $record): array => AdvancingFields::fill($record))
-                    ->schema(fn (EventAdvancing $record): array => AdvancingFields::schema($record))
-                    ->disabledSchema(),
+                    // Nur Text, keine Auswahllisten: die Personenliste mit Kontaktdaten bleibt draußen
+                    ->schema(fn (EventAdvancing $record): array => AdvancingFields::schema($record, editable: false)),
                 Action::make('send')
                     ->label('Per Mail senden')
                     ->icon(Heroicon::OutlinedPaperAirplane)

@@ -176,12 +176,19 @@ Bedienbar:
     vorbelegt (Titel, erster Tag, Zeiten wie „11:30 Uhr“, Ansprechpartner vor
     Ort). „Öffnen“ bearbeitet die Vorbelegung (`prefill`); Personenfragen wählen
     aus aktiven Personen-Konten und Kontakten und zeigen immer deren aktuelle
-    Kontaktdaten. „Per Mail senden“ wie das Daysheet (An vorbelegt mit dem
+    Kontaktdaten; zur Wahl stehen aktive Personen-Konten (System-Admins nur für
+    System-Admins) und nicht archivierte Kontakte, die schon gewählte Person
+    bleibt wählbar. Ändert der Planer einen Wert oder übernimmt er den des
+    Veranstalters, gilt danach seiner (die Antwort fällt weg, steht im Audit).
+    Leserollen sehen alles nur als Text, ohne Auswahllisten. „Per Mail senden“ wie das Daysheet (An vorbelegt mit dem
     Ansprechpartner vor Ort, gültig bis Ende des Tages nach der Veranstaltung,
     Schaltfläche „Fragenkatalog öffnen“); erneut senden schickt denselben Link,
     nach „Link sperren“ einen neuen. Der Schlüssel liegt als Hash (Suche) und
     verschlüsselt (Link kopieren, „Als Veranstalter ansehen“) – nicht im Audit.
-    „Abschließen“ macht die Seite schreibgeschützt.
+    „Abschließen“ macht die Seite schreibgeschützt. Ändern sich Titel oder Datum
+    des Events, ziehen die gebundenen Fragen nach (solange dort noch der alte Wert
+    steht) und ein versendeter Link gilt bis zum Tag nach dem neuen Datum. Die
+    Spalte „Verlauf“ zeigt geöffnet, zuletzt gespeichert und abgeschlossen.
   - **Veranstalter** (`/advancing/{Schlüssel}`, `AdvancingController`):
     klassisches Formular ohne Livewire, nur Titel und Datum des Events und der
     Katalog. Gespeichert wird in `answers` nur, was er gegenüber dem beim Laden
@@ -189,12 +196,15 @@ Bedienbar:
     gleich der Vorbelegung heißt keine eigene Antwort. Gesperrte Fragen und
     Personen ändert er nicht. „Absenden“ prüft Pflichtfragen, zählt mit und
     mailt den Planer, der verschickt hat, und die Antwortadresse der Venue.
-    Gesperrt, abgelaufen, abgeschlossen: 410. Im Audit: „Veranstalter
-    (Advancing-Link)“.
+    Gesperrt oder abgelaufen: 410; abgeschlossen: die Seite nur lesend, Speichern
+    410. Im Audit: „Veranstalter (Advancing-Link)“. Wer in VenueControl angemeldet
+    ist (Planer über „Als Veranstalter ansehen“), sieht eine Vorschau – das zählt
+    nicht als „geöffnet“, Gespeichertes steht unter seinem Namen im Audit.
   - Angezeigt wird `answers[key] ?? prefill[key]`; was abweicht, steht beim
     Planer gelb am Feld und als Zahl „Geändert“ in der Zeile.
-  - Offen: Katalog-Editor, „ins Event übernehmen“, „Wieder öffnen“, Anzeige im
-    Dashboard und Fortschritt, Kataloge je Venue (mehrere Venues je Instanz).
+  - Offen: Katalog-Editor, Export, „ins Event übernehmen“, „Wieder öffnen“, „Aus
+    dem Event neu vorbelegen“ (nur leere Felder), Anzeige im Dashboard und
+    Fortschritt, Kataloge je Venue (mehrere Venues je Instanz).
 - **Kalender** (`/kalender`, Recht „Kalender“, 13.10.2026) wie in der
   PHP-Version: Monat, Woche, Tag, 4 Wochen; die Ebenen aus Verwaltung ›
   Kalender als Chips in ihrer Farbe zum Ein- und Ausblenden, Auswahl in der

@@ -70,6 +70,9 @@
         @endif
     </header>
 
+    @if ($preview)
+        <p class="notice notice--warn"><strong>Vorschau</strong> – ihr seid in VenueControl angemeldet. Dieser Aufruf zählt nicht als „geöffnet“; was ihr hier speichert, steht unter eurem Namen im Änderungsprotokoll.</p>
+    @endif
     @if (session('status'))
         <p class="notice" role="status">{{ session('status') }}</p>
     @endif
