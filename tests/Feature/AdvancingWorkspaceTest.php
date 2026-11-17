@@ -110,6 +110,23 @@ class AdvancingWorkspaceTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    /** Mailserver lehnt ab (z. B. falsches Passwort): verständliche Meldung statt „Fehler beim Laden der Seite“, nichts gespeichert */
+    public function test_versand_scheitert_am_mailserver_mit_meldung(): void
+    {
+        $this->planer();
+        $advancing = Advancings::start($this->event, $this->template);
+        Mail::shouldReceive('to')->andThrow(new \Symfony\Component\Mailer\Exception\TransportException('535 5.7.8 Error: authentication failed'));
+
+        $this->manager()
+            ->callTableAction('send', $advancing, data: ['to' => ['tour@example.org'], 'bcc' => [], 'subject' => 'A', 'body' => '{link}'])
+            ->assertNotified('Versand fehlgeschlagen');
+
+        $advancing->refresh();
+        $this->assertNull($advancing->sent_at);
+        $this->assertNull($advancing->token_hash);
+        $this->assertSame('Entwurf', $advancing->statusLabel());
+    }
+
     public function test_planer_aendert_vorbelegung_und_sieht_aenderungen_des_veranstalters(): void
     {
         $this->planer();

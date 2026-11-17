@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Planung › Advancing (Modul Advancing): Fragenkatalog an den Veranstalter.
@@ -209,6 +210,18 @@ class AdvancingRelationManager extends RelationManager
                             );
                         } catch (InvalidArgumentException $exception) {
                             Notification::make()->danger()->title($exception->getMessage())->send();
+                            $action->halt();
+
+                            return;
+                        } catch (Throwable $exception) {
+                            // Mailserver lehnt ab (etwa falsches Passwort in der .env): wie beim Costing melden, nichts gespeichert
+                            report($exception);
+                            Notification::make()
+                                ->danger()
+                                ->title('Versand fehlgeschlagen')
+                                ->body('Die Mail ging nicht raus, der Link wurde nicht verschickt. Bitte später noch einmal versuchen oder dem Betreiber Bescheid geben.')
+                                ->persistent()
+                                ->send();
                             $action->halt();
 
                             return;
