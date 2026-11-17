@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Access\Area;
 use App\Access\Module;
 use App\Access\Modules;
 use App\Filament\Resources\Accounting\Pages\AccountingDashboard;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Models\Event;
+use App\Models\Meter;
+use App\Models\Room;
 use App\Models\Setting;
 use App\Support\EventProgress;
 use App\Support\ExecutionCheck;
@@ -76,6 +79,32 @@ class OperationsModuleTest extends TestCase
 
         $this->without(Module::Operations);
         Livewire::test(AccountingDashboard::class, ['record' => $this->past->getRouteKey()])->assertDontSee('Noch offen');
+    }
+
+    /** Räume werden nur unter Durchführung › Betrieb genutzt: der Bereich kommt mit dem Modul */
+    public function test_raeume_kommen_mit_betrieb(): void
+    {
+        $this->assertSame(Module::Operations, Area::AdminRaeume->module());
+        $this->assertFalse(Area::AdminRaeume->isSwitchable());
+        $this->assertTrue($this->admin()->can('viewAny', Room::class));
+
+        $this->without(Module::Operations);
+        $this->assertTrue(Area::AdminRaeume->isDisabled());
+        $this->assertFalse($this->admin()->can('viewAny', Room::class));
+    }
+
+    /** Stammdaten › Zähler: nur, wenn Betrieb (Stände je Event) oder Zählerstände (Seite /zaehler) frei sind */
+    public function test_zaehler_stammdaten_nur_mit_betrieb_oder_zaehlerstaenden(): void
+    {
+        $this->assertTrue($this->admin()->can('viewAny', Meter::class));
+
+        $this->without(Module::Operations);
+        $this->assertTrue($this->admin()->can('viewAny', Meter::class), 'Zählerstände sind noch frei');
+
+        Modules::current()->store(array_values(array_filter(Module::cases(), fn (Module $m): bool => $m !== Module::Operations)), [Area::Zaehler]);
+        app()->forgetScopedInstances();
+        $this->assertFalse($this->admin()->can('viewAny', Meter::class));
+        $this->assertFalse($this->admin()->can('create', Meter::class));
     }
 
     public function test_migration_ergaenzt_betrieb_in_gespeicherten_modulen(): void

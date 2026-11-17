@@ -26,6 +26,7 @@ Wahl.
 | Anfragen | Venue an der Anfrage, Belegung und Rang je Venue – **aber** bei CE abgeschaltet, deshalb in diesem Weg nicht gebaut, sondern gesperrt (siehe „Sperre“) |
 | Umfang | **Weg 2 „schlank nach Nutzung“**: venue-fähig wird nur, was CE eingeschaltet hat; alles andere bleibt gemeinsam und ist in Installationen mit mehreren Venues gesperrt, bis es venue-fähig ist |
 | Weitere Venues | vorerst keine |
+| Termin | kein fester Termin – Reihenfolge wie unten (Vorstufe zuerst, dann 1–7 gesamt) |
 
 ## Ziele
 
@@ -240,10 +241,52 @@ danach legt der System-Admin die Ritterakademie an.
 
 ## Einspielen
 
-ipa und demo: nur nach „deploy“, Sicherung vorher, Wartungsmodus, Migration;
+ipa: nur nach „deploy“, Sicherung vorher, Wartungsmodus, Migration (demo bleibt außen vor);
 danach Regressionsprüfung (Seiten, Feed-Adresse, VA-ID des nächsten Events).
 ce: zusätzlich `operator_name` „Campus Events“, Kürzel „LKH“, Katalog „Kultur“
 an LKH Arena, Betrieb abschalten, dann Ritterakademie anlegen (System-Admin).
+
+## Klärungen nach der Builder-Prüfung (17.11.2026, Entscheidungen des Bauenden)
+
+- **`isMulti()`** = mehr als **eine Venue überhaupt** (auch archivierte zählen).
+  Archivieren nimmt eine Venue nur aus der Auswahl für neue Events und
+  Stammdaten; die Installation fällt nie in den Ein-Venue-Modus zurück, solange
+  es zwei Venues gibt. Ausgaben lesen immer die Venue des Events.
+- **Die zweite Venue anlegen:** nur der System-Admin, im Ein-Venue-Modus über
+  eine Aktion auf Verwaltung › Venue („Weitere Venue anlegen“, für alle anderen
+  unsichtbar). Vorher ein Bestätigungsdialog mit der Liste der Module und
+  Bereiche, die dann gesperrt werden. Kein zusätzlicher Schalter in der `.env`.
+- **Daysheet-Werte:** `daysheet_to` (Empfänger) wird **nicht** vererbt – jede
+  Venue hat eigene Empfänger. Betreff und Text erben von der Installation
+  (Vorgabe für alle Venues, im Mehr-Venue-Modus auf der Seite „Installation“
+  pflegbar). Beim Anlegen der zweiten Venue bekommt Venue 1 die bisherigen
+  Empfänger als eigenen Wert (`venue_settings`). Antwortadresse: Spalte je
+  Venue; leer → Antwortadresse der Installation (`settings.mail_reply_to`).
+- **Feldoptionen bei der Migration:** Bereiche → Venue 1 (es sind die Bereiche
+  der bisherigen Venue). Bestuhlung → **für alle** (NULL), neue Werte je Venue
+  möglich. **„bestuhlt“ ist ein geschützter Wert** (gemeinsam, nicht je Venue
+  löschbar/umbenennbar), wie die anderen Werte, an denen Code hängt; Test.
+- **Modul Betrieb bringt den Bereich Räume mit** (`Module::areas()` =
+  [AdminRaeume], wie Buchhaltung) – Räume werden nur unter Betrieb genutzt.
+  Stammdaten › Zähler ist nur erreichbar, wenn Betrieb oder Zählerstände frei
+  sind. Damit sind Räume und Zähler bei mehreren Venues mitgesperrt.
+  **Wird in Lieferung 0 nachgezogen.**
+- **Venue eines Events wechseln:** immer erlaubt (auch mit Advancing – das ist
+  eine Kopie und liest die Identität der Event-Venue). Ein Standard-Saalplan
+  einer anderen Venue wird dabei entfernt (Hinweis), Bereiche/Bestuhlung, die es
+  in der neuen Venue nicht gibt, melden einen Formularfehler. Damit lassen sich
+  vorab als LKH angelegte Ritterakademie-Events umhängen; kein Sonderbefehl.
+- **Testdaten mit zwei Venues:** ein Seeder nur für Tests und die Testkopie
+  (zweite erfundene Venue mit Logo, Saalplan, Katalog, Daysheet-Texten); keine
+  Kopie der ce-Datenbank (echte Personendaten).
+- **Rückweg:** über die Sicherung (Datenbank + Dateien) je Installation, keine
+  doppelte Schreibweise für alten Code. ipa.vcontrol.eu ist ein ruhender Pilot
+  mit Demodaten. **Vor dem Einspielen von 1–7 auf ce muss dort die nächtliche
+  Sicherung laufen** (Nextcloud-Datei-Ablage + KAS-Cronjob, Nutzer).
+- **ipa-control.de** (IPA-Control, eigenes Repo) bleibt unberührt.
+- **demo.vcontrol.eu bleibt außen vor** (läuft seit 29.10.2026 mit IPA-Control-Code als
+  EIC-Testumgebung). Geprüft wird „eine Venue wie heute“ auf ipa.vcontrol.eu und in der
+  Testkopie. (Empfehlung an den Nutzer am 17.11.2026, nicht widersprochen.)
 
 ## Dem Bauenden überlassen
 

@@ -53,7 +53,12 @@ enum Module: string
      */
     public function areas(): array
     {
-        return $this === self::Accounting ? [Area::Buchhaltung] : [];
+        return match ($this) {
+            self::Accounting => [Area::Buchhaltung],
+            // Räume werden nur unter Durchführung › Betrieb genutzt (17.11.2026)
+            self::Operations => [Area::AdminRaeume],
+            default => [],
+        };
     }
 
     public function isEnabled(): bool
