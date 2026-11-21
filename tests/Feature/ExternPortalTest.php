@@ -52,7 +52,8 @@ class ExternPortalTest extends TestCase
         $this->mine->assignments()->create(['role' => AssignmentRole::HouseRepEarly, 'assignee_type' => 'user',
             'assignee_id' => $this->freelancer->id, 'starts_at' => '14:00:00', 'ends_at' => '23:00:00']);
         $this->mine->schedule()->create(['admission' => '18:30:00', 'start_time' => '20:00:00']);
-        $this->mine->finance()->create(['rent' => 12345, 'contract_status' => 'Rahmenvertrag unterschrieben']);
+        // Sieben Ziffern: kürzere stehen ab und zu zufällig in Livewire-Prüfsummen (Hex)
+        $this->mine->finance()->create(['rent' => 1234567, 'contract_status' => 'Rahmenvertrag unterschrieben']);
         $this->mine->notes()->create(['subject' => 'Anfahrt', 'body' => 'Ladehof über Tor 3']);
         $this->mine->notes()->create(['subject' => 'Team-Absprache', 'body' => 'Nur fürs Team', 'hidden_from_externals' => true]);
 
@@ -106,8 +107,8 @@ class ExternPortalTest extends TestCase
             ->assertSee('Rider.pdf')
             ->assertDontSee('Nur fürs Team')
             ->assertDontSee('Mietvertrag.pdf')
-            ->assertDontSee('12345')
-            ->assertDontSee('12.345')
+            ->assertDontSee('1234567')
+            ->assertDontSee('1.234.567')
             ->assertDontSee('Rahmenvertrag unterschrieben')
             ->assertDontSee('Gage nachverhandeln')
             ->assertDontSee('geheimwlan');

@@ -17,7 +17,8 @@ class EventDetailTest extends TestCase
         $this->event->schedule()->create(['admission' => '17:00:00', 'start_time' => '18:30:00']);
         $this->event->finance()->create([
             'accounting_status' => ['1. Rate gezahlt', '2. Rate gezahlt'],
-            'invoice_numbers' => ['1037', '1085'],
+            // Mit Bindestrich: reine Ziffern stehen sonst ab und zu zufällig in Livewire-Prüfsummen (Hex)
+            'invoice_numbers' => ['RG-1037', 'RG-1085'],
             'rent' => 11500,
         ]);
     }
@@ -31,7 +32,7 @@ class EventDetailTest extends TestCase
             ->assertSee('17:00')
             ->assertSee('18:30')
             ->assertSee('2. Rate gezahlt')
-            ->assertSee('1085');
+            ->assertSee('RG-1085');
     }
 
     public function test_finanzen_nur_mit_recht_auf_die_buchhaltung(): void
@@ -42,7 +43,7 @@ class EventDetailTest extends TestCase
             ->assertOk()
             ->assertSee('17:00')
             ->assertDontSee('FIBU-Status')
-            ->assertDontSee('1085');
+            ->assertDontSee('RG-1085');
     }
 
     public function test_wlan_passwort_nur_fuer_bearbeiter(): void
